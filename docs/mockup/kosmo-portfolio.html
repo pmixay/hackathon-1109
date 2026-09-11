@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Космо-портфель</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#eef4ee; --surface:#ffffff; --surface-2:#f6faf6; --ink:#12291a; --ink-2:#4a6352; --muted:#7a8f80; --rule:#d3e0d6;
+  --brand:#1f6b3a; --brand-deep:#134a27; --brand-soft:#dcefe1; --brand-ink:#0d3a1d;
+  --s1:#237a3f; --s2:#d9861a; --s3:#2f6fb5; --s4:#b3473f;
+  --seq-1:#d3ead9; --seq-2:#9fd1ae; --seq-3:#5fae78; --seq-4:#237a3f; --seq-5:#134a27;
+  --good:#0f8a3c; --good-soft:#dff3e5; --crit:#c53a2f; --crit-soft:#fbe4e1; --warn:#c98500; --warn-soft:#fff1d6;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,Arial,sans-serif;font-size:14px;line-height:1.45}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+/* sidebar */
+.side{background:var(--brand-deep);color:#e4f1e8;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo .mark{width:34px;height:34px;border-radius:8px;background:#2f9a55;display:grid;place-items:center}
+.logo b{font-family:"IBM Plex Sans Condensed",Arial,sans-serif;font-size:1.15rem;font-weight:600;letter-spacing:.01em}
+.logo small{display:block;font-size:.68rem;color:#9fc7ab;font-weight:400;font-family:"IBM Plex Mono",monospace;letter-spacing:.06em}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:#cfe3d5;text-decoration:none;font-weight:500}
+.nav a.active{background:#2a6b41;color:#fff}
+.nav svg{width:16px;height:16px;flex:none}
+.side .sec{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#8fb99c;margin:6px 0 4px}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.field label{font-size:.72rem;color:#a9cbb4}
+.select{display:flex;justify-content:space-between;align-items:center;gap:6px;line-height:1.25;background:#1a5a30;border:1px solid #2f7a48;border-radius:6px;padding:6px 9px;color:#fff;font-size:.82rem}
+.select .mode{font-family:"IBM Plex Mono",monospace;font-size:.72rem;background:#2f9a55;color:#062a12;padding:1px 6px;border-radius:4px;font-weight:500}
+.scen{display:flex;background:#0f3a1e;border-radius:6px;padding:3px;gap:3px}
+.scen span{flex:1;text-align:center;padding:6px;border-radius:4px;font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:#9fc7ab}
+.scen span.on{background:#2f9a55;color:#062a12;font-weight:500}
+.btn{margin-top:auto;background:#43b56b;color:#062a12;border:0;border-radius:6px;padding:10px;font-weight:600;font-size:.9rem;text-align:center}
+.btn.ghost{background:transparent;border:1px solid #2f7a48;color:#cfe3d5;margin-top:8px;font-weight:500}
+/* main */
+.main{padding:20px 24px 28px;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.top h1{font-family:"IBM Plex Sans Condensed",Arial,sans-serif;font-size:1.5rem;font-weight:600;margin:0;line-height:1.1}
+.top .sub{color:var(--muted);font-size:.85rem;margin-top:3px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:.72rem;padding:4px 9px;border-radius:999px;background:var(--brand-soft);color:var(--brand-ink);border:1px solid #bfdcc8}
+.chip.stress{background:var(--warn-soft);color:#6b4700;border-color:#f0d79a}
+.verdict{display:flex;align-items:center;gap:10px;background:var(--good-soft);border:1px solid #b7e2c4;border-radius:8px;padding:10px 14px;font-weight:500;color:#0c5a2a}
+.verdict.bad{background:var(--crit-soft);border-color:#f0bcb6;color:#8a2119}
+.verdict .dot{width:10px;height:10px;border-radius:50%;background:var(--good)}
+.verdict.bad .dot{background:var(--crit)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tile{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:12px 14px}
+.tile .lbl{font-size:.74rem;color:var(--muted);letter-spacing:.02em}
+.tile .val{font-family:"IBM Plex Sans Condensed",Arial,sans-serif;font-size:1.7rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:2px}
+.tile .val small{font-size:.8rem;color:var(--ink-2);font-weight:500;margin-left:4px;font-family:"IBM Plex Sans",sans-serif}
+.tile .sub{font-size:.74rem;color:var(--ink-2);margin-top:4px;display:flex;justify-content:space-between}
+.meter{height:6px;background:var(--seq-1);border-radius:3px;margin-top:8px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--s1);border-radius:3px}
+.meter i.crit{background:var(--crit)}
+.grid2{display:grid;grid-template-columns:3fr 2fr;gap:12px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.card h2{font-family:"IBM Plex Sans Condensed",Arial,sans-serif;font-size:1.05rem;font-weight:600;margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+.card h2 span{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--muted);font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+table{border-collapse:collapse;width:100%;font-size:.82rem}
+th{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);font-weight:500}
+td{padding:7px 8px;border-bottom:1px solid #e7efe9;vertical-align:middle}
+td.num,th.num{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace;font-size:.78rem}
+.st{display:inline-flex;align-items:center;gap:5px;font-family:"IBM Plex Mono",monospace;font-size:.7rem;padding:2px 7px;border-radius:4px;font-weight:500}
+.st.ok{background:var(--good-soft);color:#0c5a2a}.st.fail{background:var(--crit-soft);color:#8a2119}
+.st svg{width:10px;height:10px}
+.bar{position:relative;height:8px;background:#e6f0e9;border-radius:4px;min-width:110px}
+.bar i{position:absolute;left:0;top:0;height:100%;border-radius:4px;background:var(--s1)}
+.bar i.fail{background:var(--crit)}
+.bar b{position:absolute;top:-3px;width:2px;height:14px;background:var(--ink-2)}
+.lots{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lot{border:1px solid var(--rule);border-radius:8px;padding:10px 12px;background:var(--surface-2);display:flex;flex-direction:column;gap:4px}
+.lot .hd{display:flex;justify-content:space-between;align-items:center}
+.lot .id{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--brand);font-weight:500}
+.lot .nm{font-weight:500;font-size:.85rem}
+.lot .rg{font-size:.72rem;color:var(--muted)}
+.lot .kv{display:flex;gap:10px;font-size:.72rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.lot .kv b{color:var(--ink);font-weight:500}
+.tag{font-family:"IBM Plex Mono",monospace;font-size:.66rem;padding:1px 6px;border-radius:4px;background:var(--brand-soft);color:var(--brand-ink)}
+.tag.b{background:#e7eef8;color:#1e4a80}
+/* charts */
+svg text{font-family:"IBM Plex Sans",sans-serif;font-size:11px;fill:var(--ink-2)}
+svg text.mono{font-family:"IBM Plex Mono",monospace;font-size:10px}
+svg .grid{stroke:#e3ece5;stroke-width:1}
+svg .axis{stroke:#c4d3c8;stroke-width:1}
+.legend{display:flex;gap:14px;font-size:.74rem;color:var(--ink-2);margin-top:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.foot{font-size:.72rem;color:var(--muted);display:flex;justify-content:space-between;margin-top:6px}
+.toolbar{display:flex;gap:8px;align-items:center}
+.pill{font-size:.78rem;padding:6px 10px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--ink-2)}
+.pill.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.delta{font-family:"IBM Plex Mono",monospace;font-size:.75rem}
+.delta.down{color:var(--crit)}.delta.up{color:var(--good)}.delta.zero{color:var(--muted)}
+.stress-row{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #e7efe9;font-size:.82rem}
+.stress-row .h{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stress-row .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+.callout{border-left:3px solid var(--brand);background:var(--surface-2);padding:10px 12px;border-radius:0 6px 6px 0;font-size:.84rem}
+.callout b{color:var(--brand-ink)}
+</style>
+</head>
+<body>
+<!-- ================= SCREEN 1: ПОРТФЕЛЬ ================= -->
+<section class="app" id="screen-portfolio">
+  <aside class="side">
+    <div class="logo"><div class="mark"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="#062a12" stroke-width="1.6"/><ellipse cx="10" cy="10" rx="11" ry="3.5" stroke="#062a12" stroke-width="1.4" transform="rotate(-25 10 10)"/><circle cx="10" cy="10" r="2" fill="#062a12"/></svg></div><div><b>Космо-портфель</b><small>SEP-KOSMOS-INFRA-2026 · v1.1</small></div></div>
+    <nav class="nav">
+      <a class="active" href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Портфель</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M4 11V6M8 11V3M12 11V8"/></svg>Сравнение вариантов</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v6l4 2"/><circle cx="8" cy="8" r="6"/></svg>Стресс-сценарий</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="5" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="7" cy="11" r="1.5"/><circle cx="12" cy="10" r="1.5"/></svg>Отсев 5 670</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v10H3zM6 6h4M6 9h4"/></svg>Допущения</a>
+    </nav>
+    <div class="sec">Сценарий</div>
+    <div class="scen"><span class="on">BASE · 1300</span><span>STRESS · 1180</span></div>
+    <div class="sec">Состав портфеля</div>
+    <div class="field"><label>Лот 1</label><div class="select">FIRE · Сибирь <span class="mode">A</span></div></div>
+    <div class="field"><label>Лот 2</label><div class="select">AGRI · Юг <span class="mode">A</span></div></div>
+    <div class="field"><label>Лот 3</label><div class="select">TRANS · Центр <span class="mode">A</span></div></div>
+    <div class="field"><label>Лот 4</label><div class="select">ENV · Волга-Каспий <span class="mode">A</span></div></div>
+    <div class="btn">Рассчитать</div>
+    <div class="btn ghost">Сохранить как вариант</div>
+  </aside>
+  <main class="main">
+    <div class="top">
+      <div><h1>Портфель V1 · базовый сценарий</h1><div class="sub">Канонический расчёт case_core.py · данные организаторов не изменены · пересчитано 12.09 11:02</div></div>
+      <div class="chips"><span class="chip">4 лота</span><span class="chip">4 архетипа</span><span class="chip">EO + PNT/InSAR</span><span class="chip">public core 4</span></div>
+    </div>
+    <div class="verdict"><span class="dot"></span>Все 9 ограничений выполнены. Портфель допустим в BASE; запас по стартовым затратам 134.5 млн руб.</div>
+    <div class="tiles">
+      <div class="tile"><div class="lbl">Стартовые затраты c0</div><div class="val">1 165.5<small>млн руб.</small></div><div class="sub"><span>лимит 1 300</span><span>89.7 %</span></div><div class="meter"><i style="width:89.7%"></i></div></div>
+      <div class="tile"><div class="lbl">OPEX в год</div><div class="val">320.2<small>млн руб.</small></div><div class="sub"><span>лимит 360</span><span>88.9 %</span></div><div class="meter"><i style="width:88.9%"></i></div></div>
+      <div class="tile"><div class="lbl">Общественная ценность vpub</div><div class="val">1 370<small>усл. млн руб./год</small></div><div class="sub"><span>минимум 1 000</span><span>137 %</span></div><div class="meter"><i style="width:100%"></i></div></div>
+      <div class="tile"><div class="lbl">Покрытие OPEX поступлениями</div><div class="val">0.90<small>cash / OPEX</small></div><div class="sub"><span>минимум 0.60</span><span>cash 288.8</span></div><div class="meter"><i style="width:90%"></i></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h2>Проверка ограничений <span>условие · порог · факт · статус</span></h2>
+        <table>
+          <tr><th>Условие</th><th class="num">Порог</th><th class="num">Факт</th><th>Использование</th><th>Статус</th></tr>
+          <tr><td>Ровно 4 лота</td><td class="num">= 4</td><td class="num">4</td><td><div class="bar"><i style="width:100%"></i></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>Территориальные архетипы</td><td class="num">≥ 3</td><td class="num">4</td><td><div class="bar"><i style="width:100%"></i><b style="left:75%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>Группы возможностей</td><td class="num">≥ 2</td><td class="num">2</td><td><div class="bar"><i style="width:100%"></i><b style="left:100%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>Лоты с public core</td><td class="num">≥ 2</td><td class="num">4</td><td><div class="bar"><i style="width:100%"></i><b style="left:50%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>Стартовые затраты c0</td><td class="num">≤ 1300</td><td class="num">1165.5</td><td><div class="bar"><i style="width:89.7%"></i><b style="left:100%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>OPEX в год</td><td class="num">≤ 360</td><td class="num">320.2</td><td><div class="bar"><i style="width:88.9%"></i><b style="left:100%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>Общественная ценность</td><td class="num">≥ 1000</td><td class="num">1370.0</td><td><div class="bar"><i style="width:100%"></i><b style="left:73%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>cash / OPEX</td><td class="num">≥ 0.60</td><td class="num">0.902</td><td><div class="bar"><i style="width:100%"></i><b style="left:66%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>Средний t_rep</td><td class="num">≥ 0.63</td><td class="num">0.730</td><td><div class="bar"><i style="width:100%"></i><b style="left:86%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+        </table>
+        <div class="foot"><span>Границы включительно, допуск 1e-9</span><span>results/base.json · 12.09 11:02</span></div>
+      </div>
+      <div class="card">
+        <h2>Лоты портфеля <span>режим доступа</span></h2>
+        <div class="lots">
+          <div class="lot"><div class="hd"><span class="id">FIRE</span><span class="tag">A · public core</span></div><div class="nm">Мониторинг лесных пожаров</div><div class="rg">Сибирский архетип · EO</div><div class="kv"><span>c0 <b>336.0</b></span><span>OPEX <b>89.3</b></span><span>vpub <b>560</b></span></div></div>
+          <div class="lot"><div class="hd"><span class="id">AGRI</span><span class="tag">A · public core</span></div><div class="nm">Агроаналитика</div><div class="rg">Южный архетип · EO, PNT/InSAR</div><div class="kv"><span>c0 <b>273.0</b></span><span>OPEX <b>78.8</b></span><span>vpub <b>230</b></span></div></div>
+          <div class="lot"><div class="hd"><span class="id">TRANS</span><span class="tag">A · public core</span></div><div class="nm">Мониторинг транспорта</div><div class="rg">Центральный архетип · PNT/InSAR, EO</div><div class="kv"><span>c0 <b>262.5</b></span><span>OPEX <b>73.5</b></span><span>vpub <b>220</b></span></div></div>
+          <div class="lot"><div class="hd"><span class="id">ENV</span><span class="tag">A · public core</span></div><div class="nm">Экологический мониторинг</div><div class="rg">Волго-Каспийский архетип · EO</div><div class="kv"><span>c0 <b>294.0</b></span><span>OPEX <b>78.8</b></span><span>vpub <b>360</b></span></div></div>
+        </div>
+        <h2 style="margin-top:14px">Структура c0 по лотам <span>млн руб.</span></h2>
+        <svg viewBox="0 0 360 26" width="100%" height="26" role="img" aria-label="Доли стартовых затрат по лотам">
+          <rect x="0" y="4" width="103.8" height="16" rx="3" fill="var(--seq-5)"/>
+          <rect x="105.8" y="4" width="84.3" height="16" rx="3" fill="var(--seq-4)"/>
+          <rect x="192.1" y="4" width="81.1" height="16" rx="3" fill="var(--seq-3)"/>
+          <rect x="275.2" y="4" width="84.8" height="16" rx="3" fill="var(--seq-2)"/>
+        </svg>
+        <div class="legend"><span><i style="background:var(--seq-5)"></i>FIRE 336</span><span><i style="background:var(--seq-4)"></i>AGRI 273</span><span><i style="background:var(--seq-3)"></i>TRANS 263</span><span><i style="background:var(--seq-2)"></i>ENV 294</span></div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ================= SCREEN 2: СРАВНЕНИЕ ================= -->
+<section class="app" id="screen-compare">
+  <aside class="side">
+    <div class="logo"><div class="mark"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="#062a12" stroke-width="1.6"/><ellipse cx="10" cy="10" rx="11" ry="3.5" stroke="#062a12" stroke-width="1.4" transform="rotate(-25 10 10)"/><circle cx="10" cy="10" r="2" fill="#062a12"/></svg></div><div><b>Космо-портфель</b><small>SEP-KOSMOS-INFRA-2026 · v1.1</small></div></div>
+    <nav class="nav">
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Портфель</a>
+      <a class="active" href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M4 11V6M8 11V3M12 11V8"/></svg>Сравнение вариантов</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v6l4 2"/><circle cx="8" cy="8" r="6"/></svg>Стресс-сценарий</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="5" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="7" cy="11" r="1.5"/><circle cx="12" cy="10" r="1.5"/></svg>Отсев 5 670</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v10H3zM6 6h4M6 9h4"/></svg>Допущения</a>
+    </nav>
+    <div class="sec">Сохранённые варианты</div>
+    <div class="field"><div class="select">V1 FIRE·AGRI·TRANS·ENV <span class="mode">AAAA</span></div></div>
+    <div class="field"><div class="select">V2 FLOOD·AGRI·TRANS·ENV <span class="mode">AABA</span></div></div>
+    <div class="field"><div class="select">V3 FIRE·FLOOD·TRANS·ENV <span class="mode">AAAA</span></div></div>
+    <div class="field"><div class="select">V4 AGRI·TRANS·ENV·SSA <span class="mode">AAAA</span></div></div>
+    <div class="field"><div class="select">V5 FIRE·AGRI·INFRA·TRANS <span class="mode">ABAB</span></div></div>
+    <div class="sec">Веса модели выбора</div>
+    <div class="field"><div class="select">vpub 0.30 · c0 0.15 · kcash 0.15</div></div>
+    <div class="field"><div class="select">готовность 0.10 · устойч. 0.10 · тираж 0.10 · запас 0.10</div></div>
+    <div class="btn">Пересчитать всё</div>
+    <div class="btn ghost">Экспорт alternatives.csv</div>
+  </aside>
+  <main class="main">
+    <div class="top">
+      <div><h1>Сравнение вариантов</h1><div class="sub">Одни правила расчёта для всех · BASE и STRESS рядом · балл модели выбора команды</div></div>
+      <div class="toolbar"><span class="pill on">BASE</span><span class="pill">STRESS</span><span class="pill">Оба</span></div>
+    </div>
+    <div class="split">
+      <div class="card">
+        <h2>Общественная ценность и поступления <span>млн руб. в год</span></h2>
+        <svg viewBox="0 0 440 210" width="100%" role="img" aria-label="Столбцы vpub и cash по пяти вариантам">
+          <g class="grid"><line x1="52" x2="430" y1="30" y2="30"/><line x1="52" x2="430" y1="70" y2="70"/><line x1="52" x2="430" y1="110" y2="110"/><line x1="52" x2="430" y1="150" y2="150"/></g>
+          <line class="axis" x1="52" x2="430" y1="190" y2="190"/>
+          <text class="mono" x="46" y="34" text-anchor="end">2000</text><text class="mono" x="46" y="74" text-anchor="end">1500</text><text class="mono" x="46" y="114" text-anchor="end">1000</text><text class="mono" x="46" y="154" text-anchor="end">500</text><text class="mono" x="46" y="194" text-anchor="end">0</text>
+          <!-- vpub floor 1000 -->
+          <line x1="52" x2="430" y1="110" y2="110" stroke="var(--s4)" stroke-dasharray="4 3" stroke-width="1.5"/>
+          <!-- groups: x centers 95,165,235,305,375 ; scale 0.08 px per unit -->
+          <g>
+            <rect x="76" y="80.4" width="22" height="109.6" rx="3" fill="var(--s1)"/><rect x="100" y="166.9" width="22" height="23.1" rx="3" fill="var(--s2)"/>
+            <rect x="146" y="77.2" width="22" height="112.8" rx="3" fill="var(--s1)"/><rect x="170" y="163.2" width="22" height="26.8" rx="3" fill="var(--s2)"/>
+            <rect x="216" y="50.8" width="22" height="139.2" rx="3" fill="var(--s1)"/><rect x="240" y="164" width="22" height="26" rx="3" fill="var(--s2)"/>
+            <rect x="286" y="98" width="22" height="92" rx="3" fill="var(--s1)"/><rect x="310" y="166.4" width="22" height="23.6" rx="3" fill="var(--s2)"/>
+            <rect x="356" y="91.7" width="22" height="98.3" rx="3" fill="var(--s1)"/><rect x="380" y="160" width="22" height="30" rx="3" fill="var(--s2)"/>
+          </g>
+          <g class="mono" style="font-weight:500"><text x="87" y="75" text-anchor="middle" fill="var(--ink)">1370</text><text x="157" y="72" text-anchor="middle" fill="var(--ink)">1410</text><text x="227" y="46" text-anchor="middle" fill="var(--ink)">1740</text><text x="297" y="93" text-anchor="middle" fill="var(--ink)">1150</text><text x="367" y="87" text-anchor="middle" fill="var(--ink)">1229</text></g>
+          <g><text x="99" y="206" text-anchor="middle">V1</text><text x="169" y="206" text-anchor="middle">V2</text><text x="239" y="206" text-anchor="middle">V3</text><text x="309" y="206" text-anchor="middle">V4</text><text x="379" y="206" text-anchor="middle">V5</text></g>
+        </svg>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Общественная ценность vpub</span><span><i style="background:var(--s2)"></i>Денежные поступления cash</span><span><i style="background:transparent;border-top:2px dashed var(--s4);height:0;margin-top:5px"></i>минимум vpub 1000</span></div>
+      </div>
+      <div class="card">
+        <h2>Стартовые затраты против лимитов <span>млн руб.</span></h2>
+        <svg viewBox="0 0 440 210" width="100%" role="img" aria-label="Горизонтальные столбцы c0 по вариантам с лимитами BASE и STRESS">
+          <!-- scale: 1000..1300 mapped to x 60..420 => 1.2 px per unit -->
+          <g class="grid"><line x1="60" x2="60" y1="14" y2="176"/><line x1="180" x2="180" y1="14" y2="176"/><line x1="300" x2="300" y1="14" y2="176"/><line x1="420" x2="420" y1="14" y2="176"/></g>
+          <text class="mono" x="60" y="190" text-anchor="middle">1000</text><text class="mono" x="180" y="190" text-anchor="middle">1100</text><text class="mono" x="300" y="190" text-anchor="middle">1200</text><text class="mono" x="420" y="190" text-anchor="middle">1300</text>
+          <!-- rows y: 22,52,82,112,142 height 20 -->
+          <g>
+            <rect x="60" y="22" width="198.6" height="20" rx="3" fill="var(--s3)"/><text class="mono" x="264" y="36" fill="var(--ink)">1165.5</text>
+            <rect x="60" y="52" width="208.8" height="20" rx="3" fill="var(--s3)"/><text class="mono" x="274" y="66" fill="var(--ink)">1174.0</text>
+            <rect x="60" y="82" width="299.4" height="20" rx="3" fill="var(--s3)"/><text class="mono" x="365" y="96" fill="var(--ink)">1249.5</text>
+            <rect x="60" y="112" width="211.2" height="20" rx="3" fill="var(--s3)"/><text class="mono" x="277" y="126" fill="var(--ink)">1176.0</text>
+            <rect x="60" y="142" width="205.8" height="20" rx="3" fill="var(--s3)"/><text class="mono" x="271" y="156" fill="var(--ink)">1171.5</text>
+          </g>
+          <g><text x="52" y="36" text-anchor="end">V1</text><text x="52" y="66" text-anchor="end">V2</text><text x="52" y="96" text-anchor="end">V3</text><text x="52" y="126" text-anchor="end">V4</text><text x="52" y="156" text-anchor="end">V5</text></g>
+          <line x1="276" x2="276" y1="10" y2="176" stroke="var(--s2)" stroke-width="2"/><text x="276" y="8" text-anchor="middle" fill="var(--s2)" style="font-weight:500">STRESS 1180</text>
+          <line x1="420" x2="420" y1="10" y2="176" stroke="var(--s4)" stroke-width="2"/><text x="412" y="8" text-anchor="end" fill="var(--s4)" style="font-weight:500">BASE 1300</text>
+        </svg>
+        <div class="legend"><span><i style="background:var(--s3)"></i>c0 портфеля</span><span><i style="background:var(--s2)"></i>лимит STRESS</span><span><i style="background:var(--s4)"></i>лимит BASE</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Таблица альтернатив <span>results/alternatives.csv</span></h2>
+      <table>
+        <tr><th>Вариант</th><th>Состав</th><th>Режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">vpub</th><th class="num">cash</th><th class="num">cash/OPEX</th><th class="num">t_rep</th><th>BASE</th><th>STRESS</th><th class="num">Балл</th></tr>
+        <tr style="background:var(--surface-2)"><td><b>V1</b> ★</td><td>FIRE · AGRI · TRANS · ENV</td><td class="num">AAAA</td><td class="num">1165.5</td><td class="num">320.2</td><td class="num">1370.0</td><td class="num">288.8</td><td class="num">0.902</td><td class="num">0.730</td><td><span class="st ok">PASS</span></td><td><span class="st ok">PASS</span></td><td class="num"><b>0.81</b></td></tr>
+        <tr><td><b>V2</b></td><td>FLOOD · AGRI · TRANS · ENV</td><td class="num">AABA</td><td class="num">1174.0</td><td class="num">322.0</td><td class="num">1370.4</td><td class="num">335.0</td><td class="num">1.040</td><td class="num">0.715</td><td><span class="st ok">PASS</span></td><td><span class="st ok">PASS</span></td><td class="num">0.79</td></tr>
+        <tr><td><b>V3</b></td><td>FIRE · FLOOD · TRANS · ENV</td><td class="num">AAAA</td><td class="num">1249.5</td><td class="num">336.0</td><td class="num">1740.0</td><td class="num">325.0</td><td class="num">0.967</td><td class="num">0.700</td><td><span class="st ok">PASS</span></td><td><span class="st fail">FAIL c0</span></td><td class="num">0.62</td></tr>
+        <tr><td><b>V4</b></td><td>AGRI · TRANS · ENV · SSA</td><td class="num">AAAA</td><td class="num">1176.0</td><td class="num">330.8</td><td class="num">1150.0</td><td class="num">295.0</td><td class="num">0.892</td><td class="num">0.720</td><td><span class="st ok">PASS</span></td><td><span class="st ok">PASS</span></td><td class="num">0.58</td></tr>
+        <tr><td><b>V5</b></td><td>FIRE · AGRI · INFRA · TRANS</td><td class="num">ABAB</td><td class="num">1171.5</td><td class="num">318.2</td><td class="num">1229.0</td><td class="num">375.5</td><td class="num">1.180</td><td class="num">0.725</td><td><span class="st ok">PASS</span></td><td><span class="st ok">PASS</span></td><td class="num">0.71</td></tr>
+      </table>
+      <div class="foot"><span>★ рекомендуемый · балл модели выбора: взвешенная сумма нормированных критериев, веса в config/weights.json</span><span>Sensitivity ±20 %: лидер не меняется</span></div>
+    </div>
+  </main>
+</section>
+
+<!-- ================= SCREEN 3: СТРЕСС ================= -->
+<section class="app" id="screen-stress">
+  <aside class="side">
+    <div class="logo"><div class="mark"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="#062a12" stroke-width="1.6"/><ellipse cx="10" cy="10" rx="11" ry="3.5" stroke="#062a12" stroke-width="1.4" transform="rotate(-25 10 10)"/><circle cx="10" cy="10" r="2" fill="#062a12"/></svg></div><div><b>Космо-портфель</b><small>SEP-KOSMOS-INFRA-2026 · v1.1</small></div></div>
+    <nav class="nav">
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Портфель</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M4 11V6M8 11V3M12 11V8"/></svg>Сравнение вариантов</a>
+      <a class="active" href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v6l4 2"/><circle cx="8" cy="8" r="6"/></svg>Стресс-сценарий</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="5" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="7" cy="11" r="1.5"/><circle cx="12" cy="10" r="1.5"/></svg>Отсев 5 670</a>
+      <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v10H3zM6 6h4M6 9h4"/></svg>Допущения</a>
+    </nav>
+    <div class="sec">Сценарий</div>
+    <div class="scen"><span>BASE · 1300</span><span class="on">STRESS · 1180</span></div>
+    <div class="sec">Проверяемый портфель</div>
+    <div class="field"><div class="select">V3 FIRE·FLOOD·TRANS·ENV <span class="mode">AAAA</span></div></div>
+    <div class="sec">Пересмотренный вариант</div>
+    <div class="field"><div class="select">V1 FIRE·AGRI·TRANS·ENV <span class="mode">AAAA</span></div></div>
+    <div class="callout" style="background:#1a5a30;border-color:#43b56b;color:#e4f1e8"><b style="color:#fff">Правило кейса:</b> лимит бюджета не меняет исходную стоимость лотов. Сначала проверка, потом управленческое изменение.</div>
+    <div class="btn">Пересчитать оба</div>
+    <div class="btn ghost">Экспорт stress.json</div>
+  </aside>
+  <main class="main">
+    <div class="top">
+      <div><h1>Стресс-сценарий · c0 ≤ 1 180</h1><div class="sub">Исходный портфель V3 при новом лимите, затем пересмотренный V1 · остальные пороги без изменений</div></div>
+      <div class="chips"><span class="chip stress">STRESS</span><span class="chip">изменён только c0_max</span></div>
+    </div>
+    <div class="split">
+      <div class="verdict bad"><span class="dot"></span>V3 не проходит: стартовые затраты 1 249.5 > 1 180.0, превышение 69.5 млн руб.</div>
+      <div class="verdict"><span class="dot"></span>V1 проходит все 9 ограничений при c0 ≤ 1 180, запас 14.5 млн руб.</div>
+    </div>
+    <div class="split">
+      <div class="card">
+        <h2>Где ломается V3 <span>условие · порог · факт</span></h2>
+        <table>
+          <tr><th>Условие</th><th class="num">Порог</th><th class="num">Факт</th><th>Использование</th><th>Статус</th></tr>
+          <tr><td>Стартовые затраты c0</td><td class="num">≤ 1180</td><td class="num">1249.5</td><td><div class="bar"><i class="fail" style="width:100%"></i><b style="left:94%"></b></div></td><td><span class="st fail">FAIL</span></td></tr>
+          <tr><td>OPEX в год</td><td class="num">≤ 360</td><td class="num">336.0</td><td><div class="bar"><i style="width:93.3%"></i><b style="left:100%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>Общественная ценность</td><td class="num">≥ 1000</td><td class="num">1740.0</td><td><div class="bar"><i style="width:100%"></i><b style="left:57%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>cash / OPEX</td><td class="num">≥ 0.60</td><td class="num">0.967</td><td><div class="bar"><i style="width:100%"></i><b style="left:62%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>Средний t_rep</td><td class="num">≥ 0.63</td><td class="num">0.700</td><td><div class="bar"><i style="width:100%"></i><b style="left:90%"></b></div></td><td><span class="st ok">PASS</span></td></tr>
+          <tr><td>Состав: 4 лота · 4 архетипа · 2 группы · 4 public core</td><td class="num"></td><td class="num"></td><td></td><td><span class="st ok">PASS</span></td></tr>
+        </table>
+        <div class="callout" style="margin-top:12px"><b>Что пробовали без смены состава:</b> перевод одного лота в режим B снижает c0 на 5 % (−17 млн), все четыре в B дают 1 190 — всё ещё выше лимита. Замена лота неизбежна.</div>
+      </div>
+      <div class="card">
+        <h2>BASE → STRESS: что меняется при переходе V3 → V1 <span>млн руб.</span></h2>
+        <div class="stress-row"><div class="h">Показатель</div><div class="h num">V3 · BASE</div><div class="h num">V1 · STRESS</div><div class="h num">Δ</div></div>
+        <div class="stress-row"><div>Стартовые затраты c0</div><div class="num">1 249.5</div><div class="num">1 165.5</div><div class="num delta up">−84.0</div></div>
+        <div class="stress-row"><div>OPEX в год</div><div class="num">336.0</div><div class="num">320.2</div><div class="num delta up">−15.8</div></div>
+        <div class="stress-row"><div>Общественная ценность vpub</div><div class="num">1 740.0</div><div class="num">1 370.0</div><div class="num delta down">−370.0</div></div>
+        <div class="stress-row"><div>Денежные поступления cash</div><div class="num">325.0</div><div class="num">288.8</div><div class="num delta down">−36.2</div></div>
+        <div class="stress-row"><div>cash / OPEX</div><div class="num">0.967</div><div class="num">0.902</div><div class="num delta down">−0.065</div></div>
+        <div class="stress-row"><div>Субсидия OPEX в год</div><div class="num">11.0</div><div class="num">31.4</div><div class="num delta down">+20.4</div></div>
+        <div class="stress-row"><div>Регионы с лотом ЧС</div><div class="num">2</div><div class="num">1</div><div class="num delta down">−1</div></div>
+        <svg viewBox="0 0 440 120" width="100%" role="img" aria-label="Общественная ценность по лотам: V3 и V1" style="margin-top:10px">
+          <text x="0" y="14" style="font-weight:500" fill="var(--ink)">Откуда уходит ценность: FLOOD 600 заменяется на AGRI 230</text>
+          <!-- scale 0.2 px/unit; row1 V3 y=30, row2 V1 y=70 -->
+          <text x="0" y="46">V3</text>
+          <rect x="30" y="32" width="112" height="18" rx="3" fill="var(--seq-5)"/><rect x="144" y="32" width="120" height="18" rx="3" fill="var(--s4)"/><rect x="266" y="32" width="44" height="18" rx="3" fill="var(--seq-3)"/><rect x="312" y="32" width="72" height="18" rx="3" fill="var(--seq-2)"/>
+          <text x="86" y="45" text-anchor="middle" fill="#fff" class="mono">FIRE 560</text><text x="204" y="45" text-anchor="middle" fill="#fff" class="mono">FLOOD 600</text><text x="288" y="45" text-anchor="middle" fill="#fff" class="mono">220</text><text x="348" y="45" text-anchor="middle" fill="var(--ink)" class="mono">ENV 360</text>
+          <text x="0" y="86">V1</text>
+          <rect x="30" y="72" width="112" height="18" rx="3" fill="var(--seq-5)"/><rect x="144" y="72" width="46" height="18" rx="3" fill="var(--seq-4)"/><rect x="192" y="72" width="44" height="18" rx="3" fill="var(--seq-3)"/><rect x="238" y="72" width="72" height="18" rx="3" fill="var(--seq-2)"/>
+          <text x="86" y="85" text-anchor="middle" fill="#fff" class="mono">FIRE 560</text><text x="167" y="104" text-anchor="middle" fill="var(--ink)" class="mono">AGRI 230</text><text x="214" y="85" text-anchor="middle" fill="#fff" class="mono">220</text><text x="274" y="85" text-anchor="middle" fill="var(--ink)" class="mono">ENV 360</text>
+          <line x1="266" x2="266" y1="28" y2="96" stroke="var(--s2)" stroke-dasharray="3 3"/><text x="316" y="108" fill="var(--s2)" class="mono">−370 усл. млн руб./год</text>
+        </svg>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Резюме для одностраничника <span>docs/stress-summary</span></h2>
+      <div class="split" style="font-size:.84rem">
+        <div><b>Что изменилось.</b> Лимит стартовых затрат снижен с 1 300 до 1 180 млн руб.; остальные пороги прежние.<br><b>Проходит ли исходный портфель.</b> Нет: V3 превышает лимит на 69.5 млн руб., смена режимов не закрывает разрыв.<br><b>Что меняем.</b> FLOOD заменяется на AGRI (режим A сохраняется); состав очередей запуска не меняется.</div>
+        <div><b>Что теряем.</b> 370 усл. млн руб./год общественной ценности, мониторинг паводков на Дальнем Востоке уходит во вторую очередь тиражирования.<br><b>Что сохраняем.</b> Четыре архетипа, две группы возможностей, четыре лота public core, покрытие OPEX 90 %.<br><b>Кто решает.</b> Межрегиональный заказчик по представлению АНО «КЭП»; договор с оператором FLOOD переносится в опцион.</div>
+      </div>
+    </div>
+  </main>
+</section>
+</body>
+</html>

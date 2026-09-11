@@ -60,7 +60,10 @@
 - Постановка, критерии и README организаторов: `cases/case02/README.organizers.md`
   (PDF постановки и критериев — в архиве организаторов)
 - Канонический код и данные: `cases/case02/case_core.py`, `cases/case02/data/`, `cases/case02/config/`
-- Перебор всех портфелей: `tools/case02_enumerate.py`, результат `cases/case02/results_all_portfolios.csv`
+- Перебор всех портфелей: `tools/case02_enumerate.py`; результат
+  `cases/case02/results_all_portfolios.csv` генерируется скриптом и в репозиторий не входит
 - Общий план и стартовые альтернативы: `docs/case02-team-plan.md`
+- Вопросы организаторам с примерами формулировок: `docs/team/questions.md`
+- Макет инструмента для A и E (пять экранов, варианты шрифтов, рендеры): `docs/mockup/`
 - Стартовый репозиторий организаторов: https://github.com/SpaceEconomyPolicy/test.git
 - Место сдачи: GitVerse, https://gitverse.ru

@@ -1,0 +1,3 @@
+__pycache__/
+*.pyc
+cases/case02/results_all_portfolios.csv

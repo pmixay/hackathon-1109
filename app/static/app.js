@@ -615,6 +615,37 @@ async function select(id) {
   render();
 }
 let toastTimer = 0;
+// Смена темы. Новая тема раскрывается кругом от самой кнопки, чтобы было видно,
+// откуда она пришла. Где нет View Transitions — короткий переход цвета через класс
+// .theming, который тут же снимается. При prefers-reduced-motion — мгновенно, как раньше.
+function setTheme(next, btn) {
+  const apply = () => {
+    state.theme = next;
+    store.set('kp.theme', next);
+    document.documentElement.dataset.theme = next;
+    renderChrome();
+  };
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (still || !document.startViewTransition) {
+    if (!still) {
+      document.documentElement.classList.add('theming');
+      setTimeout(() => document.documentElement.classList.remove('theming'), 260);
+    }
+    apply();
+    return;
+  }
+  // радиус берём до перерисовки: renderChrome() заменит саму кнопку
+  const r = btn.getBoundingClientRect();
+  const x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const far = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  document.startViewTransition(apply).ready.then(() => {
+    document.documentElement.animate(
+      { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${far}px at ${x}px ${y}px)`] },
+      { duration: 420, easing: 'cubic-bezier(.4, 0, .2, 1)', pseudoElement: '::view-transition-new(root)' },
+    );
+  }).catch(() => { /* переход пропущен браузером — тема уже применена */ });
+}
+
 function toast(msg, ok = true) {
   const t = $('#toast'); t.textContent = msg; t.style.color = ok ? 'var(--good)' : 'var(--crit)'; t.classList.add('show');
   clearTimeout(toastTimer);
@@ -659,7 +690,7 @@ document.addEventListener('click', async (e) => {
   if (mode) { state.builder[+mode.parentElement.dataset.i].mode = mode.dataset.m; render(); return; }
   if (e.target.closest('#bld-calc')) { const st = builderStatus(); if (!st.error) await select(st.id); return; }
   const th = e.target.closest('#theme button');
-  if (th) { state.theme = th.dataset.theme; store.set('kp.theme', state.theme); document.documentElement.dataset.theme = state.theme; renderChrome(); return; }
+  if (th) { setTheme(th.dataset.theme, th); return; }
   if (e.target.closest('#collapse')) { state.collapsed = !state.collapsed; store.set('kp.collapsed', state.collapsed ? '1' : '0'); $('#shell').classList.toggle('collapsed', state.collapsed); return; }
   const gt = e.target.closest('#gates-filter');
   // Без сервера пересчитать нечего: не меняем состояние и не запоминаем флаг,

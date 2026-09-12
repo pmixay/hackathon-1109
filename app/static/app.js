@@ -257,7 +257,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
         const rs = checks.filter((r) => ids.includes(r.id)), okN = rs.filter((r) => r.ok).length;
         return `<tr class="grp"><td colspan="5"><span class="circ${okN === rs.length ? '' : ' bad'}">${okN === rs.length ? ICON.check : ICON.x}</span>${title}<span class="cnt">${okN} из ${rs.length}</span></td></tr>${rs.map(row).join('')}`;
       };
-      const table = `<div class="card"><h2>Все девять ограничений ${tag(sc)}${help(helpChecks + ` Запас: для «≤» порог минус факт, для «≥» факт минус порог; рядом доля от порога. Жёлтый статус — запас меньше ${Math.round(thin * 100)} % порога.`)}</h2>
+      const table = `<div class="card"><h2>Все девять ограничений ${tag(sc)} ${portfolioTag()}${help(helpChecks + ` Запас: для «≤» порог минус факт, для «≥» факт минус порог; рядом доля от порога. Жёлтый статус — запас меньше ${Math.round(thin * 100)} % порога.`)}</h2>
 <table class="chk"><tr><th>Условие</th><th class="num">Требование</th><th class="num">Факт</th><th class="num">Запас</th><th>Статус</th></tr>${group('Состав портфеля', COMPOSITION)}${group('Финансовые и качественные пороги', THRESHOLDS)}</table></div>`;
       const scn = Object.keys(d.meta.scenarios);
       const cell = (fn) => scn.map((k) => `<td class="num">${fn(k)}</td>`).join('');

@@ -23,7 +23,7 @@ const CHECK = {
   opex_limit: 'OPEX в год',
   vpub_floor: 'Общественная ценность',
   kcash_floor: 'Покрытие OPEX',
-  t_rep_floor: 'Средний t_rep',
+  t_rep_floor: 'Воспроизводимость t_rep',
 };
 const COMPOSITION = ['exact_lot_count', 'territorial_archetypes', 'capability_groups', 'public_core_lots'];
 const THRESHOLDS = ['c0_limit', 'opex_limit', 'vpub_floor', 'kcash_floor', 't_rep_floor'];
@@ -154,14 +154,14 @@ function renderPortfolio() {
     const okN = rs.filter((r) => r.ok).length;
     return `<div class="jobs"><div class="jg"><div class="jh${okN === rs.length ? '' : ' bad'}"><span class="circ">${okN === rs.length ? ICON.check : ICON.x}</span>${title}<span class="cnt">${okN} из ${rs.length}</span></div>${rs.map(jr).join('')}</div></div>`;
   };
-  const helpChecks = `Девять проверок <b>check_constraints</b>. Состав: ровно ${cons.selected_lots_exactly} лота, ≥ ${cons.min_territorial_archetypes} территориальных архетипа среди нефедеральных, ≥ ${cons.min_capability_groups} группы возможностей, ≥ ${cons.min_public_core_lots} лота с public core. Пороги: c0 ≤ ${fmt(d.meta.scenarios.BASE.c0_max, 0)} в BASE и ≤ ${fmt(d.meta.scenarios.STRESS.c0_max, 0)} в STRESS, OPEX ≤ ${cons.opex_max_mrub_per_year} млн руб./год, ценность ≥ ${fmt(cons.vpub_min_mrub_per_year, 0)}, cash / OPEX ≥ ${cons.kcash_min.toFixed(2)}, средний t_rep ≥ ${cons.t_rep_min}. Границы включительно. Процент справа — факт в долях порога: для «≤» ниже 100 % значит внутри лимита, для «≥» выше 100 % значит порог перекрыт. Переключатель BASE/STRESS в шапке меняет лимит c0.`;
+  const helpChecks = `Девять проверок <b>check_constraints</b>. Состав: ровно ${cons.selected_lots_exactly} лота, ≥ ${cons.min_territorial_archetypes} территориальных архетипа среди нефедеральных, ≥ ${cons.min_capability_groups} группы возможностей, ≥ ${cons.min_public_core_lots} лота с public core. Пороги: c0 ≤ ${fmt(d.meta.scenarios.BASE.c0_max, 0)} в BASE и ≤ ${fmt(d.meta.scenarios.STRESS.c0_max, 0)} в STRESS, OPEX ≤ ${cons.opex_max_mrub_per_year} млн руб./год, ценность ≥ ${fmt(cons.vpub_min_mrub_per_year, 0)}, cash / OPEX ≥ ${cons.kcash_min.toFixed(2)}, воспроизводимость t_rep (среднее по лотам) ≥ ${cons.t_rep_min}. Границы включительно. Процент справа — факт в долях порога: для «≤» ниже 100 % значит внутри лимита, для «≥» выше 100 % значит порог перекрыт. Переключатель BASE/STRESS в шапке меняет лимит c0.`;
 
   const lotRow = (r) => {
     const L = d.lots[r.lot];
     return `<tr><td><div class="name"><span class="code">${r.lot}</span> · ${esc(L.name)}</div><div class="sub">${esc(L.archetype)} архетип · ${L.groups.join(', ')}</div></td><td><span class="mode">${r.mode}${r.public_core ? ' · public core' : ''}</span></td><td class="num">${fmt(r.c0)}</td><td class="num">${fmt(r.opex, 2)}</td><td class="num">${fmt(r.vpub)}</td><td class="num">${fmt(r.cash, 2)}</td><td class="num">${fmt(r.t_rep, 2)}</td><td class="num">${fmt(r.readiness, 1)}</td><td class="num">${fmt(r.resilience, 1)}</td><td class="num">${fmt(r.scale, 1)}</td></tr>`;
   };
   const modesTxt = Object.entries(d.modes).map(([k, v]) => `<b>Режим ${k}:</b> k_c0 ${v.k_c0}, k_opex ${v.k_opex}, ценность ×${v.k_vpub}, якорные ×${v.k_anchor}, коммерческие ×${v.k_commercial}${v.public_core ? ', public core' : ''}`).join('. ');
-  const helpLots = `Значения после применения режима: c0 и OPEX умножены на k_c0 и k_opex, ценность — на k_vpub, поступления = якорные × k_anchor + коммерческие × k_commercial. ${modesTxt}. Готовность, устойчивость и тираж — индексы 1–5 из <b>lots.csv</b>. В строке «Портфель» — суммы; для t_rep и индексов — средние.`;
+  const helpLots = `Значения после применения режима: c0 и OPEX умножены на k_c0 и k_opex, ценность — на k_vpub, поступления = якорные × k_anchor + коммерческие × k_commercial. ${modesTxt}. t_rep — показатель воспроизводимости лота (коэффициент масштабируемости решения); готовность, устойчивость и тираж — индексы 1–5 из <b>lots.csv</b>. В строке «Портфель» — суммы; для t_rep и индексов — средние.`;
 
   // карточки сервисов: название для интерфейса и тексты из config/lots_ui.csv (файл участника записки)
   const svcCard = (r) => {

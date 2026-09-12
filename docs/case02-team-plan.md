@@ -39,7 +39,9 @@ Streamlit-приложение (или Jupyter/Colab, если так быстр
    ограничениям (уже есть в `tools/case02_enumerate.py`).
 6. Пользовательский режим D: коэффициенты и обоснование из отдельного файла
    допущений; при `public_core` базовый слой остаётся общедоступным.
-7. Экспорт `results/base.json`, `results/stress.json`, `results/alternatives.csv`.
+7. Экспорт `results/base.json`, `results/stress.json`, `results/alternatives.csv`
+   плюс `portfolio_detail.csv`, `portfolio_metrics.json`, `team_decision_config.json`
+   в формате стартового notebook организаторов (README §8.8).
    Это единственный источник цифр для записки и слайдов.
 8. Тесты: `apply_mode`, агрегация, границы (c0 = 1300 проходит BASE,
    1180 проходит STRESS, 1180.01 не проходит), собственные формулы роли B.
@@ -190,7 +192,7 @@ team-submission/
 │   ├── portfolio.json        # выбранный портфель и режимы (решение гейта)
 │   ├── assumptions.json      # собственные допущения с источниками
 │   └── weights.json
-├── results/                  # base.json, stress.json, alternatives.csv
+├── results/                  # base.json, stress.json, alternatives.csv + формат notebook организаторов
 ├── tests/
 ├── docs/
 │   ├── management-note.pdf   # 8–12 страниц

@@ -169,20 +169,6 @@ h1{font-family:var(--f-display);font-size:30px;font-weight:700;letter-spacing:-.
 .circ{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--good)}
 .circ.bad{background:var(--crit)}
 .circ svg{width:11px;height:11px}
-.jobs{border:1px solid var(--rule);border-radius:14px;overflow:hidden}
-.jobs2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-.jh{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);font-weight:700;font-size:14px}
-.jh .cnt{margin-left:auto;font-family:var(--f-num);font-size:13px;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
-.jh.bad .circ{background:var(--crit)}
-.jr{display:grid;grid-template-columns:20px 1fr 140px 140px;gap:12px;align-items:center;padding:11px 14px 11px 34px;border-top:1px solid var(--rule-2);font-size:14px}
-.jr .m{font-family:var(--f-num);font-size:13px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.jr .m b{color:var(--ink);font-weight:700}
-.jr.bad{background:var(--crit-soft)}.jr.bad .circ{background:var(--crit)}.jr.bad .mbar i{background:var(--crit)}.jr.bad .mtxt{color:var(--crit)}
-.mbar{height:7px;background:var(--rule-2);border-radius:4px;position:relative}
-.mbar i{position:absolute;left:0;top:0;height:100%;border-radius:4px;background:var(--brand)}
-.mbar i.thin{background:var(--warn)}
-.mtxt{font-size:12px;font-weight:500;color:var(--ink-2);text-align:right;margin-top:4px;font-variant-numeric:tabular-nums}
-.mtxt.thin{color:var(--warn)}
 
 /* ---- таблицы ---- */
 table{border-collapse:collapse;width:100%;font-size:14px}
@@ -263,7 +249,7 @@ tr.hl .lot{background:var(--hl-chip)}
 .acts2{display:flex;gap:10px;align-items:center;margin-top:18px}
 .fmt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;font-size:13.5px}.fmt b{display:block;margin-bottom:10px;font-size:14.5px}
 
-@media (max-width:1280px){.tiles,.hero{grid-template-columns:repeat(3,minmax(0,1fr))}.row2,.row2.w,.jobs2,.sum{grid-template-columns:1fr}.svc{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1280px){.tiles,.hero{grid-template-columns:repeat(3,minmax(0,1fr))}.row2,.row2.w,.sum{grid-template-columns:1fr}.svc{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ---- метки вариантов, места, подсказки-предположения ---- */
 .tag.warn{background:var(--warn-soft);color:var(--warn-ink)}

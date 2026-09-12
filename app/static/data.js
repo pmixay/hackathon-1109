@@ -73,7 +73,7 @@ function validateConfig(text) {
   if (!scen || typeof scen !== 'object' || !Object.keys(scen).length) errors.push('нет объекта scenarios');
   else {
     for (const [n, s] of Object.entries(scen)) if (!s || !isNum(s.c0_max_mrub)) errors.push(`scenarios.${n}: нет числового c0_max_mrub`);
-    if (!('BASE' in scen && 'STRESS' in scen)) warnings.push('ожидались сценарии BASE и STRESS');
+    if (!('BASE' in scen && 'STRESS' in scen)) errors.push('нужны сценарии BASE и STRESS — на них построены расчёт и экраны');
   }
   if (!('case_version' in cfg)) warnings.push('нет case_version');
   return { ok: !errors.length, errors, warnings, summary: { case_version: cfg.case_version, scenarios: scen ? Object.keys(scen) : [] }, cfg };
@@ -107,7 +107,7 @@ export function renderData(ctx) {
   const allOk = anyLoaded && FILES.every((n) => !upload.report[n] || upload.report[n].ok);
   const previews = FILES.filter((n) => upload.report[n]?.ok).map((n) => previewOf(n, ctx)).join('');
   const helpUpload = 'Три файла в формате организаторов, можно загружать по одному: lots.csv (14 полей на лот), access_modes.csv (коэффициенты режимов и public_core), case_config.json (constraints_common и scenarios с c0_max_mrub). Файлы проверяются здесь на структуру и типы, затем на сервере, сохраняются в app/data/uploads и становятся активным набором; все экраны пересчитываются. Непереданные файлы берутся из текущего набора. «Вернуть файлы организаторов» возвращает исходный набор из cases/case02.';
-  const fmtCard = `<div class="card"><h2>Формат организаторов${help('Обязательные столбцы и типы. Лишние столбцы игнорируются, порядок не важен. Разделитель — запятая, кодировка UTF-8. capability_groups — список через точку с запятой (EO; PNT/InSAR; SATCOM; SSA), federal и public_core — true/false.')}</h2>
+  const fmtCard = `<div class="card"><h2>Формат организаторов${help('Обязательные столбцы и типы. Лишние столбцы игнорируются, порядок не важен. Разделитель — запятая, кодировка UTF-8. capability_groups — список через точку с запятой (EO; PNT/InSAR; SATCOM; SSA), federal и public_core — true/false. В scenarios обязательны BASE и STRESS (на них построены расчёт и экраны), другие сценарии допускаются.')}</h2>
 <div class="fmt"><div><b>lots.csv</b><div class="cols">${LOT_COLUMNS.map((c) => `<span class="lot${LOT_NUMERIC.includes(c) ? '' : ' txt'}">${c}</span>`).join('')}</div></div>
 <div><b>access_modes.csv</b><div class="cols">${MODE_COLUMNS.map((c) => `<span class="lot${c === 'mode_id' || c === 'public_core' ? ' txt' : ''}">${c}</span>`).join('')}</div></div>
 <div><b>case_config.json</b><div class="cols"><span class="lot txt">case_version</span>${CONFIG_COMMON.map((c) => `<span class="lot">constraints_common.${c}</span>`).join('')}<span class="lot">scenarios.&lt;имя&gt;.c0_max_mrub</span></div></div></div>
@@ -125,7 +125,7 @@ ${previews}`,
 }
 
 function previewOf(n, ctx) {
-  const { esc, fmt } = ctx, rep = upload.report[n];
+  const { esc } = ctx, rep = upload.report[n];
   if (n === 'case_config.json') {
     const c = rep.cfg;
     const rows = Object.entries(c.constraints_common || {}).map(([k, v]) => `<tr><td><span class="code">${k}</span></td><td class="num">${esc(String(v))}</td></tr>`).join('');
@@ -167,8 +167,13 @@ export async function mountData(ctx) {
   main.querySelector('#clear')?.addEventListener('click', () => { upload.files = {}; upload.report = {}; ctx.render(); });
   main.querySelector('#reset')?.addEventListener('click', async (e) => {
     if (e.currentTarget.classList.contains('off')) return;
-    const r = await fetch('/api/data/reset', { method: 'POST' });
-    if (r.ok) { state.dataset = null; upload.files = {}; upload.report = {}; await ctx.reload(); ctx.toast('Возвращены файлы организаторов'); }
+    try {
+      const r = await fetch('/api/data/reset', { method: 'POST' });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.statusText);
+      state.dataset = null; upload.files = {}; upload.report = {};
+      await ctx.reload();
+      ctx.toast('Возвращены файлы организаторов');
+    } catch (err) { ctx.toast('Не удалось вернуть файлы организаторов: ' + err.message, false); }
   });
   main.querySelector('#apply')?.addEventListener('click', async (e) => {
     if (e.currentTarget.classList.contains('off')) return;

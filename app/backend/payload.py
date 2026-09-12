@@ -84,9 +84,12 @@ def _alternatives(lots):
     order = {lid: i for i, lid in enumerate(lots)}
     out = []
     for v in variants:
-        sel = sorted(((p["lot_id"], p["mode_id"]) for p in v["selection"]), key=lambda x: order.get(x[0], 99))
-        out.append({"name": v["name"], "id": model.combo_id(sel), "note": v.get("note", "")})
-    return out
+        name, parts = v.get("name"), v.get("selection") or []
+        if not name or not parts or not all(isinstance(p, dict) and "lot_id" in p and "mode_id" in p for p in parts):
+            continue  # неполная запись файла участника: пропускаем, не роняя сборку
+        sel = sorted(((p["lot_id"], p["mode_id"]) for p in parts), key=lambda x: order.get(x[0], 99))
+        out.append({"name": name, "id": model.combo_id(sel), "note": v.get("note", "")})
+    return out  # варианты с неизвестными лотами отбрасывает build_dashboard: их id нет в перечислении
 
 
 def _combo_payload(rec, score, rank, kcash_min):
@@ -148,6 +151,8 @@ def build_dashboard(selected_id: str | None = None) -> dict:
     ru = _load("lots_ru.json")
     ui = _lots_ui()
     final_id = _load("portfolio.json")["selected"]
+    if final_id not in records:  # набор данных без лотов решения гейта: экраны построены вокруг FINAL, собирать нечего
+        raise ValueError(f"Портфель FINAL из app/config/portfolio.json отсутствует в наборе данных: {final_id}")
     selected_id = selected_id or final_id
     if selected_id not in records:
         raise ValueError(f"Неизвестная комбинация: {selected_id}")

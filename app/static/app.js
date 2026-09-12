@@ -69,9 +69,16 @@ const signed = (v, d = 1) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v
 const pct = (x) => Math.round(x * 100) + ' %';
 const modesOf = (c) => c.selection.map((s) => s.mode).join('');
 const lotsOf = (c) => c.selection.map((s) => s.lot).join(' · ');
-const help = (text, open = false) => `<span class="help${open ? ' open' : ''}"><i>?</i><div class="pop">${text}</div></span>`;
+const help = (text) => `<span class="help"><i>?</i><div class="pop">${text}</div></span>`;
 const tag = (t, cls = '') => `<span class="tag${cls ? ' ' + cls : ''}">${esc(t)}</span>`;
 const more = (tab, label, page = null) => `<a class="more" data-tab="${tab}"${page ? ` data-page="${page}"` : ''}>${label} ${ICON.arrow}</a>`;
+
+// localStorage может быть недоступен (приватный режим, запрет cookies) — интерфейс работает и без памяти между сессиями
+const store = {
+  get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* без памяти между сессиями */ } },
+  del: (k) => { try { localStorage.removeItem(k); } catch (e) { /* нечего удалять */ } },
+};
 
 // ---------- состояние ----------
 const state = {
@@ -83,7 +90,7 @@ const state = {
   selected: null,
   builder: null,       // строки конструктора [{lot, mode} × 4]
   comparator: null,    // имя альтернативы на экране «Почему FINAL»
-  collapsed: localStorage.getItem('kp.collapsed') === '1',
+  collapsed: store.get('kp.collapsed') === '1',
   theme: document.documentElement.dataset.theme || 'light',
   dataset: null,
 };
@@ -142,6 +149,8 @@ const chips = (c, base = null) => {
 const checksOf = (c, scenario) => c.checks[scenario];
 const stChip = (ok, label) => `<span class="st ${ok ? 'ok' : 'fail'}">${label}</span>`;
 const altName = (id) => (state.data.alternatives || []).find((a) => a.id === id)?.name || null;
+// причина провала STRESS коротко («c0», «лотов с public core»…) для чипа FAIL в таблицах
+const stressWhy = (c) => { const bad = checksOf(c, 'STRESS').filter((r) => !r.ok); return bad.some((r) => r.id === 'c0_limit') ? 'c0' : SHORT[bad[0]?.id] || ''; };
 // запас по проверке: для «≤» порог − факт, для «≥» факт − порог, для «=» 0 при совпадении
 const marginOf = (r) => (r.op === '<=' ? r.threshold - r.fact : r.op === '>=' ? r.fact - r.threshold : r.ok ? 0 : r.fact - r.threshold);
 function failText(r) {
@@ -269,7 +278,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       const rows = [...d.suggestions, ...d.rejected.filter((id) => !d.suggestions.includes(id))].map((id) => {
         const c = combo(id), isSel = id === state.selected, dim = !c.ok.STRESS, nm = altName(id);
         const why = isSel ? 'показана' : describeChange(s, c) + (dim ? ' · не проходит STRESS' : '');
-        return `<tr class="pick${isSel ? ' hl' : ''}${dim ? ' dim' : ''}" data-id="${esc(id)}"><td><span class="radio${isSel ? ' on' : ''}"></span></td><td>${chips(c, s)}${nm ? ` <span class="vn">${nm}</span>` : ''}</td><td class="why">${esc(why)}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL · ' + (checksOf(c, 'STRESS').find((r) => !r.ok)?.id === 'c0_limit' ? 'c0' : 'см. стресс'))}</td><td class="num">${isSel ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`;
+        return `<tr class="pick${isSel ? ' hl' : ''}${dim ? ' dim' : ''}" data-id="${esc(id)}"><td><span class="radio${isSel ? ' on' : ''}"></span></td><td>${chips(c, s)}${nm ? ` <span class="vn">${nm}</span>` : ''}</td><td class="why">${esc(why)}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL · ' + stressWhy(c))}</td><td class="num">${isSel ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`;
       }).join('');
       return `<div class="card"><h2>Предложенные комбинации ${portfolioTag()}${help(helpSug)}</h2>
 <table><tr><th></th><th>Состав и режимы</th><th>Отличие от показанной</th><th class="num">c0</th><th class="num">Ценность</th><th class="num">Cash / OPEX</th><th>BASE</th><th>STRESS</th><th class="num">Балл · место</th></tr>${rows}</table></div>`;
@@ -336,8 +345,8 @@ function renderWhy() {
   const val = (c, k) => (k === 'margin' ? d.meta.scenarios.STRESS.c0_max - c.metrics.c0 : c.metrics[k]);
   const body = {
     decision() {
-      const hero = `<div class="card"><h2>Выбранный командой вариант ${tag('FINAL')}${help(`Формулировки — из записки участника 3 (<b>docs/note/02-selection.md</b>), тексты хранятся в <b>app/config/team.json</b>. Балл и место посчитаны на полном множестве ${t.stress_feasible} STRESS-допустимых комбинаций; веса утверждены до просмотра результата. Источник: ${esc(why.source || '')}.`)}</h2>
-<div class="why-hero"><div class="why-txt"><div class="why-st">${esc(why.status || 'Выбранный командой вариант после управленческого отбора.')}</div><p>${esc(why.headline || '')}</p>${why.pareto ? `<p class="why-pareto">${esc(why.pareto)}</p>` : ''}</div>
+      const hero = `<div class="card"><h2>Выбранный командой вариант ${tag('FINAL')}${help(`Формулировки — из записки участника 3 (<b>docs/note/02-selection.md</b>), тексты хранятся в <b>app/config/team.json</b>. Балл и место посчитаны на полном множестве ${t.stress_feasible} STRESS-допустимых комбинаций; веса утверждены до просмотра результата.${why.source ? ' Источник: ' + esc(why.source) + '.' : ''}`)}</h2>
+<div class="why-hero"><div class="why-txt"><div class="why-st">${esc(why.status || 'Выбранный командой вариант после управленческого отбора.')}</div>${why.headline ? `<p>${esc(why.headline)}</p>` : ''}${why.pareto ? `<p class="why-pareto">${esc(why.pareto)}</p>` : ''}</div>
 <div class="why-stats"><div class="ws"><span>Состав</span>${chips(f)}</div><div class="ws"><span>Место по баллу</span><b>${f.rank ?? '—'}<small>из ${t.stress_feasible}</small></b></div><div class="ws"><span>Запас STRESS по c0</span><b>${signed(mS)}<small>млн руб.</small></b></div><div class="ws"><span>Операционный баланс</span><b>${signed(f.metrics.cash - f.metrics.opex)}<small>млн руб./год</small></b></div></div></div></div>`;
       const alt = (d.alternatives || []).map((a) => combo(a.id) && { ...a, c: combo(a.id) }).filter(Boolean).sort((a, b) => (a.id === d.final ? -1 : b.id === d.final ? 1 : (b.c.rank ?? 1e9) === (a.c.rank ?? 1e9) ? 0 : (a.c.rank ?? 1e9) - (b.c.rank ?? 1e9)));
       const rows = alt.map(({ name, id, note, c }) => `<tr class="${id === d.final ? 'hl' : ''}"><td><div class="alt-h">${chips(c, f)}<span class="vn">${esc(name)}</span></div><div class="sub">${esc(note)}</div></td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex, 2)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 3)}</td><td class="num ${c.ok.STRESS ? '' : 'neg'}">${signed(val(c, 'margin'))}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')} ${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL')}</td><td class="num">${c.rank ? `<b>${c.score.toFixed(3)}</b><span class="rk">${c.rank}-е</span>` : '<span class="muted">без места</span>'}</td></tr>`).join('');
@@ -446,7 +455,7 @@ function renderCompare() {
     },
     table() {
       const helpTable = `${items.length} комбинаций, посчитанных по одним правилам: предложенные относительно показанного портфеля и отвергнутая с максимумом ценности. Балл — взвешенная сумма нормированных (min–max по ${d.meta.totals.stress_feasible} допустимым в STRESS) критериев с весами: ценность ${w.vpub}, c0 ${w.c0}, cash / OPEX ${w.kcash}, готовность ${w.readiness}, устойчивость ${w.resilience}, тираж ${w.scale}, запас по STRESS ${w.stress_margin}. Подсвечен показанный портфель. c0, OPEX и cash — млн руб., ценность — усл. млн руб./год. Именованные варианты записки — на экране «Почему FINAL».`;
-      const rows = items.map((c) => `<tr class="${c.id === s.id ? 'hl' : ''}"><td>${chips(c)}${altName(c.id) ? ` <span class="vn">${altName(c.id)}</span>` : ''}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td class="num">${fmt(c.metrics.t_rep, 3)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL · c0')}</td><td class="num">${c.id === s.id ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`).join('');
+      const rows = items.map((c) => `<tr class="${c.id === s.id ? 'hl' : ''}"><td>${chips(c)}${altName(c.id) ? ` <span class="vn">${altName(c.id)}</span>` : ''}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td class="num">${fmt(c.metrics.t_rep, 3)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL · ' + stressWhy(c))}</td><td class="num">${c.id === s.id ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`).join('');
       return `<div class="card"><h2>Комбинации в сравнении${help(helpTable)}</h2>
 <table><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">Cash / OPEX</th><th class="num">t_rep</th><th>BASE</th><th>STRESS</th><th class="num">Балл · место</th></tr>${rows}</table></div>`;
     },
@@ -506,7 +515,7 @@ ${rowD('Стартовые затраты c0', fail.metrics.c0, s.metrics.c0, 1)
 }
 
 // ---------- сборка ----------
-const ctx = { state, esc, fmt, help, tag, icon: ICON, head: (title, pill) => pageHead(title, pill), tab: () => curTab(), toast: (...a) => toast(...a), render: () => render(), reload: async () => { state.data = await loadDashboard(); state.selected = state.data.selected; state.builder = null; localStorage.removeItem('kp.selected'); render(); } };
+const ctx = { state, esc, help, icon: ICON, head: (title, pill) => pageHead(title, pill), tab: () => curTab(), toast: (...a) => toast(...a), render: () => render(), reload: async () => { state.data = await loadDashboard(); state.selected = state.data.selected; state.builder = null; store.del('kp.selected'); render(); } };
 function render() {
   renderChrome();
   const pages = { portfolio: renderPortfolio, why: renderWhy, compare: renderCompare, stress: renderStress, data: () => renderData(ctx) };
@@ -521,18 +530,22 @@ function go(page, tab) {
   render();
 }
 async function select(id) {
-  if (id === state.selected) return;
-  if (state.api) {
-    try { state.data = await loadDashboard(id); } catch (e) { toast('Не рассчитано: ' + e.message, false); return; }
-  } else if (!state.data.combinations[id]) { toast('Без сервера доступны только комбинации из собранного файла', false); return; }
-  state.selected = id;
+  if (id !== state.selected) {
+    if (state.api) {
+      try { state.data = await loadDashboard(id); } catch (e) { toast('Не рассчитано: ' + e.message, false); return; }
+    } else if (!state.data.combinations[id]) { toast('Без сервера доступны только комбинации из собранного файла', false); return; }
+    state.selected = id;
+    store.set('kp.selected', id);
+  }
+  // строки конструктора всегда приводятся к показанному портфелю — в том числе «Вернуть FINAL» при неизменённом выборе
   state.builder = state.data.combinations[id].selection.map((x) => ({ lot: x.lot, mode: x.mode }));
-  localStorage.setItem('kp.selected', id);
   render();
 }
+let toastTimer = 0;
 function toast(msg, ok = true) {
   const t = $('#toast'); t.textContent = msg; t.style.color = ok ? 'var(--good)' : 'var(--crit)'; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
 }
 const closeMenus = () => document.querySelectorAll('.help.open,.dd.open').forEach((o) => o.classList.remove('open'));
 
@@ -561,10 +574,10 @@ document.addEventListener('click', async (e) => {
   if (mode) { state.builder[+mode.parentElement.dataset.i].mode = mode.dataset.m; render(); return; }
   if (e.target.closest('#bld-calc')) { const st = builderStatus(); if (!st.error) await select(st.id); return; }
   const th = e.target.closest('#theme button');
-  if (th) { state.theme = th.dataset.theme; localStorage.setItem('kp.theme', state.theme); document.documentElement.dataset.theme = state.theme; renderChrome(); return; }
-  if (e.target.closest('#collapse')) { state.collapsed = !state.collapsed; localStorage.setItem('kp.collapsed', state.collapsed ? '1' : '0'); $('#shell').classList.toggle('collapsed', state.collapsed); return; }
+  if (th) { state.theme = th.dataset.theme; store.set('kp.theme', state.theme); document.documentElement.dataset.theme = state.theme; renderChrome(); return; }
+  if (e.target.closest('#collapse')) { state.collapsed = !state.collapsed; store.set('kp.collapsed', state.collapsed ? '1' : '0'); $('#shell').classList.toggle('collapsed', state.collapsed); return; }
   const row = e.target.closest('tr.pick');
-  if (row) { await select(row.dataset.id); return; }
+  if (row) { if (row.dataset.id !== state.selected) await select(row.dataset.id); return; }
   if (e.target.closest('#export')) {
     if (!state.api) return toast('Экспорт доступен только с сервером (python app/server.py)', false);
     try {
@@ -583,9 +596,15 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenus
 window.addEventListener('hashchange', () => { const before = hashOf(); if (parseHash() && hashOf() !== before) render(); });
 
 (async () => {
-  const remembered = localStorage.getItem('kp.selected');
-  try { state.data = await loadDashboard(remembered || undefined); } catch (e) { state.data = await loadDashboard(); }
-  if (remembered && !state.data.combinations[remembered]) { localStorage.removeItem('kp.selected'); if (state.api) state.data = await loadDashboard(); }
+  const remembered = store.get('kp.selected');
+  try {
+    // запомненный id может устареть (другой набор данных) — тогда сервер отвечает 400 и берём портфель по умолчанию
+    try { state.data = await loadDashboard(remembered || undefined); } catch (e) { state.data = await loadDashboard(); }
+  } catch (e) {
+    $('#main').innerHTML = `<div class="empty">Не удалось загрузить данные: ${esc(e.message)}. Запустите python app/server.py или соберите файл командой python app/build.py.</div>`;
+    return;
+  }
+  if (remembered && !state.data.combinations[remembered]) store.del('kp.selected');
   state.selected = state.data.combinations[remembered] ? remembered : state.data.selected;
   parseHash();
   render();

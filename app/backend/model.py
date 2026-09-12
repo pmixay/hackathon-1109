@@ -55,6 +55,8 @@ def make_scorer(records, weights, config, feasible_scenario="STRESS"):
         "stress_margin": (lambda m: stress_max - m["c0_mrub"], +1),
     }
     feasible = [r for r in records.values() if r["ok"][feasible_scenario]]
+    if not feasible:  # ни одна комбинация не проходит STRESS (чужой набор данных): нормируем по всем, мест никто не получит
+        feasible = list(records.values())
     lo, hi = {}, {}
     for key, (fn, _) in criteria.items():
         vals = [fn(r["metrics"]) for r in feasible]

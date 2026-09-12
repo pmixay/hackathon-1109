@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from backend import evaluate as ev, model, payload  # noqa: E402
+from backend import evaluate as ev, ingest, model, payload  # noqa: E402
 
 SELECTED = "FIRE:A|AGRI:B|TRANS:B|ENV:A"
 
@@ -207,6 +207,75 @@ class Payload2(unittest.TestCase):
         for lid in ("FIRE", "ENV", "AGRI", "TRANS"):
             card = self.d["lots"][lid]["card"]
             self.assertTrue(card["payer"] and card["risk"] and card["problem"], lid)
+
+
+class EdgeCases(unittest.TestCase):
+    """Крайние входы: неполные альтернативы, team.json без why_final, FINAL вне набора, ни одной допустимой комбинации, набор без STRESS."""
+
+    def _with_load(self, name, value, fn):
+        orig = payload._load
+        payload._load = lambda n: value if n == name else orig(n)
+        try:
+            return fn()
+        finally:
+            payload._load = orig
+
+    def test_broken_alternatives_are_skipped(self):
+        import json
+        import tempfile
+
+        lots, _, _, records = payload._enumerated()
+
+        def four(*pairs):
+            return [{"lot_id": lot, "mode_id": mode} for lot, mode in pairs]
+
+        variants = {"variants": [
+            {"name": "X", "selection": four(("NOPE", "A"), ("FIRE", "A"), ("ENV", "A"), ("AGRI", "A"))},  # неизвестный лот
+            {"name": "Y"},                                                                              # без selection
+            {"selection": four(("FIRE", "A"))},                                                          # без name
+            {"name": "Z", "selection": [{"lot_id": "FIRE"}]},                                             # без mode_id
+            {"name": "V1", "selection": four(("FIRE", "A"), ("AGRI", "A"), ("TRANS", "A"), ("ENV", "A"))},
+        ]}
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "config").mkdir()
+            (Path(tmp) / "config" / "alternatives.json").write_text(json.dumps(variants), encoding="utf-8")
+            orig = payload.ROOT
+            payload.ROOT = Path(tmp)
+            try:
+                alts = payload._alternatives(lots)
+                d = payload.build_dashboard(SELECTED)
+            finally:
+                payload.ROOT = orig
+        self.assertEqual([a["name"] for a in alts], ["X", "V1"])
+        self.assertNotIn(alts[0]["id"], records)
+        self.assertEqual([a["name"] for a in d["alternatives"]], ["V1"])   # X отброшен: его нет в перечислении
+        self.assertIn(d["alternatives"][0]["id"], d["combinations"])
+
+    def test_team_without_why_final(self):
+        d = self._with_load("team.json", {}, lambda: payload.build_dashboard(SELECTED))
+        self.assertEqual(d["why_final"], {})
+        self.assertEqual(d["final"], SELECTED)
+
+    def test_final_missing_in_dataset(self):
+        with self.assertRaisesRegex(ValueError, "portfolio.json"):
+            self._with_load("portfolio.json", {"selected": "NOPE:A|FIRE:A|ENV:A|AGRI:A"}, lambda: payload.build_dashboard(SELECTED))
+
+    def test_scorer_without_feasible_combinations(self):
+        _, _, config, records = payload._enumerated()
+        recs = {cid: dict(r, ok={"BASE": r["ok"]["BASE"], "STRESS": False}) for cid, r in records.items()}
+        score = model.make_scorer(recs, {"vpub": 0.5, "c0": 0.5}, config)
+        self.assertTrue(0 <= score(recs[SELECTED]) <= 1)
+        self.assertEqual(len(score.breakdown(recs[SELECTED])), 7)
+
+    def test_config_requires_base_and_stress(self):
+        import json
+
+        cfg = {"case_version": "1.1", "constraints_common": {k: 1 for k in ingest.CONFIG_COMMON}, "scenarios": {"BASE": {"c0_max_mrub": 1300}, "CRISIS": {"c0_max_mrub": 1180}}}
+        rep = ingest.validate_config(json.dumps(cfg))
+        self.assertFalse(rep["ok"])
+        self.assertTrue(any("STRESS" in e for e in rep["errors"]))
+        cfg["scenarios"]["STRESS"] = {"c0_max_mrub": 1180}
+        self.assertTrue(ingest.validate_config(json.dumps(cfg))["ok"])
 
 
 class CrossCheckKosmo(unittest.TestCase):

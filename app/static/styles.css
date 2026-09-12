@@ -13,15 +13,18 @@
   --f-num:"Montserrat","Segoe UI",Arial,sans-serif;
   --f-code:"Montserrat","Segoe UI",Arial,sans-serif;
   --code-tracking:.03em;}
+/* Тёмная тема — «зелёные чернила»: фон глубокий и холодный, зелёный работает сигналом,
+   а запас и «сверх порога» уходят в тёплую латунь, чтобы шкала читалась по температуре.
+   Рельеф даёт только верхняя кромка панели в --shadow-sm: рамок у панелей нет. */
 :root[data-theme="dark"]{color-scheme:dark;
-  --bg:#0e1411;--surface:#161e19;--surface-2:#1b2520;--ink:#e9f0ea;--ink-2:#b3c0b7;--muted:#7d8b82;--rule:#26322b;--rule-2:#1f2a24;
-  --brand:#63a884;--brand-soft:#1b2c23;--on-brand:#08130d;--accent:#63a884;
-  --good:#5ba077;--good-soft:#1a2a21;--good-ink:#a8c9b5;
-  --crit:#c9705f;--crit-soft:#2e201e;--crit-ink:#e0aca3;
-  --warn:#c19a4c;--warn-soft:#2c271a;--warn-ink:#d8c391;
-  --side:#08301f;--side-ink:#b6ccbc;--side-dim:rgba(255,255,255,.38);--side-on-1:#215c3d;--side-on-2:#1b5236;--side-hover:rgba(255,255,255,.07);
-  --seg-a:#3d7357;--seg-b:#7aa891;--hl-chip:#23362b;--s1:#5f9c79;--s2:#b8904f;
-  --shadow:0 12px 32px rgba(0,0,0,.55);--shadow-sm:0 1px 2px rgba(0,0,0,.4);}
+  --bg:#09140f;--surface:#0f1d17;--surface-2:#17271f;--ink:#e2efe7;--ink-2:#a5bdb0;--muted:#86a094;--rule:#1e3228;--rule-2:#142219;
+  --brand:#55b894;--brand-soft:#123028;--on-brand:#03130c;--accent:#55b894;
+  --good:#4fb28a;--good-soft:#102b23;--good-ink:#9ed3bb;
+  --crit:#cc7468;--crit-soft:#2d1e1b;--crit-ink:#e6b2a9;
+  --warn:#c39e53;--warn-soft:#2a2417;--warn-ink:#ddc795;
+  --side:#05100c;--side-ink:#aec5b8;--side-dim:rgba(226,239,231,.4);--side-on-1:#1c5741;--side-on-2:#164c39;--side-hover:rgba(255,255,255,.07);
+  --seg-a:#2f7a5f;--seg-b:#b8904f;--hl-chip:#163128;--s1:#55b894;--s2:#b8904f;
+  --shadow:0 14px 36px rgba(0,0,0,.55);--shadow-sm:inset 0 1px 0 rgba(190,240,214,.07),0 2px 6px rgba(0,0,0,.35);}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5}
 a{color:var(--brand);text-decoration:none}a:hover{color:var(--accent)}
@@ -81,6 +84,16 @@ button{font-family:inherit}
 .tsw button{width:38px;height:34px;border:0;border-radius:9px;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
 .tsw button:hover{color:var(--ink)}
 .tsw button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+/* смена темы: круг раскрывается от кнопки (радиус считает app.js), поэтому
+   стандартное растворение View Transitions выключаем — иначе оно накладывается */
+::view-transition-old(root),::view-transition-new(root){animation:none}
+/* запасной путь там, где View Transitions нет: переход цвета живёт только во время смены,
+   постоянных переходов на всём дереве не остаётся */
+html.theming,html.theming *:not(svg *){transition:background-color .24s ease,border-color .24s ease,color .24s ease,fill .24s ease,box-shadow .24s ease}
+@media (prefers-reduced-motion: reduce){
+  html.theming,html.theming *{transition:none !important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important}
+}
 .tsw svg{width:17px;height:17px}
 
 /* ---- страница ---- */

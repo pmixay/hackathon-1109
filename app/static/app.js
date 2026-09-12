@@ -163,6 +163,18 @@ function renderPortfolio() {
   const modesTxt = Object.entries(d.modes).map(([k, v]) => `<b>Режим ${k}:</b> k_c0 ${v.k_c0}, k_opex ${v.k_opex}, ценность ×${v.k_vpub}, якорные ×${v.k_anchor}, коммерческие ×${v.k_commercial}${v.public_core ? ', public core' : ''}`).join('. ');
   const helpLots = `Значения после применения режима: c0 и OPEX умножены на k_c0 и k_opex, ценность — на k_vpub, поступления = якорные × k_anchor + коммерческие × k_commercial. ${modesTxt}. Готовность, устойчивость и тираж — индексы 1–5 из <b>lots.csv</b>. В строке «Портфель» — суммы; для t_rep и индексов — средние.`;
 
+  // карточки сервисов: название для интерфейса и тексты из config/lots_ui.csv (файл участника записки)
+  const svcCard = (r) => {
+    const L = d.lots[r.lot], c = L.card;
+    const head = `<div class="sv-h"><div class="name"><span class="code">${r.lot}</span> · ${esc(L.name)}</div><span class="mode">${r.mode}${r.public_core ? ' · public core' : ''}</span></div>`;
+    if (!c) return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}</div><p class="muted">Карточка сервиса не подготовлена</p></div>`;
+    const sameMode = !c.mode || c.mode === r.mode;
+    const row = (k, v) => (v ? `<dt>${k}</dt><dd>${esc(v)}</dd>` : '');
+    const access = sameMode ? row('Базовый доступ', c.access_base) + row('Дополнительно', c.access_extra) : `<dt>Доступ</dt><dd class="muted">описан для режима ${esc(c.mode)}, в комбинации — ${r.mode}</dd>`;
+    return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}${c.user ? ' · ' + esc(c.user) : ''}</div><p>${esc(c.description)}</p><dl>${access}${row('KPI', c.kpi)}${row('При сбое', c.on_failure)}</dl></div>`;
+  };
+  const helpSvc = `Карточки сервисов из <b>config/lots_ui.csv</b> — файла участника записки (формат «участник 5»: название для интерфейса, короткое описание, основной пользователь, базовый и дополнительный доступ, главный KPI, что показать при сбое). Название лота берётся отсюда же, поэтому в интерфейсе и записке оно одно. Правила доступа описаны для режима из карточки; если в выбранной комбинации режим другой, строки доступа не показываются. Плательщик, оператор, приёмка и риски — в полных карточках записки, в инструменте не дублируются.`;
+
   return `<div class="top"><h1>Портфель</h1>${pill}</div>
 <div class="card"><h2>Предложенные комбинации<span class="u">допустимые в STRESS, ранжированы моделью выбора</span>${help(helpSug)}</h2>
 <table><tr><th></th><th>Состав и режимы</th><th>Отличие от выбранной</th><th class="num">c0</th><th class="num">Ценность</th><th class="num">Cash / OPEX</th><th>BASE</th><th>STRESS</th><th class="num">Балл</th></tr>${rows}</table></div>
@@ -171,7 +183,8 @@ ${tiles}
 <div class="card"><h2>Лоты портфеля<span class="u">млн руб.; ценность в усл. млн руб./год; индексы 1–5</span>${help(helpLots)}</h2>
 <table><tr><th>Лот</th><th>Режим</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">t_rep</th><th class="num">Готовность</th><th class="num">Устойчивость</th><th class="num">Тираж</th></tr>
 ${s.per_lot.map(lotRow).join('')}
-<tr class="total"><td>Портфель</td><td></td><td class="num">${fmt(m.c0)}</td><td class="num">${fmt(m.opex, 2)}</td><td class="num">${fmt(m.vpub)}</td><td class="num">${fmt(m.cash, 2)}</td><td class="num">${fmt(m.t_rep, 3)}</td><td class="num">${fmt(m.readiness, 2)}</td><td class="num">${fmt(m.resilience, 2)}</td><td class="num">${fmt(m.scale, 2)}</td></tr></table></div>`;
+<tr class="total"><td>Портфель</td><td></td><td class="num">${fmt(m.c0)}</td><td class="num">${fmt(m.opex, 2)}</td><td class="num">${fmt(m.vpub)}</td><td class="num">${fmt(m.cash, 2)}</td><td class="num">${fmt(m.t_rep, 3)}</td><td class="num">${fmt(m.readiness, 2)}</td><td class="num">${fmt(m.resilience, 2)}</td><td class="num">${fmt(m.scale, 2)}</td></tr></table></div>
+<div class="card"><h2>Сервисы портфеля<span class="u">что получает пользователь каждого лота</span>${help(helpSvc)}</h2><div class="svc">${s.per_lot.map(svcCard).join('')}</div></div>`;
 }
 
 // ---------- страница «Сравнение» ----------

@@ -24,6 +24,36 @@ def _load(name):
         return json.load(f)
 
 
+# Карточки сервисов (app/config/lots_ui.csv, формат участника 5 — записка): русские заголовки как в файле → поля контракта.
+UI_COLUMNS = {
+    "Название для интерфейса": "name",
+    "Короткое описание": "description",
+    "Основной пользователь": "user",
+    "Режим": "mode",
+    "Базовый доступ": "access_base",
+    "Дополнительный доступ": "access_extra",
+    "Главный KPI": "kpi",
+    "Что показать при сбое": "on_failure",
+}
+
+
+def _lots_ui() -> dict:
+    """lot_id → карточка сервиса. Файл правит участник записки; лоты без строки получают card = null."""
+    import csv
+
+    path = CONFIG / "lots_ui.csv"
+    if not path.exists():
+        return {}
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        rows = list(csv.DictReader(f))
+    out = {}
+    for row in rows:
+        lid = (row.get("lot_id") or "").strip()
+        if lid:
+            out[lid] = {UI_COLUMNS[k]: (row.get(k) or "").strip() for k in UI_COLUMNS if k in row}
+    return out
+
+
 @lru_cache(maxsize=4)
 def _enumerated_for(root: str):
     lots, modes, config = ev.load_case(Path(root))
@@ -88,6 +118,7 @@ def build_dashboard(selected_id: str | None = None) -> dict:
     lots, modes, config, records = _enumerated()
     model_cfg = _load("model.json")
     ru = _load("lots_ru.json")
+    ui = _lots_ui()
     selected_id = selected_id or _load("portfolio.json")["selected"]
     if selected_id not in records:
         raise ValueError(f"Неизвестная комбинация: {selected_id}")
@@ -124,8 +155,9 @@ def build_dashboard(selected_id: str | None = None) -> dict:
         },
         "lots": {
             lid: {
-                "name": ru["lots"].get(lid, {}).get("name", row["service"]),
+                "name": ui.get(lid, {}).get("name") or ru["lots"].get(lid, {}).get("name", row["service"]),
                 "region": ru["lots"].get(lid, {}).get("region", row["territorial_archetype"]),
+                "card": {k: v for k, v in ui[lid].items() if k != "name"} if lid in ui else None,
                 "archetype": ru["archetypes"].get(row["territorial_archetype"], row["territorial_archetype"]),
                 "groups": sorted(set().union(*[ev.normalize_capability(t) for t in row["capability_groups"].split(";")])),
                 "federal": str(row["federal"]).lower() == "true",

@@ -1,4 +1,4 @@
-// Снимки экранов живого интерфейса. Запускает сервер на 8766, снимает три страницы, останавливает сервер.
+// Снимки экранов живого интерфейса. Запускает сервер на 8766, снимает четыре страницы, останавливает сервер.
 //   node app/screenshot.mjs [outDir=app/screenshots]
 // Нужен playwright с Chromium (npm i -g playwright && npx playwright install chromium).
 // FONT_DIR — локальный кэш Google Fonts (см. docs/mockup/README.md), если сеть недоступна.
@@ -20,7 +20,7 @@ if (fontDir) await page.route(/^https:\/\/fonts\.googleapis\.com\//, (route) => 
   return route.fulfill({ path: path.join(fontDir, 'local-fonts.css'), contentType: 'text/css' });
 });
 try {
-  for (const p of ['portfolio', 'compare', 'stress']) {
+  for (const p of ['portfolio', 'compare', 'stress', 'data']) {
     await page.goto(BASE + '#' + p, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(400);

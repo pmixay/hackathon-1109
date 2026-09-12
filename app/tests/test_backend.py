@@ -73,6 +73,17 @@ class Model(unittest.TestCase):
         for rid in d["rejected"]:
             self.assertFalse(d["combinations"][rid]["ok"]["STRESS"])
 
+    def test_lot_names_and_service_cards(self):
+        d = payload.build_dashboard(SELECTED)
+        self.assertEqual(d["lots"]["FIRE"]["name"], "Лесные пожары")
+        self.assertEqual(d["lots"]["ENV"]["region"], "Волго-Каспийский регион")
+        for lid, mode in [("FIRE", "A"), ("ENV", "A"), ("AGRI", "B"), ("TRANS", "B")]:
+            card = d["lots"][lid]["card"]
+            self.assertEqual(card["mode"], mode, lid)
+            for key in ("description", "user", "access_base", "access_extra", "kpi", "on_failure"):
+                self.assertTrue(card[key], (lid, key))
+        self.assertIsNone(d["lots"]["FLOOD"]["card"])
+
     def test_unknown_selection(self):
         with self.assertRaises(ValueError):
             payload.build_dashboard("FIRE:A|FIRE:A|FIRE:A|FIRE:A")

@@ -187,6 +187,17 @@ td .name{font-weight:500}td .sub{color:var(--muted);font-size:11.5px;margin-top:
 /* lot chips with mode letter */
 .lot b{margin-left:5px;padding:0 4px;border-radius:4px;background:rgba(15,111,64,.12);color:var(--brand);font-weight:700}
 .lot b.chg{background:var(--warn-soft);color:#6b4700}
+/* service cards (texts from config/lots_ui.csv) */
+.svc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.sv{display:flex;flex-direction:column;gap:8px;padding:14px 16px 16px;background:var(--bg);border:1px solid var(--rule);border-radius:14px;min-width:0}
+.sv-h{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.sv-h .name{font-weight:500;min-width:0;line-height:1.35}
+.sv-h .mode{flex:none;margin-top:1px}
+.sv-r{font-size:12px;color:var(--muted);margin-top:-4px}
+.sv p{margin:0;font-size:12.5px;line-height:1.45;color:var(--ink)}
+.sv dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 10px;margin:4px 0 0;font-size:12px;line-height:1.4}
+.sv dt{color:var(--muted);white-space:nowrap}.sv dd{margin:0;color:var(--ink-2)}
+.sv .muted{color:var(--muted)}
 /* two-line margin tile */
 .two{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .two div{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink-2)}
@@ -213,7 +224,7 @@ tr.pick{cursor:pointer}tr.pick:hover td{background:var(--bg)}tr.pick.hl:hover td
 .jh.bad .circ{background:var(--crit)}
 .empty{padding:24px;color:var(--muted);font-size:13px}
 svg .xm text{font-size:9px;letter-spacing:.1em;fill:var(--muted);font-weight:600}
-@media (max-width:1280px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.row2,.row2.w,.jobs2{grid-template-columns:1fr}}
+@media (max-width:1280px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.row2,.row2.w,.jobs2{grid-template-columns:1fr}.svc{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ---- вкладка «Данные» ---- */
 .slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}

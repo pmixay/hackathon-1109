@@ -33,7 +33,7 @@ if (fullName) {
     console.log('wrote', id + '.png', 'height', h);
   }
   // one extra shot with a help popover open (the constraints block on the portfolio screen)
-  const helpBtn = await page.$('#screen-portfolio .row2 .card .help i');
+  const helpBtn = await page.$('#screen-portfolio .card:has(.jobs2) .help i');
   if (helpBtn) {
     await helpBtn.click();
     await (await page.$('#screen-portfolio')).screenshot({ path: path.join(outDir, 'portfolio-help.png') });

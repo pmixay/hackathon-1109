@@ -55,6 +55,7 @@ python -m pytest -q                                 # 333 теста, около
 
 ## Материалы экономиста
 
+- [Модель выбора и обоснование FINAL](docs/note/02-selection.md)
 - [Финансирование и экономическая устойчивость](docs/note/03-finance.md)
 - [Устойчивость в стресс-сценарии](docs/note/06-stress.md)
 - [Одностраничное STRESS-резюме](docs/stress-summary.md)

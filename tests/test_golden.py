@@ -12,6 +12,8 @@ GOLDEN = {
     "V4": dict(c0=1176.0, opex=330.75, vpub=1150.0, cash=295.0, t_rep=0.72, public_core_lots=4, base=True, stress=True),
     "V5": dict(c0=1171.5, opex=318.25, vpub=1229.0, cash=375.5, t_rep=0.725, public_core_lots=2, base=True, stress=True),
     "V6": dict(c0=1155.0, opex=315.0, vpub=1110.0, cash=286.25, t_rep=0.7375, public_core_lots=4, base=True, stress=True),
+    "V7": dict(c0=1129.8, opex=305.75, vpub=1199.0, cash=398.0, t_rep=0.73, public_core_lots=2, base=True, stress=True),
+    "V8": dict(c0=1134.8, opex=309.25, vpub=1243.0, cash=390.0, t_rep=0.73, public_core_lots=2, base=True, stress=True),
 }
 
 
@@ -43,7 +45,7 @@ def test_v3_is_the_only_alternative_that_fails_stress(case, alternatives):
 
 def test_final_and_v5_sit_exactly_on_two_public_core(case, alternatives):
     counts = {name: calculate(case, variant.selection, "BASE").metrics.public_core_lots for name, variant in alternatives.items()}
-    assert [name for name, count in counts.items() if count == 2] == ["FINAL", "V5"]
+    assert [name for name, count in counts.items() if count == 2] == ["FINAL", "V5", "V7", "V8"]
     assert all(count >= 2 for count in counts.values())
 
 
@@ -52,7 +54,7 @@ def test_stress_margins_of_alternatives(case, alternatives):
     for name, variant in alternatives.items():
         check = next(item for item in calculate(case, variant.selection, "STRESS").checks if item.code == "c0_limit")
         margins[name] = check.margin
-    assert margins == pytest.approx({"FINAL": 40.0, "V1": 14.5, "V2": 6.0, "V3": -69.5, "V4": 4.0, "V5": 8.5, "V6": 25.0})
+    assert margins == pytest.approx({"FINAL": 40.0, "V1": 14.5, "V2": 6.0, "V3": -69.5, "V4": 4.0, "V5": 8.5, "V6": 25.0, "V7": 50.2, "V8": 45.2})
 
 
 def test_limit_reached_exactly_through_summation_passes(case):

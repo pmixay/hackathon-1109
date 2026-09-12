@@ -134,7 +134,7 @@ def test_compare_without_weights(root, capsys):
 def test_compare_with_weights_prints_ranking_and_sensitivity(root, capsys):
     code, out, err = run(capsys, "--root", root, "compare", "--weights", "config/weights.json")
     assert code == 0
-    assert "Модель выбора: weighted_sum_minmax, допустимость по сценарию BASE" in out
+    assert "Модель выбора: weighted_sum_minmax, допустимость по сценарию STRESS" in out
     assert "Чувствительность к весам" in out
     assert "margin:STRESS:c0_limit" in out
 
@@ -181,14 +181,18 @@ def test_export_writes_every_artifact(case_root, capsys):
     code, out, err = run(capsys, "--root", case_root, "export", "--out", "out", "--skip-enumeration")
     assert code == 0, err
     names = sorted(path.name for path in out_dir.iterdir())
-    assert names == ["alternatives.csv", "base.json", "repairs_base.csv", "repairs_stress.csv", "scores.csv", "sensitivity.csv", "stress.json"]
+    assert names == ["alternatives.csv", "base.json", "ranking_full.csv", "repairs_base.csv", "repairs_stress.csv", "scores.csv", "sensitivity.csv", "sensitivity_full.csv", "stress.json"]
     base = json.loads((out_dir / "base.json").read_text(encoding="utf-8"))
     assert base["portfolio"]["name"] == "FINAL" and base["scenario"] == "BASE"
     assert base["metrics"]["c0"] == 1140.0 and base["feasible"] is True
-    assert len(read_csv(out_dir / "alternatives.csv")) == 14
+    assert len(read_csv(out_dir / "alternatives.csv")) == 18
     scores = read_csv(out_dir / "scores.csv")
-    assert {row["variant"] for row in scores} == {"FINAL", "V1", "V2", "V3", "V4", "V5", "V6"}
-    assert all(row["rank"] for row in scores)
+    assert {row["variant"] for row in scores} == {"FINAL", "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"}
+    assert next(row for row in scores if row["variant"] == "V3")["rank"] == ""
+    full = read_csv(out_dir / "ranking_full.csv")
+    assert len(full) == 143
+    assert full[0]["variant"] == "FIRE:A|AGRI:C|TRANS:C|ENV:A"
+    assert next(row for row in full if row["variant"] == "FIRE:A|AGRI:B|TRANS:B|ENV:A")["rank"] == "3"
 
 
 def test_export_with_enumeration(case_root, capsys):
@@ -204,7 +208,7 @@ def test_export_adds_portfolio_when_it_is_not_among_alternatives(case_root, caps
     assert code == 0, err
     rows = read_csv(case_root / "out" / "alternatives.csv")
     assert [row["variant"] for row in rows][:2] == ["GATE", "GATE"]
-    assert len(rows) == 16
+    assert len(rows) == 20
 
 
 def test_export_with_custom_mode_records_it(case_root, capsys):

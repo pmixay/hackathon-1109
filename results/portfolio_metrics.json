@@ -1,0 +1,19 @@
+{
+  "selected_lots": 4,
+  "c0_mrub": 1140.0,
+  "opex_mrub_per_year": 313.0,
+  "vpub_mrub_per_year": 1289.0,
+  "cash_mrub_per_year": 370.5,
+  "kcash": 1.18370607028754,
+  "t_rep": 0.73,
+  "readiness_1_5": 4.525,
+  "resilience_1_5": 4.05,
+  "scale_1_5": 4.675,
+  "territorial_archetypes": 4,
+  "capability_groups": 2,
+  "capability_set": [
+    "EO",
+    "PNT/InSAR"
+  ],
+  "public_core_lots": 2
+}

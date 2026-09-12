@@ -15,7 +15,7 @@
    "portfolio_id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
    "weights_file": "config/weights.json"
   },
-  "generated_at": "2026-09-12T17:14:29+00:00",
+  "generated_at": "2026-09-12T17:58:07+00:00",
   "scenarios": {
    "BASE": {
     "c0_max": 1300.0

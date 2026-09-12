@@ -84,12 +84,12 @@ const VALIDATE = { 'lots.csv': validateLots, 'access_modes.csv': validateModes, 
 export function renderData(ctx) {
   const { esc, help, state } = ctx;
   const ds = state.dataset;
-  const cur = ds ? `<table><tr><th>Файл</th><th>Содержание</th><th>Хэш</th><th class="num">Байт</th></tr>${FILES.map((n) => {
+  const cur = ds ? `<div class="tw"><table><tr><th>Файл</th><th>Содержание</th><th>Хэш</th><th class="num">Байт</th></tr>${FILES.map((n) => {
     const f = ds.files[n] || {};
     const s = f.summary || {};
     const what = n === 'lots.csv' ? `${s.rows ?? '?'} лотов, ${s.columns ?? '?'} полей` : n === 'access_modes.csv' ? `режимы ${(s.modes || []).join(', ')}` : `версия ${s.case_version ?? '—'}, сценарии ${(s.scenarios || []).join(', ')}, ${s.constraints ?? '?'} ограничений`;
     return `<tr><td><span class="code">${n}</span></td><td>${f.missing ? '<span class="st fail">нет файла</span>' : esc(what)}</td><td class="mono">${f.sha || '—'}</td><td class="num">${f.bytes ?? '—'}</td></tr>`;
-  }).join('')}</table><div class="note">${esc(ds.source === 'организаторы' ? 'Файлы организаторов (копия cases/case02 в data/ и config/, сверена движком по контрольным суммам). Расчёт идёт по ним через src/kosmo.' : `Загруженный набор, активирован ${ds.activated_at || ''}. Папка: ${ds.root}`)}</div>`
+  }).join('')}</table></div><div class="note">${esc(ds.source === 'организаторы' ? 'Файлы организаторов (копия cases/case02 в data/ и config/, сверена движком по контрольным суммам). Расчёт идёт по ним через src/kosmo.' : `Загруженный набор, активирован ${ds.activated_at || ''}. Папка: ${ds.root}`)}</div>`
     : `<div class="empty">${state.api ? 'Загрузка…' : 'Сведения о наборе доступны только с сервером (python app/server.py). Проверка файлов ниже работает и без него.'}</div>`;
   const pill = ds ? `<div class="pill"><span class="dot">${ctx.icon.check}</span>${ds.source === 'организаторы' ? 'файлы организаторов' : 'загруженный набор'} · v${ds.case_version ?? '—'}</div>` : '';
 
@@ -130,7 +130,7 @@ function previewOf(n, ctx) {
     const c = rep.cfg;
     const rows = Object.entries(c.constraints_common || {}).map(([k, v]) => `<tr><td><span class="code">${k}</span></td><td class="num">${esc(String(v))}</td></tr>`).join('');
     const sc = Object.entries(c.scenarios || {}).map(([k, v]) => `<tr><td><span class="code">scenarios.${k}.c0_max_mrub</span></td><td class="num">${esc(String(v.c0_max_mrub))}</td></tr>`).join('');
-    return `<div class="card"><h2>Предпросмотр · case_config.json<span class="u">версия ${esc(String(c.case_version ?? '—'))}</span></h2><table class="half"><tr><th>Параметр</th><th class="num">Значение</th></tr>${rows}${sc}</table></div>`;
+    return `<div class="card"><h2>Предпросмотр · case_config.json<span class="u">версия ${esc(String(c.case_version ?? '—'))}</span></h2><div class="tw"><table class="half"><tr><th>Параметр</th><th class="num">Значение</th></tr>${rows}${sc}</table></div></div>`;
   }
   const { header, rows } = rep.table;
   const cols = (n === 'lots.csv' ? LOT_COLUMNS : MODE_COLUMNS).filter((c) => header.includes(c));

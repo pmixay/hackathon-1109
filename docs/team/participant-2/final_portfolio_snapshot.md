@@ -14,7 +14,7 @@
 | TRANS | B | нет | 250,0 | 70,00 | 180,4 | 102,50 |
 | **Итого** |  | **2** | **1 140,0** | **313,0** | **1 289,0** | **370,50** |
 
-Источник: [`results/base.json`](https://github.com/pmixay/hackathon-1109/blob/calc-engine/results/base.json) и [`results/stress.json`](https://github.com/pmixay/hackathon-1109/blob/calc-engine/results/stress.json) в commit [`9699070`](https://github.com/pmixay/hackathon-1109/commit/969907065fa1454708e0d7ea66c74b25e2445964).
+Источник: [`results/base.json`](https://github.com/pmixay/hackathon-1109/blob/main/results/base.json) и [`results/stress.json`](https://github.com/pmixay/hackathon-1109/blob/main/results/stress.json) в общей ветке.
 
 ## Сценарии и проверки
 
@@ -33,4 +33,4 @@
 
 ## Источник данных организаторов
 
-`lots.csv`, `access_modes.csv` и `case_config.json` отсутствовали в переданном ZIP №5. Для экрана «Данные» использовать неизменённые файлы и хэши из ветки `calc-engine`; не пересказывать их содержимое как вывод участника №2. Ссылки: [`data/`](https://github.com/pmixay/hackathon-1109/tree/calc-engine/data), [`config/case_config.json`](https://github.com/pmixay/hackathon-1109/blob/calc-engine/config/case_config.json), [`config/case_checksums.json`](https://github.com/pmixay/hackathon-1109/blob/calc-engine/config/case_checksums.json).
+`lots.csv`, `access_modes.csv` и `case_config.json` отсутствовали в первоначальном ZIP №5. Для экрана «Данные» использовать неизменённые файлы и хэши из общей ветки; не пересказывать их содержимое как вывод участника №2. Ссылки: [`data/`](https://github.com/pmixay/hackathon-1109/tree/main/data), [`config/case_config.json`](https://github.com/pmixay/hackathon-1109/blob/main/config/case_config.json), [`config/case_checksums.json`](https://github.com/pmixay/hackathon-1109/blob/main/config/case_checksums.json).

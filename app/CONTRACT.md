@@ -96,5 +96,8 @@
 `python app/build.py --export` (или кнопка «Экспорт results/» в шапке при
 запущенном сервере) пишет `results/base.json`, `results/stress.json`
 (выбранная комбинация: состав, лоты, показатели, проверки, балл, веса) и
-`results/alternatives.csv` (строки `comparison`). Это единственный источник
+`results/alternatives.csv` (строки `comparison`), а также
+`results/portfolio_detail.csv`, `results/portfolio_metrics.json` и
+`results/team_decision_config.json` в формате стартового notebook
+организаторов (карточка решения — из `app/config/team.json`). Это единственный источник
 цифр для записки и слайдов.

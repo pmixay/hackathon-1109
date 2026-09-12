@@ -133,7 +133,7 @@ def build_dashboard(selected_id: str | None = None) -> dict:
     actions = model.stress_actions(records, rejected, selected_id, score, config, allowed_modes=allowed) if rejected else []
 
     wanted = set(comparison) | {selected_id} | {a["id"] for a in actions}
-    combos = {cid: _combo_payload(records[cid], score, rank) for cid in wanted}
+    combos = {cid: _combo_payload(records[cid], score, rank) for cid in sorted(wanted)}  # стабильный порядок → маленькие диффы dashboard.json
 
     return {
         "meta": {
@@ -179,7 +179,12 @@ def build_dashboard(selected_id: str | None = None) -> dict:
 
 
 def export_results(dashboard: dict, out_dir: Path):
-    """results/base.json, results/stress.json, results/alternatives.csv — источник цифр для записки."""
+    """results/base.json, results/stress.json, results/alternatives.csv — источник цифр для записки.
+
+    Плюс три файла в формате стартового notebook организаторов (README организаторов, §8.8):
+    portfolio_detail.csv, portfolio_metrics.json, team_decision_config.json — чтобы эксперт
+    сравнил нашу выгрузку с выгрузкой template один в один.
+    """
     import csv
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -218,3 +223,41 @@ def export_results(dashboard: dict, out_dir: Path):
                 round(m["kcash"], 4), round(m["t_rep"], 4), m["public_core"],
                 c["ok"]["BASE"], c["ok"]["STRESS"], c["score"], c["rank"],
             ])
+    _export_template_format(dashboard, out_dir)
+
+
+# Колонки detail из case_core.apply_mode — в том порядке, в каком их пишет notebook организаторов.
+TEMPLATE_DETAIL_COLUMNS = [
+    "lot_id", "mode_id", "c0_mrub", "opex_mrub_per_year", "vpub_mrub_per_year", "cash_mrub_per_year",
+    "t_rep", "readiness_1_5", "resilience_1_5", "scale_1_5", "territorial_archetype", "federal",
+    "capability_groups", "public_core",
+]
+
+
+def _export_template_format(dashboard: dict, out_dir: Path):
+    """Те же имена файлов и поля, что у последней ячейки cases/case02/Космос_как_инфраструктура.ipynb."""
+    import csv
+
+    _, _, _, records = _enumerated()
+    rec = records[dashboard["selected"]]
+    with open(out_dir / "portfolio_detail.csv", "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(TEMPLATE_DETAIL_COLUMNS)
+        for row in rec["detail"]:
+            w.writerow([row[k] for k in TEMPLATE_DETAIL_COLUMNS])
+    with open(out_dir / "portfolio_metrics.json", "w", encoding="utf-8") as f:
+        json.dump(rec["metrics"], f, ensure_ascii=False, indent=2)
+    team = _load("team.json") if (CONFIG / "team.json").exists() else {}
+    summary = {
+        "team": team.get("team_name", ""),
+        "decision_method": team.get("decision_method", ""),
+        "strategy_thesis": team.get("strategy_thesis", ""),
+        "selection": [list(pair) for pair in rec["selection"]],
+        "weights": dashboard["meta"]["weights"],
+        "management": {
+            key: (team.get("management") or {}).get(key, "")
+            for key in ("payer_opex", "operator_model", "supplier_switch_rule", "replicable_core", "local_adaptation", "stress_decision")
+        },
+    }
+    with open(out_dir / "team_decision_config.json", "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)

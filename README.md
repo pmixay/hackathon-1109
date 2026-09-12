@@ -66,3 +66,4 @@ python app/server.py                                # интерфейс на ht
 - [Устойчивость в стресс-сценарии](docs/note/06-stress.md)
 - [Одностраничное STRESS-резюме](docs/stress-summary.md)
 - [Приложение: денежные потоки 2027–2033](docs/note/finance-appendix.md)
+- [Дорожная карта финансовых этапов](docs/team/participant-3/roadmap.md)

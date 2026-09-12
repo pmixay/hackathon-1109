@@ -12,18 +12,15 @@
 1. `cases/case02/README.organizers.md`, разделы 3, 4, 7, 10.2, 12 (Т1–Т5), 13, 14, 15.
 2. `cases/case02/case_core.py` целиком: четыре функции, ~100 строк.
 3. `cases/case02/config/case_config.json` и оба CSV.
-   `cases/case02/Космос_как_инфраструктура.ipynb` — стартовый notebook
-   организаторов, не развиваем; его исполненный пример (FIRE:A, AGRI:C,
-   TRANS:C, ENV:A) уже стоит контрольным примером в `app/tests/`.
 4. `tools/case02_enumerate.py` — перебор, который ты встроишь в приложение.
 5. В постановке задачи: «Программный расчётный инструмент», «Технические
    требования и воспроизводимость», «Базовые сценарии проверки решения».
-6. `app/README.md` и `app/CONTRACT.md`: интерфейс уже собран (`app/static/`),
-   расчётный слой на stdlib повторяет `case_core.py`. Твоя часть — заменить
-   его на канонический `case_core.py` (`backend/evaluate.core_backend`),
-   прогнать `python -m unittest discover -s app/tests` и подключить свой
-   пайплайн обработки данных (`backend/ingest.apply_dataset`), если он
-   отличается от встроенного. Макет-референс: `docs/mockup/`.
+6. `app/README.md` и `app/CONTRACT.md`: интерфейс уже собран (`app/static/`)
+   и подключён к движку команды `src/kosmo` (сделано 12.09, ветка
+   `calc-engine`): `app/backend` только вызывает движок и собирает
+   `dashboard.json`, своих формул там нет. Проверка: `python -m pytest -q`
+   (движок + `app/tests`), `python app/build.py`, `python app/server.py`.
+   Макет-референс: `docs/mockup/`.
 
 ## Что строим
 
@@ -59,10 +56,6 @@ Streamlit-приложение поверх **неизменённого** `case
   состав, режимы, все показатели, все проверки, timestamp, версия конфигов.
 - `results/alternatives.csv` — все сохранённые варианты в обоих сценариях.
 - `results/sensitivity.csv`.
-- `results/portfolio_detail.csv`, `portfolio_metrics.json`,
-  `team_decision_config.json` — формат последней ячейки notebook организаторов
-  (уже пишет `python app/build.py --export`; карточка решения — из
-  `app/config/team.json`).
 
 Это **единственный источник цифр** для записки и слайдов. После заморозки в
 17:00 файлы не меняются.

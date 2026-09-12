@@ -2,16 +2,19 @@
 
 Единственный вход интерфейса. Его собирает `app/backend/payload.py`
 (`python app/build.py` → `app/static/data/dashboard.json`, или на лету
-`GET /api/dashboard?selected=<id>`). Интерфейс ничего не считает по модели:
-только отображает и выводит производные (отличия комбинаций, проценты от
-порога, графики). Поэтому расчёт можно заменить целиком, сохранив форму
-этого файла.
+`GET /api/dashboard?selected=<id>`) из результатов расчётного движка
+`src/kosmo`: показатели, проверки и заметки — `kosmo.calculate_all_scenarios`,
+балл и ранг — `kosmo.score_variants` с весами `config/weights.json`.
+Интерфейс ничего не считает по модели: только отображает и выводит
+производные (отличия комбинаций, проценты от порога, графики).
 
 ## Идентификатор комбинации
 
-`LOT:MODE|LOT:MODE|LOT:MODE|LOT:MODE` в порядке лотов, например
+`LOT:MODE|LOT:MODE|LOT:MODE|LOT:MODE` в порядке лотов `lots.csv`, например
 `FIRE:A|AGRI:B|TRANS:B|ENV:A`. Лоты — `lot_id` из `lots.csv`, режимы —
-`mode_id` из `access_modes.csv`.
+`mode_id` из `access_modes.csv` (плюс пользовательский режим из
+`config/custom_mode.json`, если он задан). Id в другом порядке лотов
+принимается и приводится к каноническому.
 
 ## Структура
 
@@ -20,14 +23,20 @@
   "meta": {
     "case_id": "SEP-KOSMOS-INFRA-2026",
     "case_version": "1.1",
+    "engine": { "name": "kosmo", "verified": true,          // контрольные суммы файлов кейса сошлись с config/case_checksums.json
+                "checksums": { "data/lots.csv": "8e2b…", "...": "..." },
+                "portfolio": "FINAL", "portfolio_id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",   // из config/portfolio.json
+                "weights_file": "config/weights.json" },
     "generated_at": "2026-09-12T10:00:00+00:00",
     "scenarios": { "BASE": { "c0_max": 1300 }, "STRESS": { "c0_max": 1180 } },
     "constraints": { /* constraints_common из case_config.json как есть */ },
     "weights": { "vpub": 0.30, "c0": 0.15, "kcash": 0.15, "readiness": 0.10, "resilience": 0.10, "scale": 0.10, "stress_margin": 0.10 },
-    "rationale": { "vpub": "главная цель заказчика", "...": "..." },
+    "rationale": { "vpub": "главная цель заказчика", "...": "..." },   // из config/weights.json; margin:STRESS:c0_limit показан как stress_margin
+    "feasible_scenario": "STRESS",    // среди каких комбинаций нормируется балл и считается ранг
     "thin_margin_pct": 0.03,          // порог «тонкого запаса» для стресс-матрицы
     "allowed_modes": ["A", "B", "C"], // режимы, участвующие в предложениях
-    "totals": { "combinations": 5670, "base_feasible": 1031, "stress_feasible": 143 }
+    "dataset": { "source": "организаторы", "root": ".", "case_version": "1.1" },
+    "totals": { "combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "ranked": 143 }
   },
 
   "lots": {                           // справочник для подписей и карточек сервисов
@@ -41,12 +50,12 @@
                 "kpi": "Время от сигнала до проверки",
                 "on_failure": "Время последнего обновления, номер инцидента, ручной канал" } }
   },
-  "modes": {                          // коэффициенты access_modes.csv
-    "A": { "k_c0": 1.05, "k_opex": 1.05, "k_vpub": 1.0, "k_anchor": 1.0, "k_commercial": 0.25, "public_core": true }
+  "modes": {                          // коэффициенты access_modes.csv; custom = true у режима из config/custom_mode.json
+    "A": { "k_c0": 1.05, "k_opex": 1.05, "k_vpub": 1.0, "k_anchor": 1.0, "k_commercial": 0.25, "public_core": true, "custom": false }
   },
 
   "selected": "FIRE:A|AGRI:B|TRANS:B|ENV:A",   // выбранный портфель (решение гейта)
-  "suggestions": ["<id>", "..."],              // предложенные комбинации по порядку показа; выбранная — среди них
+  "suggestions": ["<id>", "..."],              // предложенные комбинации по убыванию балла; выбранная и портфель команды — всегда среди них
   "rejected": ["<id>"],                        // показываются серыми: проходят BASE, не проходят STRESS
   "comparison": ["<id>", "..."],               // строки экрана «Сравнение» и стресс-матрицы
   "stress": {
@@ -59,16 +68,20 @@
       "id": "<id>",
       "selection": [ { "lot": "FIRE", "mode": "A" }, "..." ],
       "per_lot": [ { "lot": "FIRE", "mode": "A", "public_core": true, "c0": 336.0, "opex": 89.25, "vpub": 560.0, "cash": 83.75,
-                     "anchor_cash": 75.0, "commercial_cash": 8.75, "t_rep": 0.68, "readiness": 4.3, "resilience": 3.5, "scale": 4.5 } ],
-      "metrics": { "c0": 1140.0, "opex": 313.0, "vpub": 1289.0, "cash": 370.5, "kcash": 1.1837, "t_rep": 0.73,
+                     "anchor_cash": 75.0, "commercial_cash": 8.75, "opex_gap": 5.5, "t_rep": 0.68, "readiness": 4.3, "resilience": 3.5, "scale": 4.5 } ],
+      "metrics": { "c0": 1140.0, "opex": 313.0, "vpub": 1289.0, "cash": 370.5, "anchor_cash": 190.0, "commercial_cash": 180.5,
+                   "kcash": 1.1837, "opex_gap": -57.5, "t_rep": 0.73,
                    "readiness": 4.525, "resilience": 4.05, "scale": 4.675, "archetypes": 4, "groups": 2, "public_core": 2 },
-      "checks": {                              // девять проверок check_constraints, порядок как в case_core
-        "BASE":   [ { "id": "c0_limit", "ok": true, "fact": 1140.0, "op": "<=", "threshold": 1300 }, "..." ],
+      "checks": {                              // девять проверок kosmo.run_checks, порядок и коды как в case_core.check_constraints
+        "BASE":   [ { "id": "c0_limit", "ok": true, "fact": 1140.0, "op": "<=", "threshold": 1300.0 }, "..." ],
         "STRESS": [ "..." ]
       },
       "ok": { "BASE": true, "STRESS": true },
-      "score": 0.7249,                         // балл модели выбора, 0–1
-      "rank": 3                                // место среди допустимых в STRESS; null для недопустимых
+      "notes": {                               // управленческие заметки движка (что кейс не задаёт, что решать команде)
+        "BASE": [ { "code": "c0_funding", "message": "...", "lots": ["FIRE", "AGRI", "TRANS", "ENV"] } ], "STRESS": [ "..." ]
+      },
+      "score": 0.7249,                         // балл kosmo.score_variants по всем допустимым в feasible_scenario, 0–1
+      "rank": 3                                // место среди допустимых в feasible_scenario; null для недопустимых
     }
   }
 }
@@ -94,10 +107,12 @@
 ## Экспорт для записки
 
 `python app/build.py --export` (или кнопка «Экспорт results/» в шапке при
-запущенном сервере) пишет `results/base.json`, `results/stress.json`
-(выбранная комбинация: состав, лоты, показатели, проверки, балл, веса) и
-`results/alternatives.csv` (строки `comparison`), а также
-`results/portfolio_detail.csv`, `results/portfolio_metrics.json` и
-`results/team_decision_config.json` в формате стартового notebook
-организаторов (карточка решения — из `app/config/team.json`). Это единственный источник
-цифр для записки и слайдов.
+запущенном сервере) вызывает `kosmo.export_bundle` — ту же функцию, что
+`python -m kosmo export`. Для портфеля из `config/portfolio.json` файлы
+ложатся в `results/` (`base.json`, `stress.json`, `alternatives.csv`,
+`scores.csv`, `sensitivity.csv`, `repairs_base.csv`, `repairs_stress.csv`;
+формат описан в `docs/calc-engine.md`; плюс `portfolio_detail.csv`,
+`portfolio_metrics.json`, `team_decision_config.json` в формате стартового
+notebook организаторов, карточка решения — из `config/team.json`), для любой
+другой комбинации — в `results/variants/<id>/`. `results/` остаётся
+единственным источником цифр для записки и слайдов.

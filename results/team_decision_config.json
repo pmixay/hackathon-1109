@@ -1,8 +1,34 @@
 {
-  "_comment": "Карточка решения команды: идёт в results/team_decision_config.json в формате стартового notebook организаторов (README организаторов, §8.1 и §8.7). Портфель и веса подставляются из portfolio.json и model.json. Заполняют: team_name и strategy_thesis — E; payer_opex и stress_decision — C; operator_model и supplier_switch_rule — D; replicable_core и local_adaptation — E. Одно-два предложения на поле; тексты те же, что в записке.",
-  "team_name": "",
+  "team": "",
   "decision_method": "Weighted MCDA",
   "strategy_thesis": "",
+  "selection": [
+    [
+      "FIRE",
+      "A"
+    ],
+    [
+      "ENV",
+      "A"
+    ],
+    [
+      "AGRI",
+      "B"
+    ],
+    [
+      "TRANS",
+      "B"
+    ]
+  ],
+  "weights": {
+    "vpub": 0.3,
+    "c0": 0.15,
+    "kcash": 0.15,
+    "readiness": 0.1,
+    "resilience": 0.1,
+    "scale": 0.1,
+    "stress_margin": 0.1
+  },
   "management": {
     "payer_opex": "",
     "operator_model": "Единый оператор портфеля управляет доступом, SLA, журналами, интеграциями и поддержкой и собирает результаты разных поставщиков в единый сервис. Заказчик сохраняет контроль над стандартами, правами на историю данных и правилами доступа; поставщики конкурируют за отдельные компоненты или периоды оказания услуги.",

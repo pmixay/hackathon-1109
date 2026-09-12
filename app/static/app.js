@@ -335,7 +335,7 @@ document.addEventListener('click', async (e) => {
       const r = await fetch('/api/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ selected: state.selected }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || r.statusText);
-      toast('Записано: ' + j.written.join(', '));
+      toast(`Движок kosmo записал ${j.written.length} файлов в ${j.dir}/: ${j.written.map((f) => f.split('/').pop()).join(', ')}`);
     } catch (err) { toast('Ошибка экспорта: ' + err.message, false); }
   }
 });

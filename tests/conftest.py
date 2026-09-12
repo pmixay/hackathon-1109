@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from kosmo import load_case  # noqa: E402
 from kosmo.case import CHECKSUMS_FILE, SOURCE_FILES  # noqa: E402
 
-COPIED_FILES = SOURCE_FILES + (CHECKSUMS_FILE, "config/portfolio.json", "config/alternatives.json", "config/weights.json")
+COPIED_FILES = SOURCE_FILES + (CHECKSUMS_FILE, "config/portfolio.json", "config/alternatives.json", "config/weights.json", "config/team.json")
 
 
 @pytest.fixture(scope="session")

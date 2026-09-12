@@ -5,7 +5,7 @@
 
 API
     GET  /api/dashboard?selected=<id>   пересобрать dashboard.json для выбранной комбинации
-    POST /api/export                    записать results/ для текущей выбранной комбинации ({"selected": id})
+    POST /api/export                    записать results/ движком kosmo для выбранной комбинации ({"selected": id})
     GET  /api/data                      активный набор данных (файлы, хэши, версия)
     POST /api/data                      {"files": {"lots.csv": "...", ...}, "apply": true} — проверить, сохранить, применить
     POST /api/data/reset                вернуть файлы организаторов
@@ -66,8 +66,8 @@ class Handler(SimpleHTTPRequestHandler):
                 dash = payload.build_dashboard(body.get("selected"))
             except ValueError as e:
                 return self._json(HTTPStatus.BAD_REQUEST, {"error": str(e)})
-            payload.export_results(dash, RESULTS)
-            return self._json(HTTPStatus.OK, {"written": ["results/base.json", "results/stress.json", "results/alternatives.csv", "results/portfolio_detail.csv", "results/portfolio_metrics.json", "results/team_decision_config.json"], "selected": dash["selected"]})
+            written = sorted(Path(p).relative_to(RESULTS.parent).as_posix() for p in payload.export_results(dash, RESULTS).values())
+            return self._json(HTTPStatus.OK, {"written": written, "dir": written[0].rsplit("/", 1)[0], "selected": dash["selected"]})
         if url.path == "/api/data":
             length = int(self.headers.get("Content-Length") or 0)
             body = json.loads(self.rfile.read(length) or b"{}")
@@ -104,7 +104,7 @@ def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     args = ap.parse_args()
-    payload.build_dashboard()  # прогреть перебор (~1 с)
+    payload.build_dashboard()
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"Космо-портфель: http://{args.host}:{args.port}  (Ctrl+C — стоп)")
     try:

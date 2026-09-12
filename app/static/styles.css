@@ -63,6 +63,7 @@ button{font-family:inherit}
 .dd-btn:hover,.dd.open .dd-btn{border-color:var(--brand)}
 .dd-btn .k{font-size:12.5px;font-weight:500;color:var(--ink-2)}
 .dd-btn b{font-weight:700;letter-spacing:.03em}
+.dd-btn .lim{font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;padding-left:8px;border-left:1px solid var(--rule)}
 .dd-btn svg{width:14px;height:14px;color:var(--muted);transition:transform .15s}
 .dd.open .dd-btn svg{transform:rotate(180deg)}
 .dd-pop{display:none;position:absolute;top:48px;right:0;min-width:250px;background:var(--surface);border:1px solid var(--rule);border-radius:14px;box-shadow:var(--shadow);padding:6px;z-index:6}

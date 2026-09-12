@@ -146,8 +146,8 @@ function renderChrome() {
   $('#nav').innerHTML = PAGES.map(([k, t, ic, grp]) => (grp ? `<div class="grp">${grp}</div>` : '') + `<a data-page="${k}" class="${k === state.page ? 'on' : ''}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ic}</svg><span>${t}</span></a>`).join('');
   const sc = d.meta.scenarios;
   if (!(state.scenario in sc)) state.scenario = Object.keys(sc)[0];
-  $('#scenario').innerHTML = `<button class="dd-btn" type="button" title="Сценарий бюджета"><span class="k">Сценарий</span><b>${esc(state.scenario)}</b>${ICON.chev}</button>
-<div class="dd-pop">${Object.keys(sc).map((s) => `<div class="dd-it${s === state.scenario ? ' on' : ''}" data-s="${esc(s)}"><span class="ck">${ICON.tick}</span><div><b>${esc(s)}</b><span>${SCENARIO_NOTE[s] || 'сценарий кейса'}</span></div></div>`).join('')}</div>`;
+  $('#scenario').innerHTML = `<button class="dd-btn" type="button" title="Сценарий бюджета: меняется только лимит c0"><span class="k">Сценарий</span><b>${esc(state.scenario)}</b><span class="lim">c0 ≤ ${fmt(sc[state.scenario].c0_max, 0)}</span>${ICON.chev}</button>
+<div class="dd-pop">${Object.keys(sc).map((s) => `<div class="dd-it${s === state.scenario ? ' on' : ''}" data-s="${esc(s)}"><span class="ck">${ICON.tick}</span><div><b>${esc(s)}</b><span>${SCENARIO_NOTE[s] || 'сценарий кейса'} · c0 ≤ ${fmt(sc[s].c0_max, 0)}</span></div></div>`).join('')}</div>`;
   $('#theme').innerHTML = `<button type="button" data-theme="light" class="${state.theme === 'light' ? 'on' : ''}" title="Светлая тема">${ICON.sun}</button><button type="button" data-theme="dark" class="${state.theme === 'dark' ? 'on' : ''}" title="Тёмная тема">${ICON.moon}</button>`;
   const src = d.meta.dataset ? (d.meta.dataset.source === 'организаторы' ? '' : ' · загружено') : '';
   $('#ver').textContent = `данные v${d.meta.case_version}${src}${state.api ? '' : ' · статический файл'}`;
@@ -166,7 +166,7 @@ function renderPortfolio() {
   const gateTxt = gatesBad.length ? ` · S2 не пройден: ${gatesBad.map((g) => `${gateName(g)} ${fmt(g.fact, 2)} ${g.op === '<=' ? '>' : '<'} ${fmt(g.threshold, 2)}`).join(', ')}` : gates.length ? ' · S2 пройден' : '';
   const pill = failing.length || gatesBad.length
     ? `<div class="pill bad"><span class="dot">${ICON.x}</span>${ok} из ${checks.length}${failing.length ? ' · нарушено: ' + failing.map((r) => `${CHECK[r.id]} ${fmt(r.fact, DEC[r.id])} ${r.op === '<=' ? '>' : '<'} ${fmt(r.threshold, THR_DEC[r.id] ?? 0)}`).join(', ') : ''}${gateTxt}</div>`
-    : `<div class="pill"><span class="dot">${ICON.check}</span>${ok} из ${checks.length} ограничений выполнены${gateTxt}</div>`;
+    : `<div class="pill"><span class="dot">${ICON.check}</span>${ok} из ${checks.length} ограничений выполнены в ${sc} (c0 ≤ ${fmt(d.meta.scenarios[sc].c0_max, 0)})${gateTxt}</div>`;
   const t = d.meta.totals, w = d.meta.weights, m = s.metrics, cons = d.meta.constraints, c0max = d.meta.scenarios[sc].c0_max;
   const weightsTxt = `ценность ${w.vpub}, c0 ${w.c0}, cash / OPEX ${w.kcash}, готовность ${w.readiness}, устойчивость ${w.resilience}, тираж ${w.scale}, запас по STRESS ${w.stress_margin}`;
   const helpChecks = `Девять проверок <b>check_constraints</b>. Состав: ровно ${cons.selected_lots_exactly} лота, ≥ ${cons.min_territorial_archetypes} территориальных архетипа среди нефедеральных, ≥ ${cons.min_capability_groups} группы возможностей, ≥ ${cons.min_public_core_lots} лота с public core. Пороги: c0 ≤ ${fmt(d.meta.scenarios.BASE.c0_max, 0)} в BASE и ≤ ${fmt(d.meta.scenarios.STRESS.c0_max, 0)} в STRESS, OPEX ≤ ${cons.opex_max_mrub_per_year} млн руб./год, ценность ≥ ${fmt(cons.vpub_min_mrub_per_year, 0)}, cash / OPEX ≥ ${cons.kcash_min.toFixed(2)}, воспроизводимость t_rep (среднее по лотам) ≥ ${cons.t_rep_min}. Границы включительно. Сценарий в шапке меняет лимит c0.${gateHelp(d)}`;
@@ -183,7 +183,7 @@ function renderPortfolio() {
       const tile = (title, val, unit, reqW, lblA, lblB) => `<div class="tile"><div class="tl">${title}</div><div class="tv">${val}<small>${unit}</small></div><div class="seg"><i class="req" style="width:${(reqW * 100).toFixed(1)}%"></i><i class="sur" style="width:${((1 - reqW) * 100).toFixed(1)}%"></i></div><div class="seglbl"><span><i class="sw" style="background:var(--seg-a)"></i>${lblA}</span><span><i class="sw" style="background:var(--seg-b)"></i>${lblB}</span></div></div>`;
       const mB = d.meta.scenarios.BASE.c0_max - m.c0, mS = d.meta.scenarios.STRESS.c0_max - m.c0;
       const tiles = `<div class="tiles">
-${tile('Стартовые затраты c0', fmt(m.c0), 'млн руб.', Math.min(1, m.c0 / c0max), 'использовано ' + fmt(m.c0), (c0max - m.c0 >= 0 ? 'запас ' : 'превышение ') + fmt(Math.abs(c0max - m.c0)))}
+${tile(`Стартовые затраты c0 · лимит ${sc} ${fmt(c0max, 0)}`, fmt(m.c0), 'млн руб.', Math.min(1, m.c0 / c0max), 'использовано ' + fmt(m.c0), (c0max - m.c0 >= 0 ? 'запас ' : 'превышение ') + fmt(Math.abs(c0max - m.c0)))}
 ${tile('OPEX в год', fmt(m.opex), 'млн руб.', Math.min(1, m.opex / cons.opex_max_mrub_per_year), 'использовано ' + fmt(m.opex), 'запас ' + fmt(cons.opex_max_mrub_per_year - m.opex))}
 ${tile('Общественная ценность', fmt(m.vpub, 0), 'усл. млн руб.', Math.min(1, cons.vpub_min_mrub_per_year / m.vpub), 'порог ' + fmt(cons.vpub_min_mrub_per_year, 0), 'сверх ' + signed(m.vpub - cons.vpub_min_mrub_per_year, 0))}
 ${tile('Покрытие OPEX', fmt(m.kcash, 2), 'cash / OPEX', Math.min(1, cons.kcash_min / m.kcash), 'порог ' + fmt(cons.kcash_min, 2), 'сверх ' + signed(m.kcash - cons.kcash_min, 2))}

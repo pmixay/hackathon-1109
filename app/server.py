@@ -35,6 +35,11 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(STATIC), **kw)
 
+    def end_headers(self):
+        if not self.path.startswith("/api/"):
+            self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def _json(self, status, obj):
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(status)

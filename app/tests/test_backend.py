@@ -182,6 +182,17 @@ class Model(unittest.TestCase):
         back = payload.build_dashboard(SELECTED, gates_filter=False)
         self.assertEqual(back["combinations"][SELECTED]["rank"], 3)
 
+    def test_build_does_not_mutate_the_shared_enumeration_cache(self):
+        """Регрессия: build_dashboard писал admitted/gates прямо в записи из lru_cache перебора,
+        поэтому параллельные запросы с разным gates_filter отдавали ответы друг друга."""
+        _, enumerated = payload._enumerated_for(str(ingest.active_root()))
+        before = {cid: dict(rec) for cid, rec in enumerated.items()}
+        payload.build_dashboard(SELECTED, gates_filter=True)
+        payload.build_dashboard(SELECTED, gates_filter=False)
+        self.assertEqual([cid for cid, rec in enumerated.items() if rec != before[cid]], [])
+        self.assertEqual(payload.build_dashboard(SELECTED, gates_filter=True)["meta"]["totals"]["admitted"], 18)
+        self.assertEqual(payload.build_dashboard(SELECTED, gates_filter=False)["meta"]["totals"]["admitted"], 143)
+
     def test_team_portfolio_stays_in_suggestions(self):
         d = payload.build_dashboard("FLOOD:A|AGRI:C|TRANS:B|ENV:A")
         self.assertIn(SELECTED, d["suggestions"])
@@ -257,9 +268,9 @@ class Export(unittest.TestCase):
             committed.pop("generated_at")
             self.assertEqual(fresh, committed)
             self.assertEqual(fresh["portfolio"]["name"], "FINAL")
+            norm = lambda b: b.replace(b"\r\n", b"\n")  # csv пишет CRLF, а в checkout git может быть LF: сравниваем содержимое, не переводы строк
             for name in ("portfolio_detail.csv", "portfolio_metrics.json", "team_decision_config.json"):
-                norm = lambda b: b.replace(b"\r\n", b"\n")  # csv пишет CRLF, а в checkout git может быть LF: сравниваем содержимое, не переводы строк
-            self.assertEqual(norm((Path(tmp) / name).read_bytes()), norm((REPO / "results" / name).read_bytes()), name)
+                self.assertEqual(norm((Path(tmp) / name).read_bytes()), norm((REPO / "results" / name).read_bytes()), name)
 
     def test_export_matches_template_format(self):
         import csv

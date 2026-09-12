@@ -1,13 +1,16 @@
 # Чистый запуск: протокол и результат
 
 Проверка «эксперт запускает без помощи разработчика» выполнена 12.09.2026 в
-пустой папке из свежего клона ветки (коммит `e3016e2`). Все команды ниже —
-ровно те, что выполнялись; результат записан как есть.
+пустой папке из свежего клона и повторена на актуальном `main` (коммит
+указан в таблице ниже). Все команды ниже — ровно те, что выполнялись; результат записан
+как есть. Шаги 1–4 и запуск сервера воспроизведены на `a3e3682`; экранные
+шаги 5–10 записаны по прогону Playwright на предыдущем коммите, состав и
+цифры интерфейса с тех пор не менялись.
 
 ## Команды
 
 ```bash
-git clone --branch claude/trusting-bohr-lfy6se https://github.com/pmixay/hackathon-1109 kosmo && cd kosmo
+git clone --branch main https://github.com/pmixay/hackathon-1109 kosmo && cd kosmo
 python -m venv .venv
 .venv/bin/pip install -r requirements.txt            # Windows: .venv\Scripts\pip
 PYTHONPATH=src .venv/bin/python -m pytest -q          # движок src/kosmo
@@ -23,10 +26,10 @@ PYTHONPATH=src .venv/bin/python -m kosmo calc --lots FIRE:A ENV:A AGRI:B TRANS:B
 
 | Шаг | Что сделано | Результат |
 |---|---|---|
-| 1. clone | клон ветки в пустую папку | ok, `e3016e2` |
+| 1. clone | клон `main` в пустую папку | ok, `PENDING_HASH` |
 | 2. venv | `python -m venv .venv` | Python 3.11.15 |
 | 3. зависимости | `pip install -r requirements.txt` | ok, pandas 2.3.3, ~10 с |
-| 4. backend | `pytest -q` (движок), `unittest` (интерфейс) | **358 passed** за 32 с; **21 тестов OK**, включая сверку каждой показанной комбинации с `src/kosmo` (метрики, девять проверок, PASS/FAIL в обоих сценариях) |
+| 4. backend | `pytest -q` (движок и интерфейс), `unittest` (интерфейс) | **383 passed** и 9 subtests за 62 с; **37 тестов OK**, включая сверку каждой показанной комбинации с `src/kosmo` (метрики, девять проверок, PASS/FAIL в обоих сценариях) |
 | 4. CLI | `kosmo calc … --scenario STRESS` | код выхода 0, c0 1 140, kcash 1,1837, все проверки ВЫПОЛНЕНО |
 | 4. сервер | `app/server.py` | `GET /` → 200; `GET /api/dashboard` → selected `FIRE:A\|AGRI:B\|TRANS:B\|ENV:A`, c0 1 140.0, BASE и STRESS PASS, место 3 |
 | 5–6. интерфейс, FINAL | открыть `#portfolio/overview` | подпись FINAL, «BASE: 9 из 9 ограничений выполнены», состав FIRE, AGRI, TRANS, ENV |

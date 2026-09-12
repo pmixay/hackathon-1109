@@ -315,7 +315,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       };
       const modesTxt = Object.entries(d.modes).map(([k, v]) => `<b>Режим ${k}:</b> k_c0 ${v.k_c0}, k_opex ${v.k_opex}, ценность ×${v.k_vpub}, якорные ×${v.k_anchor}, коммерческие ×${v.k_commercial}${v.public_core ? ', public core' : ''}`).join('. ');
       const helpLots = `c0, OPEX и cash — млн руб.; ценность — усл. млн руб./год; готовность, устойчивость и тираж — индексы 1–5 из <b>lots.csv</b>. Значения после применения режима: c0 и OPEX умножены на k_c0 и k_opex, ценность — на k_vpub, поступления = якорные × k_anchor + коммерческие × k_commercial. ${modesTxt}. t_rep — показатель воспроизводимости лота (коэффициент масштабируемости решения). В строке «Портфель» — суммы; для t_rep и индексов — средние.`;
-      // карточки сервисов: название для интерфейса и тексты из config/lots_ui.csv (файл участника записки)
+      // карточки сервисов: название для интерфейса и тексты из app/config/lots_ui.csv (файл участника записки)
       const svcCard = (r) => {
         const L = d.lots[r.lot], c = L.card;
         const head = `<div class="sv-h"><div class="name"><span class="code">${r.lot}</span> · ${esc(L.name)}</div><span class="mode">${r.mode}${r.public_core ? ' · public core' : ''}</span></div>`;
@@ -325,7 +325,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
         const access = sameMode ? row('Базовый доступ', c.access_base) + row('Дополнительно', c.access_extra) : `<dt>Доступ</dt><dd class="muted">описан для режима ${esc(c.mode)}, в комбинации — ${r.mode}</dd>`;
         return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}${c.user ? ' · ' + esc(c.user) : ''}</div>${c.problem ? `<div class="sv-p"><b>Проблема:</b> ${esc(c.problem)}</div>` : ''}<p>${esc(c.description)}</p><dl>${access}${row('KPI', c.kpi)}${c.payer ? `<dt>Плательщик</dt><dd>${esc(c.payer)} <span class="hyp">предположение</span></dd>` : ''}${row('Ключевой риск', c.risk)}${row('При сбое', c.on_failure)}</dl></div>`;
       };
-      const helpSvc = `Что получает пользователь каждого лота. Карточки сервисов из <b>config/lots_ui.csv</b> — файла участника записки: проблема, короткое описание, основной пользователь, базовый и дополнительный доступ, главный KPI, предполагаемый плательщик, ключевой риск, что показать при сбое. Плательщики — гипотезы по консультации трекера 12.09, не подтверждённые назначения. Название лота берётся отсюда же, поэтому в интерфейсе и записке оно одно. Правила доступа описаны для режима из карточки; если в комбинации режим другой, строки доступа не показываются. Оператор, приёмка и полный текст рисков — в записке.`;
+      const helpSvc = `Что получает пользователь каждого лота. Карточки сервисов из <b>app/config/lots_ui.csv</b> — файла участника записки: проблема, короткое описание, основной пользователь, базовый и дополнительный доступ, главный KPI, предполагаемый плательщик, ключевой риск, что показать при сбое. Плательщики — гипотезы по консультации трекера 12.09, не подтверждённые назначения. Название лота берётся отсюда же, поэтому в интерфейсе и записке оно одно. Правила доступа описаны для режима из карточки; если в комбинации режим другой, строки доступа не показываются. Оператор, приёмка и полный текст рисков — в записке.`;
       return `<div class="card"><h2>Лоты портфеля ${portfolioTag()}${help(helpLots)}</h2>
 <table><tr><th>Лот</th><th>Режим</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">t_rep</th><th class="num">Готовность</th><th class="num">Устойчивость</th><th class="num">Тираж</th></tr>
 ${s.per_lot.map(lotRow).join('')}
@@ -370,9 +370,9 @@ function renderWhy() {
   const val = (c, k) => (k === 'margin' ? d.meta.scenarios.STRESS.c0_max - c.metrics.c0 : c.metrics[k]);
   const body = {
     decision() {
-      const hero = `<div class="card"><h2>Выбранный командой вариант ${tag('FINAL')}${help(`Формулировки — из записки участника 3 (<b>docs/note/02-selection.md</b>), тексты хранятся в <b>app/config/team.json</b>. Балл и место посчитаны на полном множестве ${t.ranked} STRESS-допустимых комбинаций; веса утверждены до просмотра результата.${why.source ? ' Источник: ' + esc(why.source) + '.' : ''}`)}</h2>
+      const hero = `<div class="card"><h2>Выбранный командой вариант ${tag('FINAL')}${help(`Формулировки — из записки участника 3 (<b>docs/note/02-selection.md</b>), тексты хранятся в <b>app/config/why_final.json</b>. Балл и место посчитаны на полном множестве ${t.ranked} STRESS-допустимых комбинаций; веса утверждены до просмотра результата.${why.source ? ' Источник: ' + esc(why.source) + '.' : ''}`)}</h2>
 <div class="why-hero"><div class="why-txt"><div class="why-st">${esc(why.status || 'Выбранный командой вариант после управленческого отбора.')}</div>${why.headline ? `<p>${esc(why.headline)}</p>` : ''}${why.pareto ? `<p class="why-pareto">${esc(why.pareto)}</p>` : ''}</div>
-<div class="why-stats"><div class="ws"><span>Состав</span>${chips(f)}</div><div class="ws"><span>Место по баллу</span><b>${f.rank ?? '—'}<small>из ${t.ranked}</small></b></div><div class="ws"><span>Запас STRESS по c0</span><b>${signed(mS)}<small>млн руб.</small></b></div><div class="ws"><span>Операционный баланс</span><b>${signed(f.metrics.cash - f.metrics.opex)}<small>млн руб./год</small></b></div></div></div></div>`;
+<div class="why-stats"><div class="ws"><span>Состав</span>${chips(f)}</div><div class="ws"><span>Место по баллу</span><b>${f.rank ?? '—'}<small>из ${t.ranked}</small></b></div><div class="ws"><span>Запас STRESS по c0</span><b>${signed(mS)}<small>млн руб.</small></b></div><div class="ws"><span>Операционный баланс</span><b>${signed(-f.metrics.opex_gap)}<small>млн руб./год</small></b></div></div></div></div>`;
       const alt = (d.alternatives || []).map((a) => combo(a.id) && { ...a, c: combo(a.id) }).filter(Boolean).sort((a, b) => (a.id === d.final ? -1 : b.id === d.final ? 1 : (b.c.rank ?? 1e9) === (a.c.rank ?? 1e9) ? 0 : (a.c.rank ?? 1e9) - (b.c.rank ?? 1e9)));
       const rows = alt.map(({ name, id, note, c }) => `<tr class="${id === d.final ? 'hl' : ''}"><td><div class="alt-h">${chips(c, f)}<span class="vn">${esc(name)}</span></div><div class="sub">${esc(note)}</div></td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex, 2)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 3)}</td><td class="num ${c.ok.STRESS ? '' : 'neg'}">${signed(val(c, 'margin'))}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')} ${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL')}</td><td class="num">${c.rank ? `<b>${c.score.toFixed(3)}</b><span class="rk">${c.rank}-е</span>` : '<span class="muted">без места</span>'}</td></tr>`).join('');
       const table = `<div class="card"><h2>Ближайшие альтернативы${help(`Именованные варианты записки из <b>config/alternatives.json</b>, все посчитаны по одним правилам. Жёлтый лот — отличие от FINAL по составу, жёлтая буква — по режиму. Место — среди ${t.ranked} STRESS-допустимых комбинаций; вариант, не проходящий STRESS, места не получает. Варианты выше FINAL по баллу показаны, а не скрыты.`)}</h2>
@@ -606,7 +606,14 @@ document.addEventListener('click', async (e) => {
   if (th) { state.theme = th.dataset.theme; store.set('kp.theme', state.theme); document.documentElement.dataset.theme = state.theme; renderChrome(); return; }
   if (e.target.closest('#collapse')) { state.collapsed = !state.collapsed; store.set('kp.collapsed', state.collapsed ? '1' : '0'); $('#shell').classList.toggle('collapsed', state.collapsed); return; }
   const gt = e.target.closest('#gates-filter');
-  if (gt) { state.gatesFilter = gt.checked; store.set('kp.gates', gt.checked ? '1' : '0'); if (state.api) { try { state.data = await loadDashboard(state.selected); } catch (err) { toast('Не пересчитано: ' + err.message, false); } } render(); return; }
+  // Без сервера пересчитать нечего: не меняем состояние и не запоминаем флаг,
+  // иначе следующий запуск с сервером молча поднимется с включённым фильтром S2.
+  if (gt) {
+    if (!state.api) { render(); return toast('«S2 как фильтр» доступен только с сервером (python app/server.py)', false); }
+    state.gatesFilter = gt.checked; store.set('kp.gates', gt.checked ? '1' : '0');
+    try { state.data = await loadDashboard(state.selected); } catch (err) { toast('Не пересчитано: ' + err.message, false); }
+    render(); return;
+  }
   const row = e.target.closest('tr.pick');
   if (row) { if (row.dataset.id !== state.selected) await select(row.dataset.id); return; }
   if (e.target.closest('#export')) {

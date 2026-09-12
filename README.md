@@ -54,7 +54,7 @@ python -m kosmo calc                                # итоговый порт�
 python -m kosmo calc --lots FIRE:A ENV:A AGRI:B TRANS:B --scenario STRESS
 python -m kosmo compare --weights config/weights.json
 python -m kosmo export                              # перевыгрузить results/
-python -m pytest -q                                 # 372 теста (движок + app/tests), около 45 секунд
+python -m pytest -q                                 # 383 теста (346 движок + 37 app/tests), около 65 секунд
 python app/build.py                                 # собрать app/static/data/dashboard.json из движка
 python app/server.py                                # интерфейс на http://127.0.0.1:8765
 ```

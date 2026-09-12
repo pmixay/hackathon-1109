@@ -182,7 +182,10 @@ def _combo_payload(rec, score, rank, kcash_min: float):
 def build_dashboard(selected_id: str | None = None, root: Path | None = None, gates_filter: bool | None = None) -> dict:
     root = Path(root) if root is not None else ingest.active_root()
     case, enumerated = _enumerated_for(str(root))
-    records = dict(enumerated)  # копия: произвольные комбинации (конструктор, альтернативы записки) не попадают в кэш перебора
+    # Копия каждой записи, а не только словаря: model.admit пишет в rec["gates"] и rec["admitted"],
+    # а enumerated лежит в lru_cache и общий для всех запросов ThreadingHTTPServer.
+    # Без копии записей параллельные запросы с разным gates_filter портят ответы друг другу.
+    records = {cid: dict(rec) for cid, rec in enumerated.items()}
     ui_cfg = _load("model.json")
     ru = _load("lots_ru.json")
     ui = _lots_ui()
@@ -207,7 +210,7 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None, ga
     feasible_scenario = ui_cfg.get("feasible_scenario", "STRESS")
     model.admit(records, sel_model, feasible_scenario)
     score, rank = model.make_scorer(records, sel_model, feasible_scenario)
-    admitted = [r for r in enumerated.values() if r["admitted"]]
+    admitted = [records[cid] for cid in enumerated if records[cid]["admitted"]]
 
     allowed = ui_cfg.get("allowed_modes")
     suggestions, rejected, gate_rejected = model.suggest(records, score, selected_id, n=int(ui_cfg.get("suggestions", 6)), allowed_modes=allowed, pinned=(default_id,))

@@ -19,6 +19,28 @@
 | **D. Доступ, договоры, риски** | юрист / закупщик | П5 доступ и договорная схема 10, П7 риски и конкуренция 5 = **15** | `docs/note/05-access-contracts.md`, `docs/note/07-risks.md`, `config/access_modes_meaning.md` |
 | **E. Регионы, тиражирование, план, сборка, защита** | редактор / капитан | П1 потребности и общественная ценность 10, П8 тиражирование 5, П9 план 5 = **20** + презентация | `docs/note/01-needs.md`, `docs/note/08-replication.md`, `docs/note/09-roadmap.md`, `docs/management-note.md` (сборка), `presentation.*` |
 
+### Фактическое состояние разделов записки на 12.09
+
+Пути `docs/note/01-needs.md`, `02-model.md`, `04-comparison.md`,
+`05-access-contracts.md`, `07-risks.md`, `08-replication.md`, `09-roadmap.md`,
+`config/access_modes_meaning.md` и `docs/management-note.md` в таблице выше —
+это исходный план, а не то, что лежит в репозитории. Реально написанное:
+
+| Критерий | Где лежит содержательный текст | Статус |
+|---|---|---|
+| П1 потребности и общественная ценность | `docs/team/participant-2/README.md` (карточки четырёх сервисов, цепочки эффекта, KPI) | черновик, в записку не перенесён |
+| П2 обоснование модели | `docs/note/02-selection.md`, `config/weights.json`, `config/assumptions.json` | готово |
+| П3 финансирование | `docs/note/03-finance.md`, `docs/note/finance-appendix.md`, `docs/D-confirmations.md` | готово |
+| П4 сравнение вариантов | `docs/note/02-selection.md` (раздел «Честное сравнение»), `results/alternatives.csv`, `results/ranking_full.csv` | готово, отдельного файла нет |
+| П5 доступ и договорная схема | `docs/team/participant-2/README.md`, `docs/D-confirmations.md`, `config/assumptions.json` | черновик, в записку не перенесён |
+| П6 стресс-сценарий | `docs/note/06-stress.md`, `docs/stress-summary.md` | готово |
+| П7 риски и конкуренция | `docs/team/participant-2/README.md` (реестр из восьми рисков, `supplier_switch_rule`) | черновик, в записку не перенесён |
+| П8 тиражирование | `docs/team/participant-2/README.md` (ядро / адаптация / передача опыта) | черновик, в записку не перенесён |
+| П9 план реализации | `docs/team/participant-3/roadmap.md` | готово |
+
+Не собрано: единая управленческая записка на 8–12 страниц и презентация
+≤ 12 слайдов. Не заполнено: `team_name` и `strategy_thesis` в `config/team.json`.
+
 ## 2. Что делает каждый независимо
 
 ### A. Инструмент (Т1–Т5)

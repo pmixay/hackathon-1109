@@ -8,17 +8,17 @@
 |---|---|---|
 | `data/lots.csv`, `data/access_modes.csv`, `config/case_config.json`, `src/case_core.py` | неизменённые файлы организаторов | никто; хэши зафиксированы в `config/case_checksums.json`, при расхождении движок падает с `CaseIntegrityError` |
 | `config/portfolio.json` | итоговый портфель FINAL: FIRE-A, ENV-A, AGRI-B, TRANS-B (подтверждён 12.09 11:02) | E/B при смене решения |
-| `config/alternatives.json` | сравниваемые варианты: FINAL (итоговый) и V1–V6 | B |
+| `config/alternatives.json` | сравниваемые варианты: FINAL (итоговый) и V1–V8 | B |
 | `config/weights.json` | критерии, направления, веса модели выбора и `gates` — диагностические проверки команды (S2: `anchor_kcash ≥ 0.6`, `gates_filter: false`) | B |
 | `config/custom_mode.json` | режим D; если файла нет — D недоступен; `custom_mode.example.json` — шаблон | C/D |
-| `config/assumptions.json` | допущения команды: SLA по каждому сервису, источники данных, правила по облачности, истории, API, журналу доступа, контрольной выборке поставщика; проектное описание, движком не читается | участник 4 (роль D) |
+| `config/assumptions.json` | допущения команды: SLA по каждому сервису, источники данных, правила по облачности, истории, API, журналу доступа, контрольной выборке поставщика; проектное описание, движком не читается | роль D (участник 2) — договорная и эксплуатационная схема; финансовая часть сверяется с участником 3 |
 | `config/team.json` | карточка решения: команда, метод, тезис, шесть управленческих полей для `team_decision_config.json` | C, D, E |
 | `results/` | выгрузка для записки: `base.json`, `stress.json`, `alternatives.csv`, `scores.csv`, `sensitivity.csv`, `ranking_full.csv`, `sensitivity_full.csv`, `repairs_*.csv`, `enumeration.csv`, плюс `portfolio_detail.csv`, `portfolio_metrics.json`, `team_decision_config.json` в формате стартового notebook организаторов | только `python -m kosmo export` или кнопка «Экспорт results/» интерфейса (та же `export_bundle`) |
-
-`scores.csv` и `sensitivity.csv` относятся к презентационному shortlist из `config/alternatives.json`. Математический ranking и sensitivity модели определяются по полному множеству 143 STRESS-допустимых комбинаций и находятся в `ranking_full.csv` и `sensitivity_full.csv`.
 | `app/` | интерфейс команды; тонкий слой `app/backend` вызывает движок и собирает `dashboard.json` (`app/CONTRACT.md`) | участник 5 (экраны), участник 4 (слой над движком) |
 | `variants/` | сохранённые варианты с настройками и результатами | `python -m kosmo variant save` |
 | `examples/` | зафиксированный пример входа/выхода для интерфейса | — |
+
+`scores.csv` и `sensitivity.csv` относятся к презентационному shortlist из `config/alternatives.json`. Математический ranking и sensitivity модели определяются по полному множеству 143 STRESS-допустимых комбинаций и находятся в `ranking_full.csv` и `sensitivity_full.csv`.
 
 ## Запуск
 
@@ -35,7 +35,7 @@ python -m kosmo repairs --lots FIRE:A FLOOD:A TRANS:A ENV:A
 python -m kosmo export                              # всё в results/
 python -m kosmo variant save V1 --lots FIRE:A AGRI:A TRANS:A ENV:A
 python -m kosmo variant check V1                    # пересчёт совпал с сохранённым?
-python -m pytest -q                                 # 372 теста, ~45 с; сверка с case_core.py на всех 5670 комбинациях, плюс тесты интерфейсного слоя app/tests
+python -m pytest -q                                 # 383 теста (346 движок + 37 app/tests), ~65 с; сверка с case_core.py на всех 5670 комбинациях, плюс тесты интерфейсного слоя app/tests
 python app/build.py                                 # dashboard.json интерфейса из движка
 python app/server.py                                # интерфейс на http://127.0.0.1:8765
 ```

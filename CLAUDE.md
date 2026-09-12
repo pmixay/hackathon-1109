@@ -12,7 +12,9 @@ Notes for Claude Code sessions in this repository.
   `kosmo.export_bundle`. Never re-implement formulas in `app/`; if a screen
   needs a new number, add it to the engine (`src/kosmo`) and expose it in
   `payload.py`. Shared inputs: `config/portfolio.json`, `config/weights.json`,
-  `config/alternatives.json`, `config/custom_mode.json`.
+  `config/alternatives.json` and — only when mode D is in play —
+  `config/custom_mode.json` (not committed; copy it from
+  `config/custom_mode.example.json`).
 - After any change to the app or the engine: `python -m pytest -q` (engine
   tests plus `app/tests`), `python app/build.py`, then `node app/screenshot.mjs`
   (set `FONT_DIR` when Google Fonts is unreachable) and send the PNGs from
@@ -43,6 +45,6 @@ Notes for Claude Code sessions in this repository.
 
 - Documentation is in Russian; keep it that way.
 - Files under `cases/case02/` come from the organizers and are read-only.
-- Figures in the mockup come from `tools/case02_enumerate.py` and the candidate
-  table in `docs/case02-team-plan.md` §4. Combinations are named by their lot
-  composition and modes, never as versions.
+- Figures in the mockup come from the engine's `results/`, as recorded in
+  `docs/mockup/README.md`. Combinations are named by their lot composition and
+  modes, never as versions.

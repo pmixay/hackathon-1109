@@ -12,8 +12,8 @@
 1. `cases/case02/README.organizers.md`, разделы 4 (канонический расчёт), 5
    (поля лотов), 6 (режимы), 7 (ограничения), 9 (шаги 2, 3, 6), 12 (П2, П4), 15.
 2. `cases/case02/case_core.py` — понять каждую формулу.
-3. `cases/case02/results_all_portfolios.csv` (получается из
-   `tools/case02_enumerate.py`) и таблица кандидатов в `docs/case02-team-plan.md` §4.
+3. `cases/case02/results_all_portfolios.csv` (генерируется скриптом
+   `tools/case02_enumerate.py`, в репозиторий не входит) и таблица кандидатов в `docs/case02-team-plan.md` §4.
 4. В критериях оценки: описания П2 и П4 с уровнями 0–10.
 
 ## Что ты делаешь

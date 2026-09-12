@@ -45,10 +45,11 @@ PYTHONPATH=src .venv/bin/python -m kosmo calc --lots FIRE:A ENV:A AGRI:B TRANS:B
 
 ## Замечания участнику 4 (расчётный слой)
 
-1. **`results/` пишет только движок.** Кнопка «Экспорт results/» в
-   интерфейсе вызывает `kosmo.export_bundle`, как и `python -m kosmo export`;
-   произвольная комбинация из конструктора уходит в `results/variants/<id>/`
-   и цифры записки не затирает. Тест `test_export_writes_the_engine_bundle`
+1. **`results/` пишет только движок и только из командной строки.**
+   `python -m kosmo export` и `python app/build.py --export` вызывают одну
+   функцию `kosmo.export_bundle`; из интерфейса выгрузка не запускается.
+   Произвольная комбинация уходит в `results/variants/<id>/` и цифры записки
+   не затирает. Тест `test_export_writes_the_engine_bundle`
    сравнивает выгрузку с `results/` без учёта переводов строк: `csv` пишет
    CRLF, а checkout под Linux хранит LF.
 2. **Google Fonts.** Без доступа в интернет браузер один раз пишет в консоль

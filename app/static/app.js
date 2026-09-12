@@ -616,15 +616,6 @@ document.addEventListener('click', async (e) => {
   }
   const row = e.target.closest('tr.pick');
   if (row) { if (row.dataset.id !== state.selected) await select(row.dataset.id); return; }
-  if (e.target.closest('#export')) {
-    if (!state.api) return toast('Экспорт доступен только с сервером (python app/server.py)', false);
-    try {
-      const r = await fetch('/api/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ selected: state.selected }) });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error || r.statusText);
-      toast(`Движок kosmo записал ${j.written.length} файлов в ${j.dir}/: ${j.written.map((f) => f.split('/').pop()).join(', ')}`);
-    } catch (err) { toast('Ошибка экспорта: ' + err.message, false); }
-  }
 });
 document.addEventListener('change', (e) => {
   const lotSel = e.target.closest('select.bld-lot');

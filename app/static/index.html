@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Космо-портфель</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
 <script>(function(){try{var t=localStorage.getItem('kp.theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}catch(e){document.documentElement.dataset.theme='light';}})();</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="styles.css">
@@ -19,7 +21,7 @@
   </aside>
   <div class="body">
     <header class="hdr">
-      <div class="hleft"><span class="btn ghost sm" id="export" title="Записать results/base.json, stress.json, alternatives.csv">Экспорт results/</span><span class="toast" id="toast"></span></div>
+      <div class="hleft"><span class="toast" id="toast"></span></div>
       <div class="hright"><div class="dd" id="scenario"></div><div class="tsw" id="theme"></div><span class="ver" id="ver"></span></div>
     </header>
     <main class="main" id="main"><div class="empty">Загрузка…</div></main>

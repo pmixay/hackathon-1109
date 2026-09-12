@@ -6,7 +6,6 @@
 API
     GET  /api/dashboard?selected=<id>   пересобрать dashboard.json для выбранной комбинации
          &gates=filter|off              проверки команды (S2) как фильтр ранжирования / только диагностика (по умолчанию — как в config/weights.json)
-    POST /api/export                    записать results/ движком kosmo для выбранной комбинации ({"selected": id})
     GET  /api/data                      активный набор данных (файлы, хэши, версия)
     POST /api/data                      {"files": {"lots.csv": "...", ...}, "apply": true} — проверить, сохранить, применить
     POST /api/data/reset                вернуть файлы организаторов
@@ -29,7 +28,6 @@ from backend import ingest, payload  # noqa: E402
 
 APP = Path(__file__).resolve().parent
 STATIC = APP / "static"
-RESULTS = APP.parent / "results"
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -89,10 +87,6 @@ class Handler(SimpleHTTPRequestHandler):
         return self._api(self._post_api, urlparse(self.path))
 
     def _post_api(self, url):
-        if url.path == "/api/export":
-            dash = payload.build_dashboard(self._body().get("selected"))
-            written = sorted(Path(p).relative_to(RESULTS.parent).as_posix() for p in payload.export_results(dash, RESULTS).values())
-            return self._json(HTTPStatus.OK, {"written": written, "dir": written[0].rsplit("/", 1)[0], "selected": dash["selected"]})
         if url.path == "/api/data":
             body = self._body()
             files = {k: v for k, v in (body.get("files") or {}).items() if k in ingest.FILES and isinstance(v, str)}

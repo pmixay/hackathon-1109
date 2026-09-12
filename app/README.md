@@ -27,7 +27,7 @@ python -m unittest discover -s app/tests -v
 
 ```
 app/
-├── server.py            сервер: статика + GET /api/dashboard + POST /api/export + /api/data
+├── server.py            сервер: статика + GET /api/dashboard + POST /api/data
 ├── build.py             собрать dashboard.json; --export пишет results/ движком
 ├── config/
 │   ├── model.json       параметры интерфейса: feasible_scenario, thin_margin_pct,
@@ -120,15 +120,16 @@ config/team.json         карточка решения: команда, мет
   карточка «Замена».
 - **Данные.** «Текущий набор» (хэши, версия), «Загрузка» (три файла
   организаторов, проверка, предпросмотр, применение), «Формат».
-- Кнопка «Экспорт results/» вызывает `kosmo.export_bundle`: для портфеля
-  команды пишет в `results/` те же файлы, что `python -m kosmo export`
-  (`base.json`, `stress.json`, `alternatives.csv`, `scores.csv`,
-  `sensitivity.csv`, `repairs_base.csv`, `repairs_stress.csv`, а также
-  `portfolio_detail.csv`, `portfolio_metrics.json`, `team_decision_config.json`
-  с теми же именами и полями, что у последней ячейки стартового notebook
-  организаторов, README организаторов §8.8); для любой другой комбинации —
-  в `results/variants/<id>/`, чтобы цифры записки не затирались случайным
-  кликом.
+- Интерфейс `results/` не пишет: кнопки экспорта в шапке нет, и серверного
+  маршрута записи тоже нет. Выгрузку делают только из командной строки —
+  `python -m kosmo export` или `python app/build.py --export`. Обе вызывают
+  `kosmo.export_bundle`: для портфеля команды пишут в `results/` (`base.json`,
+  `stress.json`, `alternatives.csv`, `scores.csv`, `sensitivity.csv`,
+  `repairs_base.csv`, `repairs_stress.csv`, а также `portfolio_detail.csv`,
+  `portfolio_metrics.json`, `team_decision_config.json` с теми же именами и
+  полями, что у последней ячейки стартового notebook организаторов, README
+  организаторов §8.8); для любой другой комбинации — в
+  `results/variants/<id>/`, чтобы цифры записки не затирались.
 - Пояснения не лежат на экране серым текстом: у каждого блока кнопка «?»,
   по клику открывается подсказка для эксперта (пороги, формулы, правила
   кейса, единицы измерения).

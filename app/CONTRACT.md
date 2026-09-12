@@ -129,9 +129,9 @@
 
 ## Экспорт для записки
 
-`python app/build.py --export` (или кнопка «Экспорт results/» в шапке при
-запущенном сервере) вызывает `kosmo.export_bundle` — ту же функцию, что
-`python -m kosmo export`. Для портфеля из `config/portfolio.json` файлы
+`python app/build.py --export` вызывает `kosmo.export_bundle` — ту же функцию,
+что `python -m kosmo export`. Из интерфейса выгрузка не запускается: кнопки
+экспорта в шапке нет. Для портфеля из `config/portfolio.json` файлы
 ложатся в `results/` (`base.json`, `stress.json`, `alternatives.csv`,
 `scores.csv`, `sensitivity.csv`, `repairs_base.csv`, `repairs_stress.csv`;
 формат описан в `docs/calc-engine.md`; плюс `portfolio_detail.csv`,

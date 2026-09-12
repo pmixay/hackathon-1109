@@ -62,6 +62,8 @@ def make_scorer(records: dict, model: SelectionModel, feasible_scenario: str = "
     model = replace(model, feasibility_scenario=feasible_scenario)
     scored = {item.name: item for item in score_variants({cid: rec["results"] for cid, rec in records.items()}, model)}
     feasible = [rec for rec in records.values() if rec["ok"][feasible_scenario]]
+    if not feasible:
+        return (lambda rec: 0.0), {}
     bounds = {}
     for criterion in model.criteria:
         values = [criterion_value(rec["results"], criterion.key, feasible_scenario) for rec in feasible]

@@ -130,8 +130,9 @@ def _combo_payload(rec, score, rank):
     }
 
 
-def build_dashboard(selected_id: str | None = None) -> dict:
-    case, enumerated = _enumerated()
+def build_dashboard(selected_id: str | None = None, root: Path | None = None) -> dict:
+    root = Path(root) if root is not None else ingest.active_root()
+    case, enumerated = _enumerated_for(str(root))
     records = enumerated
     ui_cfg = _load("model.json")
     ru = _load("lots_ru.json")
@@ -178,7 +179,7 @@ def build_dashboard(selected_id: str | None = None) -> dict:
             "feasible_scenario": feasible_scenario,
             "thin_margin_pct": ui_cfg.get("thin_margin_pct", 0.03),
             "allowed_modes": allowed,
-            "dataset": {k: v for k, v in ingest.describe().items() if k in ("source", "root", "case_version", "activated_at")},
+            "dataset": {k: v for k, v in ingest.describe(root).items() if k in ("source", "root", "case_version", "activated_at")},
             "totals": {
                 "combinations": len(enumerated),
                 "base_feasible": sum(1 for r in enumerated.values() if r["ok"]["BASE"]),

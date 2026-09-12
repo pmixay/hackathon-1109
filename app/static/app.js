@@ -69,7 +69,7 @@ const signed = (v, d = 1) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v
 const pct = (x) => Math.round(x * 100) + ' %';
 const modesOf = (c) => c.selection.map((s) => s.mode).join('');
 const lotsOf = (c) => c.selection.map((s) => s.lot).join(', ');
-const help = (text) => `<span class="help"><i>?</i><div class="pop">${text}</div></span>`;
+const help = (text) => `<span class="help"><i tabindex="0" role="button" aria-label="Подсказка">?</i><div class="pop">${text}</div></span>`;
 const tag = (t, cls = '') => `<span class="tag${cls ? ' ' + cls : ''}">${esc(t)}</span>`;
 // Итоговый портфель помечается заливным бейджем: чип того же вида, что у лотов,
 // читался как пятый лот. Комбинации называются составом и режимами, а не версиями.
@@ -466,13 +466,17 @@ function barChart(items) {
   items.forEach((c, i) => {
     const cx = x0 + step * (i + 0.5);
     const hv = c.metrics.vpub * scaleY, hc = c.metrics.cash * scaleY;
-    g += `<rect x="${(cx - bw - 2).toFixed(1)}" y="${(base - hv).toFixed(1)}" width="${bw}" height="${hv.toFixed(1)}" rx="3" style="fill:var(--s1)"></rect><rect x="${(cx + 2).toFixed(1)}" y="${(base - hc).toFixed(1)}" width="${bw}" height="${hc.toFixed(1)}" rx="3" style="fill:var(--s2)"></rect>`;
-    g += `<text class="n t" x="${(cx - bw / 2 - 2).toFixed(1)}" y="${(base - hv - 6).toFixed(1)}" text-anchor="middle">${fmt(c.metrics.vpub, 0)}</text>`;
     const lots = c.selection.map((s) => s.lot);
-    g += `<g class="xl"><text x="${cx.toFixed(1)}" y="204" text-anchor="middle">${lots.slice(0, 2).join(', ')}</text><text x="${cx.toFixed(1)}" y="215" text-anchor="middle">${lots.slice(2).join(', ')}</text></g><g class="xm"><text x="${cx.toFixed(1)}" y="228" text-anchor="middle">${modesOf(c)}</text></g>`;
+    // столбцы одной комбинации — в группе с прозрачной областью наведения (подсветка столбца, подпись cash, всплывающая подсказка)
+    g += `<g class="cb"><title>${esc(`${lotsOf(c)}, ${modesOf(c)} — ценность ${fmt(c.metrics.vpub, 0)}, cash ${fmt(c.metrics.cash, 1)}`)}</title>`;
+    g += `<rect class="hit" x="${(cx - step / 2).toFixed(1)}" y="18" width="${step.toFixed(1)}" height="216" rx="8"></rect>`;
+    g += `<rect class="b b1" x="${(cx - bw - 2).toFixed(1)}" y="${(base - hv).toFixed(1)}" width="${bw}" height="${hv.toFixed(1)}" rx="3" style="fill:var(--s1)"></rect><rect class="b b2" x="${(cx + 2).toFixed(1)}" y="${(base - hc).toFixed(1)}" width="${bw}" height="${hc.toFixed(1)}" rx="3" style="fill:var(--s2)"></rect>`;
+    g += `<text class="n t" x="${(cx - bw / 2 - 2).toFixed(1)}" y="${(base - hv - 6).toFixed(1)}" text-anchor="middle">${fmt(c.metrics.vpub, 0)}</text>`;
+    g += `<text class="n t cv" x="${(cx + bw / 2 + 2).toFixed(1)}" y="${(base - hc - 6).toFixed(1)}" text-anchor="middle">${fmt(c.metrics.cash, 0)}</text>`;
+    g += `<g class="xl"><text x="${cx.toFixed(1)}" y="204" text-anchor="middle">${lots.slice(0, 2).join(', ')}</text><text x="${cx.toFixed(1)}" y="215" text-anchor="middle">${lots.slice(2).join(', ')}</text></g><g class="xm"><text x="${cx.toFixed(1)}" y="228" text-anchor="middle">${modesOf(c)}</text></g></g>`;
   });
-  return `<svg viewBox="0 0 ${W} 244" width="100%" role="img" aria-label="Общественная ценность и поступления"><line class="axis" x1="${x0}" x2="${x1}" y1="${base}" y2="${base}"></line>${g}</svg>
-<div class="legend"><span><i style="background:var(--s1)"></i>Общественная ценность</span><span><i style="background:var(--s2)"></i>Поступления cash</span><span><i class="line"></i>порог ${fmt(floor, 0)}</span></div>`;
+  return `<div class="chart"><svg viewBox="0 0 ${W} 244" width="100%" role="img" aria-label="Общественная ценность и поступления"><line class="axis" x1="${x0}" x2="${x1}" y1="${base}" y2="${base}"></line>${g}</svg>
+<div class="legend"><span class="lg lg1"><i style="background:var(--s1)"></i>Общественная ценность</span><span class="lg lg2"><i style="background:var(--s2)"></i>Поступления cash</span><span class="lg lg3"><i class="line"></i>порог ${fmt(floor, 0)}</span></div></div>`;
 }
 function c0Chart(items) {
   const sc = state.data.meta.scenarios, lo0 = sc.STRESS.c0_max, hi0 = sc.BASE.c0_max;
@@ -486,14 +490,18 @@ function c0Chart(items) {
   g += `<line x1="${X(lo0).toFixed(1)}" x2="${X(lo0).toFixed(1)}" y1="${top - 4}" y2="${base + 4}" style="stroke:var(--warn)" stroke-width="2"></line><line x1="${X(hi0).toFixed(1)}" x2="${X(hi0).toFixed(1)}" y1="${top - 4}" y2="${base + 4}" style="stroke:var(--crit)" stroke-width="2"></line>`;
   items.forEach((c, i) => {
     const y = top + rowH * (i + 0.7), cx = X(c.metrics.c0), ok = c.ok.STRESS;
-    g += `<text class="xl" x="200" y="${(y + 4).toFixed(1)}" text-anchor="end" style="fill:var(--ink)">${lotsOf(c)}, ${modesOf(c)}</text><line class="grid" x1="${x0}" x2="${x1}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"></line><circle cx="${cx.toFixed(1)}" cy="${y.toFixed(1)}" r="6" style="fill:var(${ok ? '--good' : c.ok.BASE ? '--warn' : '--crit'});stroke:var(--surface)" stroke-width="2"></circle>`;
+    const pc = ok ? 'ok' : c.ok.BASE ? 'warn' : 'bad';
+    // строка одной комбинации — в группе с прозрачной областью наведения (подсветка строки и всплывающая подсказка)
+    g += `<g class="cb"><title>${esc(`${lotsOf(c)}, ${modesOf(c)} — c0 ${fmt(c.metrics.c0)} млн руб., STRESS ${ok ? 'проходит' : 'не проходит'}`)}</title><rect class="hit" x="0" y="${(y - rowH / 2).toFixed(1)}" width="${x1}" height="${rowH}" rx="6"></rect>`;
+    g += `<text class="xl" x="200" y="${(y + 4).toFixed(1)}" text-anchor="end" style="fill:var(--ink)">${lotsOf(c)}, ${modesOf(c)}</text><line class="grid" x1="${x0}" x2="${x1}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"></line><circle class="p ${pc}" cx="${cx.toFixed(1)}" cy="${y.toFixed(1)}" r="6" style="fill:var(${ok ? '--good' : c.ok.BASE ? '--warn' : '--crit'});stroke:var(--surface)" stroke-width="2"></circle>`;
     const right = cx + 70 <= x1; // подпись справа от точки, у правого края — слева
     g += right ? `<text class="n t" x="${(cx + 11).toFixed(1)}" y="${(y + 4).toFixed(1)}">${fmt(c.metrics.c0)}</text>` : `<text class="n t" x="${(cx - 11).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end">${fmt(c.metrics.c0)}</text>`;
+    g += '</g>';
   });
   g += `<line class="axis" x1="${x0}" x2="${x1}" y1="${base}" y2="${base}"></line>`;
   for (let v = dmin; v <= dmax; v += 50) g += `<text class="n" x="${X(v).toFixed(1)}" y="${base + 18}" text-anchor="middle">${fmt(v, 0)}</text>`;
-  return `<svg viewBox="0 0 560 ${base + 28}" width="100%" role="img" aria-label="c0 относительно лимитов">${g}</svg>
-<div class="legend"><span><i style="background:var(--good);border-radius:50%"></i>оба сценария</span><span><i style="background:var(--warn);border-radius:50%"></i>только BASE</span></div>`;
+  return `<div class="chart"><svg viewBox="0 0 560 ${base + 28}" width="100%" role="img" aria-label="c0 относительно лимитов">${g}</svg>
+<div class="legend"><span class="lg lg1"><i style="background:var(--good);border-radius:50%"></i>оба сценария</span><span class="lg lg2"><i style="background:var(--warn);border-radius:50%"></i>только BASE</span></div></div>`;
 }
 function renderCompare() {
   const d = state.data, s = sel();
@@ -667,7 +675,14 @@ document.addEventListener('change', (e) => {
   const lotSel = e.target.closest('select.bld-lot');
   if (lotSel) { state.builder[+lotSel.dataset.i].lot = lotSel.value; render(); }
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenus(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeMenus(); return; }
+  // кнопка «?» получает фокус с клавиатуры — Enter и пробел открывают подсказку
+  if (e.key === 'Enter' || e.key === ' ') {
+    const hb = e.target.closest && e.target.closest('.help i');
+    if (hb) { e.preventDefault(); hb.click(); }
+  }
+});
 window.addEventListener('hashchange', () => { const before = hashOf(); if (parseHash() && hashOf() !== before) render(); });
 
 (async () => {

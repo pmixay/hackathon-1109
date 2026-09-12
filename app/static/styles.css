@@ -248,7 +248,7 @@ tr.hl .lot{background:var(--hl-chip)}
 .slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .slot{display:flex;flex-direction:column;gap:8px;padding:18px 20px;border:1.5px dashed var(--rule);border-radius:16px;background:var(--bg);cursor:pointer;min-height:104px;justify-content:center}
 .slot:hover{border-color:var(--brand)}.slot.ok{border-style:solid;border-color:var(--good);background:var(--good-soft)}.slot.bad{border-style:solid;border-color:var(--crit);background:var(--crit-soft)}
-.slot input{display:none}
+.slot input{position:absolute;width:0;height:0;opacity:0}/* не display:none — иначе слот недоступен с клавиатуры */
 .slot-t{display:flex;align-items:baseline;gap:10px}.slot-t b{font-size:14.5px}.slot-t span{font-size:13px;color:var(--ink-2)}
 .slot-s{font-size:13px}.slot-s .muted{color:var(--ink-2)}
 .dz.over{outline:2px solid var(--brand);outline-offset:-2px}
@@ -410,3 +410,62 @@ table.brk td .sub{font-size:12px}
   .hdr{padding:10px}
   .pop{width:calc(100vw - 40px)}
 }
+
+/* ---- наведение и фокус ---- */
+/* части графиков, нужные только для наведения: прозрачная область строки/столбца и вторая подпись */
+.chart .hit{fill:var(--ink);opacity:0;pointer-events:all}
+.chart .cv{opacity:0}
+.chart .lg{cursor:default}
+/* переходы — короткие и только если пользователь не просит уменьшить анимацию */
+@media (prefers-reduced-motion: no-preference){
+  .btn,.chip,.segc span,.tsw button,.dd-btn,.dd-it,.dd-it .ck,.help i,.more,.more svg,.tabs a,.radio,.slot,.tile,.tile .seglbl,.hl-lot,.sv,.mini,td,
+  .chart .hit,.chart .b,.chart .p,.chart text,.chart .lg{transition:background-color .14s ease,border-color .14s ease,color .14s ease,box-shadow .14s ease,fill .14s ease,opacity .14s ease,stroke-width .14s ease,transform .14s ease}
+}
+/* состояния наведения — только там, где есть указатель: на сенсорных экранах они не залипают */
+@media (hover: hover){
+  /* строки таблиц: строка данных подсвечивается слегка, кликабельная — заметнее */
+  tr:not(.hl):hover>td{background:var(--surface-2)}
+  tr.pick:hover>td{background:var(--bg)}
+  tr.pick.hl:hover>td{background:var(--brand-soft)}
+  tr.pick:hover .radio{border-color:var(--brand)}
+  /* кнопки */
+  .btn:hover{background:color-mix(in srgb,var(--brand) 80%,var(--ink))}
+  .btn.ghost:hover{background:var(--surface-2);border-color:var(--brand)}
+  /* чипы сравнения, сегменты режимов, радио */
+  .chip:hover{background:var(--surface-2)}
+  .chip.on:hover{background:var(--ink-2);border-color:var(--ink-2);color:var(--surface)}
+  .segc span:not(.on):hover{background:var(--rule-2);color:var(--ink)}
+  .radio:hover{border-color:var(--brand)}
+  /* вкладки: под неактивной вкладкой появляется серая полоса на месте активной */
+  .tabs a:not(.on):hover::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:var(--rule)}
+  /* ссылки «подробнее» */
+  .more:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
+  .more:hover svg{transform:translateX(2px)}
+  /* кнопка «?»; у раскрытой подсказки фон не меняем */
+  .help:not(.open) i:hover{background:var(--brand-soft)}
+  /* шапка: выбор сценария и переключатель темы */
+  .tsw button:not(.on):hover{background:var(--rule-2);color:var(--ink)}
+  .dd-it:hover .ck{visibility:visible;opacity:.4}
+  .dd-it.on:hover .ck{opacity:1}
+  /* карточки лотов, плитки, карточки сервисов */
+  .hl-lot:hover,.tile:not(.thin):not(.bad):hover{background:var(--surface-2);box-shadow:var(--shadow-sm)}
+  .tile:hover .seglbl{color:var(--ink)}
+  .sv:hover{background:var(--surface-2)}
+  /* полоса вклада в разложении балла */
+  .mini:hover{background:var(--rule)}
+  /* слоты загрузки; проверенный слот сохраняет цвет статуса */
+  .slot:not(.ok):not(.bad):hover{background:var(--surface-2)}
+  /* графики: столбец или строка подсвечивается, показывается вторая подпись, точка утолщается */
+  .chart .cb:hover .hit{opacity:.06}
+  .chart .cb:hover text{fill:var(--ink)}
+  .chart .cb:hover .cv{opacity:1}
+  .chart .cb:hover .p{r:7;stroke-width:3}
+  /* легенда: наведение на элемент приглушает остальные ряды */
+  .chart .lg:hover{color:var(--ink)}
+  .chart:has(.lg1:hover) .b2,.chart:has(.lg2:hover) .b1,.chart:has(.lg3:hover) .b{opacity:.2}
+  .chart:has(.lg1:hover) .p:not(.ok),.chart:has(.lg2:hover) .p:not(.warn){opacity:.18}
+}
+/* видимый фокус с клавиатуры */
+.dd-btn:focus-visible,.help i:focus-visible,.slot:has(input:focus-visible),#gates-filter:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.tsw button:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.help i:focus-visible{border-color:var(--brand);color:var(--brand)}

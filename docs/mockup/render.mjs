@@ -32,5 +32,12 @@ if (fullName) {
     await el.screenshot({ path: path.join(outDir, id + '.png') });
     console.log('wrote', id + '.png', 'height', h);
   }
+  // one extra shot with a help popover open (the constraints block on the portfolio screen)
+  const helpBtn = await page.$('#screen-portfolio .row2 .card .help i');
+  if (helpBtn) {
+    await helpBtn.click();
+    await (await page.$('#screen-portfolio')).screenshot({ path: path.join(outDir, 'portfolio-help.png') });
+    console.log('wrote portfolio-help.png');
+  }
 }
 await browser.close();

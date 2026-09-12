@@ -68,7 +68,7 @@ const fmt = (v, d = 1) => {
 const signed = (v, d = 1) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v), d);
 const pct = (x) => Math.round(x * 100) + ' %';
 const modesOf = (c) => c.selection.map((s) => s.mode).join('');
-const lotsOf = (c) => c.selection.map((s) => s.lot).join(' · ');
+const lotsOf = (c) => c.selection.map((s) => s.lot).join(', ');
 const help = (text) => `<span class="help"><i>?</i><div class="pop">${text}</div></span>`;
 const tag = (t, cls = '') => `<span class="tag${cls ? ' ' + cls : ''}">${esc(t)}</span>`;
 // Итоговый портфель помечается заливным бейджем: чип того же вида, что у лотов,
@@ -148,7 +148,7 @@ function describeChange(base, other) {
   const byMode = {};
   for (const l of Object.keys(o)) if (l in b && b[l] !== o[l]) (byMode[o[l]] ||= []).push(l);
   for (const [m, ls] of Object.entries(byMode)) parts.push(`${ls.join(', ')} → ${m}`);
-  return parts.join(' · ') || 'без изменений';
+  return parts.join(', ') || 'без изменений';
 }
 const chips = (c, base = null) => {
   const ms = base ? marks(base, c) : c.selection.map((s) => ({ ...s }));
@@ -160,7 +160,7 @@ const stChip = (ok, label) => `<span class="st ${ok ? 'ok' : 'fail'}">${label}</
 const gatesOf = (c) => c.gates || [];
 const gateName = (g) => (g.label || g.id).replace(/^S2:\s*/, '');
 const gateHead = (d) => (d.meta.gates || []).map((g) => `<th>S2 ${OP[g.op]} ${fmt(g.threshold, 2)}</th>`).join('');
-const gateCells = (c) => gatesOf(c).map((g) => `<td>${stChip(g.ok, `${g.ok ? 'PASS' : 'FAIL'} · ${fmt(g.fact, 2)}`)}</td>`).join('');
+const gateCells = (c) => gatesOf(c).map((g) => `<td>${stChip(g.ok, `${g.ok ? 'PASS' : 'FAIL'}, ${fmt(g.fact, 2)}`)}</td>`).join('');
 const gateHelp = (d) => (d.meta.gates || []).map((g) => ` Проверка команды S2 (не канон кейса, диагностика): ${esc(g.label)} — ${g.metric} ${OP[g.op]} ${fmt(g.threshold, 2)}. ${esc(g.rationale)}${d.meta.gates_filter ? ' Сейчас включён режим «S2 как фильтр»: комбинации, не прошедшие S2, в ранжировании не участвуют и показаны серым.' : ' На ранг и балл S2 не влияет; переключатель «S2 как фильтр» на вкладке «Комбинации» показывает, как изменился бы список.'}`).join('');
 const gateFailText = (g) => `${gateName(g)}: ${fmt(g.fact, 3)} ${g.op === '<=' ? '>' : '<'} ${fmt(g.threshold, 2)}`;
 // Альтернатива подписывается отличием от итогового портфеля, а не именем версии.
@@ -182,9 +182,9 @@ function failText(r) {
 const statusPill = (c, scenario) => {
   const checks = checksOf(c, scenario), ok = checks.filter((r) => r.ok).length, failing = checks.filter((r) => !r.ok);
   const gatesBad = gatesOf(c).filter((g) => !g.ok);
-  const gateTxt = gatesBad.length ? ` · S2 не пройден: ${gatesBad.map(gateFailText).join(', ')}` : gatesOf(c).length ? ' · S2 пройден' : '';
+  const gateTxt = gatesBad.length ? `, S2 не пройден: ${gatesBad.map(gateFailText).join(', ')}` : gatesOf(c).length ? ', S2 пройден' : '';
   return failing.length
-    ? `<div class="pill bad"><span class="dot">${ICON.x}</span>${scenario}: ${ok} из ${checks.length} · ${failing.map(failText).join('; ')}${gateTxt}</div>`
+    ? `<div class="pill bad"><span class="dot">${ICON.x}</span>${scenario}: ${ok} из ${checks.length}, ${failing.map(failText).join('; ')}${gateTxt}</div>`
     : `<div class="pill${gatesBad.length ? ' warn' : ''}"><span class="dot">${gatesBad.length ? ICON.x : ICON.check}</span>${scenario}: ${ok} из ${checks.length} ограничений выполнены (c0 ≤ ${fmt(state.data.meta.scenarios[scenario].c0_max, 0)})${gateTxt}</div>`;
 };
 
@@ -197,8 +197,8 @@ function renderChrome() {
   $('#scenario').innerHTML = `<button class="dd-btn" type="button" title="Сценарий бюджета: меняется только лимит c0 (${esc(state.scenario)}: ≤ ${fmt(sc[state.scenario].c0_max, 0)})"><span class="k">Сценарий</span><b>${esc(state.scenario)}</b>${ICON.chev}</button>
 <div class="dd-pop">${Object.keys(sc).map((s) => `<div class="dd-it${s === state.scenario ? ' on' : ''}" data-s="${esc(s)}"><span class="ck">${ICON.tick}</span><div><b>${esc(s)}</b><span>${SCENARIO_NOTE[s] || 'сценарий кейса'}</span></div></div>`).join('')}</div>`;
   $('#theme').innerHTML = `<button type="button" data-theme="light" class="${state.theme === 'light' ? 'on' : ''}" title="Светлая тема">${ICON.sun}</button><button type="button" data-theme="dark" class="${state.theme === 'dark' ? 'on' : ''}" title="Тёмная тема">${ICON.moon}</button>`;
-  const src = d.meta.dataset ? (d.meta.dataset.source === 'организаторы' ? '' : ' · загружено') : '';
-  $('#ver').textContent = `данные v${d.meta.case_version}${src}${state.api ? '' : ' · статический файл'}`;
+  const src = d.meta.dataset ? (d.meta.dataset.source === 'организаторы' ? '' : ', загружено') : '';
+  $('#ver').textContent = `данные v${d.meta.case_version}${src}${state.api ? '' : ', статический файл'}`;
   $('#shell').classList.toggle('collapsed', state.collapsed);
 }
 const tabsHtml = (page) => `<nav class="tabs">${TABS[page].map(([k, t]) => `<a data-tab="${k}" class="${k === curTab(page) ? 'on' : ''}">${t}</a>`).join('')}</nav>`;
@@ -219,14 +219,14 @@ function renderPortfolio() {
       const helpHero = `Показанный портфель: FINAL — решение гейта из <b>config/portfolio.json</b>, или произвольный портфель из конструктора. Четыре лота, у каждого режим доступа (буква в чипе; public core — режим с общественным ядром). В карточке лота — название из карточки сервиса, регион и архетип, стартовые затраты c0 лота с учётом режима. Место — среди ${t.ranked} комбинаций, допустимых в STRESS${d.meta.gates_filter ? ' и прошедших проверку команды S2' : ''}, по баллу модели выбора (0–1; веса: ${weightsTxt}); модель — советник, выбор портфеля управленческий.`;
       const lotCards = s.per_lot.map((r) => {
         const L = d.lots[r.lot];
-        return `<div class="hl-lot"><div class="hl-h"><span class="hl-code">${r.lot}</span><span class="mode">${r.mode}${r.public_core ? ' · public core' : ''}</span></div><div class="hl-name">${esc(L.name)}</div><div class="hl-sub">${esc(L.region)} · ${esc(L.archetype)} архетип</div><div class="hl-c0">${fmt(r.c0)}<small>c0, млн руб.</small></div></div>`;
+        return `<div class="hl-lot"><div class="hl-h"><span class="hl-code">${r.lot}</span><span class="mode">${r.mode}${r.public_core ? ', public core' : ''}</span></div><div class="hl-name">${esc(L.name)}</div><div class="hl-sub">${esc(L.region)}</div><div class="hl-c0">${fmt(r.c0)}<small>c0, млн руб.</small></div></div>`;
       }).join('');
       const score = `<div class="hl-score"><div class="k">Место по баллу</div><div class="v">${s.rank ?? '—'}<small>из ${t.ranked}</small></div><div class="s">балл модели <b>${s.score.toFixed(2)}</b></div>${more('decision', 'Почему FINAL', 'why')}</div>`;
       const helpTiles = `Показатели портфеля в сценарии ${sc}. Тёмная часть полосы — использовано или порог, светлая — запас или превышение порога. c0 и OPEX — млн руб.; общественная ценность — усл. млн руб./год (синтетическая шкала кейса, не деньги); покрытие OPEX — поступления cash за год, делённые на OPEX. Запас по c0 — расстояние до лимита в каждом сценарии; отрицательный — лимит превышен.`;
       const tile = (title, val, unit, reqW, lblA, lblB) => `<div class="tile"><div class="tl">${title}</div><div class="tv">${val}<small>${unit}</small></div><div class="seg"><i class="req" style="width:${(reqW * 100).toFixed(1)}%"></i><i class="sur" style="width:${((1 - reqW) * 100).toFixed(1)}%"></i></div><div class="seglbl"><span><i class="sw" style="background:var(--seg-a)"></i>${lblA}</span><span><i class="sw" style="background:var(--seg-b)"></i>${lblB}</span></div></div>`;
       const mB = d.meta.scenarios.BASE.c0_max - m.c0, mS = d.meta.scenarios.STRESS.c0_max - m.c0;
       const tiles = `<div class="tiles">
-${tile(`Стартовые затраты c0 · лимит ${sc} ${fmt(c0max, 0)}`, fmt(m.c0), 'млн руб.', Math.min(1, m.c0 / c0max), 'использовано ' + fmt(m.c0), (c0max - m.c0 >= 0 ? 'запас ' : 'превышение ') + fmt(Math.abs(c0max - m.c0)))}
+${tile(`Стартовые затраты c0, лимит ${sc} ${fmt(c0max, 0)}`, fmt(m.c0), 'млн руб.', Math.min(1, m.c0 / c0max), 'использовано ' + fmt(m.c0), (c0max - m.c0 >= 0 ? 'запас ' : 'превышение ') + fmt(Math.abs(c0max - m.c0)))}
 ${tile('OPEX в год', fmt(m.opex), 'млн руб.', Math.min(1, m.opex / cons.opex_max_mrub_per_year), 'использовано ' + fmt(m.opex), (cons.opex_max_mrub_per_year - m.opex >= 0 ? 'запас ' : 'превышение ') + fmt(Math.abs(cons.opex_max_mrub_per_year - m.opex)))}
 ${tile('Общественная ценность', fmt(m.vpub, 0), 'усл. млн руб.', Math.min(1, cons.vpub_min_mrub_per_year / m.vpub), 'порог ' + fmt(cons.vpub_min_mrub_per_year, 0), (m.vpub >= cons.vpub_min_mrub_per_year ? 'сверх ' : 'ниже порога ') + signed(m.vpub - cons.vpub_min_mrub_per_year, 0))}
 ${tile('Покрытие OPEX', fmt(m.kcash, 2), 'cash / OPEX', Math.min(1, cons.kcash_min / m.kcash), 'порог ' + fmt(cons.kcash_min, 2), (m.kcash >= cons.kcash_min ? 'сверх ' : 'ниже порога ') + signed(m.kcash - cons.kcash_min, 2))}
@@ -234,12 +234,12 @@ ${tile('Покрытие OPEX', fmt(m.kcash, 2), 'cash / OPEX', Math.min(1, cons
 </div>`;
       const grp = (title, ids) => {
         const rs = checks.filter((r) => ids.includes(r.id)), okN = rs.filter((r) => r.ok).length, all = okN === rs.length;
-        return `<div class="sum-it"><div class="sum-h"><span class="circ${all ? '' : ' bad'}">${all ? ICON.check : ICON.x}</span><span class="t">${title}</span><span class="n">${okN} из ${rs.length}</span></div><div class="sum-l">${rs.map((r) => `<span class="${r.ok ? '' : 'bad'}"><i></i>${CHECK[r.id]}${r.ok ? '' : ' · ' + esc(failText(r))}</span>`).join('')}</div></div>`;
+        return `<div class="sum-it"><div class="sum-h"><span class="circ${all ? '' : ' bad'}">${all ? ICON.check : ICON.x}</span><span class="t">${title}</span><span class="n">${okN} из ${rs.length}</span></div><div class="sum-l">${rs.map((r) => `<span class="${r.ok ? '' : 'bad'}"><i></i>${CHECK[r.id]}${r.ok ? '' : ', ' + esc(failText(r))}</span>`).join('')}</div></div>`;
       };
       const grpGates = () => {
         if (!gates.length) return '';
         const all = gatesBad.length === 0;
-        return `<div class="sum-it"><div class="sum-h"><span class="circ${all ? '' : ' bad'}">${all ? ICON.check : ICON.x}</span><span class="t">Проверка команды S2 <span class="tag warn">диагностика</span></span><span class="n">${gates.length - gatesBad.length} из ${gates.length}</span></div><div class="sum-l">${gates.map((g) => `<span class="${g.ok ? '' : 'bad'}"><i></i>${esc(gateName(g))}${g.ok ? '' : ' · ' + esc(gateFailText(g))}</span>`).join('')}</div></div>`;
+        return `<div class="sum-it"><div class="sum-h"><span class="circ${all ? '' : ' bad'}">${all ? ICON.check : ICON.x}</span><span class="t">Проверка команды S2 <span class="tag warn">диагностика</span></span><span class="n">${gates.length - gatesBad.length} из ${gates.length}</span></div><div class="sum-l">${gates.map((g) => `<span class="${g.ok ? '' : 'bad'}"><i></i>${esc(gateName(g))}${g.ok ? '' : ', ' + esc(gateFailText(g))}</span>`).join('')}</div></div>`;
       };
       return `<div class="card"><h2>${isFinal() ? 'Итоговый портфель' : 'Показанный портфель'} ${portfolioTag()}${help(helpHero)}</h2><div class="hero">${lotCards}${score}</div></div>
 ${tiles}
@@ -248,23 +248,25 @@ ${tiles}
     builder() {
       if (!state.builder) state.builder = s.selection.map((x) => ({ lot: x.lot, mode: x.mode }));
       const st = builderStatus();
-      const lotOpts = (cur) => Object.entries(d.lots).map(([lid, L]) => `<option value="${lid}"${lid === cur ? ' selected' : ''}>${lid} · ${esc(L.name)}</option>`).join('');
+      const lotOpts = (cur) => Object.entries(d.lots).map(([lid, L]) => `<option value="${lid}"${lid === cur ? ' selected' : ''}>${lid}, ${esc(L.name)}</option>`).join('');
       const rows = state.builder.map((r, i) => {
         const L = d.lots[r.lot], dup = state.builder.filter((x) => x.lot === r.lot).length > 1;
+        const M = d.modes[r.mode] || {};
+        const eff = [`c0 ×${M.k_c0}`, `OPEX ×${M.k_opex}`, `ценность ×${M.k_vpub}`].join(', ');
         return `<div class="bld-row${dup ? ' dup' : ''}"><span class="bld-n">${i + 1}</span>
 <label class="bld-sel"><select class="bld-lot" data-i="${i}">${lotOpts(r.lot)}</select>${ICON.chev}</label>
-<div class="segc bld-mode" data-i="${i}">${Object.keys(d.modes).map((mm) => `<span data-m="${mm}" class="${mm === r.mode ? 'on' : ''}">${mm}</span>`).join('')}</div>
-<div class="bld-info">${esc(L.region)} · ${esc(L.archetype)} архетип · ${L.groups.join(', ')}${L.federal ? ' · федеральный' : ''}${d.modes[r.mode]?.public_core ? ' · <b>public core</b>' : ''}</div></div>`;
+<div class="segc bld-mode" data-i="${i}" role="group" aria-label="Режим доступа">${Object.keys(d.modes).map((mm) => `<span data-m="${mm}" class="${mm === r.mode ? 'on' : ''}">${mm}</span>`).join('')}</div>
+<div class="bld-info"><span class="bld-where">${esc(L.region)}, ${L.groups.join(', ')}${L.federal ? ', федеральный' : ''}</span><span class="bld-eff">режим ${r.mode}: ${eff}${M.public_core ? ', public core' : ''}</span></div></div>`;
       }).join('');
       const same = st.id === state.selected;
       const helpB = `Эксперт собирает любой портфель без правки JSON: четыре разных лота из <b>lots.csv</b> и режим доступа A/B/C каждого (коэффициенты из <b>access_modes.csv</b>; A и режимы с public core отмечены). Порядок строк не важен — комбинация приводится к порядку лотов кейса. Счёт делает сервер (<b>app/backend</b>, формулы case_core); интерфейс только показывает результат. Сценарий BASE/STRESS выбирается в шапке и меняет лимит c0. Кнопка «Вернуть FINAL» возвращает решение гейта.`;
       const form = `<div class="card"><h2>Собрать портфель${help(helpB)}</h2><div class="bld">${rows}</div>
-${st.error ? `<div class="bld-err">${esc(st.error)}</div>` : same ? '' : '<div class="bld-hint">Состав изменён — нажмите «Рассчитать», чтобы пересчитать все экраны.</div>'}
-<div class="acts2"><span class="btn${st.error || same ? ' off' : ''}" id="bld-calc">Рассчитать</span><span class="btn ghost${isFinal() && same ? ' off' : ''}" data-final="1">Вернуть FINAL</span></div></div>`;
+${st.error ? `<div class="bld-err">${esc(st.error)}</div>` : ''}
+<div class="acts2"><span class="btn${st.error || same ? ' off' : ''}" id="bld-calc">Рассчитать</span><span class="btn ghost${isFinal() && same ? ' off' : ''}" data-final="1">Вернуть FINAL</span>${st.error ? '' : `<span class="bld-state${same ? ' ok' : ''}">${same ? 'Показанные экраны соответствуют этому составу' : 'Состав не рассчитан'}</span>`}</div></div>`;
       const res = (scn) => {
         const cs = checksOf(s, scn), bad = cs.filter((r) => !r.ok), lim = cs.find((r) => r.id === 'c0_limit');
         return `<div class="res${bad.length ? ' bad' : ''}"><div class="res-h"><span class="res-s">${scn}</span>${stChip(!bad.length, bad.length ? 'FAIL' : 'PASS')}<span class="res-n">${cs.length - bad.length} из ${cs.length}</span></div>
-<div class="res-c0">c0 ${fmt(lim.fact)} ${OP[lim.op]} ${fmt(lim.threshold, 0)} · ${marginOf(lim) >= 0 ? 'запас' : 'превышение'} ${fmt(Math.abs(marginOf(lim)))}</div>
+<div class="res-c0">c0 ${fmt(lim.fact)} ${OP[lim.op]} ${fmt(lim.threshold, 0)}, ${marginOf(lim) >= 0 ? 'запас' : 'превышение'} ${fmt(Math.abs(marginOf(lim)))}</div>
 ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>`).join('')}</ul>` : '<div class="res-ok">Все ограничения выполнены</div>'}</div>`;
       };
       const result = `<div class="card"><h2>Результат расчёта ${chips(s, finalC())} ${portfolioTag()}${more('checks', 'Все 9 проверок')}${help('Результат для показанного портфеля в обоих сценариях: PASS/FAIL, положение c0 относительно лимита и текст каждого нарушенного условия. Жёлтый лот в чипах — отличие от FINAL по составу, жёлтая буква — по режиму. Подробная таблица с фактом, порогом и запасом по всем девяти проверкам — на вкладке «Ограничения».')}</h2><div class="res2">${res('BASE')}${res('STRESS')}</div></div>`;
@@ -276,7 +278,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
         const mg = marginOf(r), comp = COMPOSITION.includes(r.id);
         const rel = !comp && r.threshold ? mg / r.threshold : null;   // доля от порога — только для числовых порогов
         const cls = !r.ok ? 'fail' : comp ? (mg === 0 ? 'edge' : 'ok') : rel < thin ? 'thin' : 'ok';
-        const status = cls === 'fail' ? stChip(false, 'FAIL') : cls === 'thin' ? '<span class="st thin">PASS · тонкий запас</span>' : cls === 'edge' ? '<span class="st thin">PASS · граница</span>' : stChip(true, 'PASS');
+        const status = cls === 'fail' ? stChip(false, 'FAIL') : cls === 'thin' ? '<span class="st thin">PASS, тонкий запас</span>' : cls === 'edge' ? '<span class="st thin">PASS, граница</span>' : stChip(true, 'PASS');
         return `<tr class="${r.ok ? '' : 'bad'}"><td><div class="name">${CHECK[r.id]}${UNIT[r.id] ? `<span class="unit">${UNIT[r.id]}</span>` : ''}</div>${r.ok ? '' : `<div class="sub fail">${esc(failText(r))}</div>`}</td><td class="num req">${OP[r.op]} ${fmt(r.threshold, THR_DEC[r.id] ?? 0)}</td><td class="num"><b>${fmt(r.fact, DEC[r.id])}</b></td><td class="num ${cls === 'fail' ? 'neg' : cls === 'thin' || cls === 'edge' ? 'warn' : ''}">${r.op === '=' ? (r.ok ? '—' : signed(mg, 0)) : signed(mg, DEC[r.id])}${rel !== null && r.ok ? `<span class="rel">${pct(Math.abs(rel))}</span>` : ''}</td><td>${status}</td></tr>`;
       };
       const group = (title, ids) => {
@@ -286,7 +288,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       const gateRow = (g) => {
         const mg = g.op === '<=' ? g.threshold - g.fact : g.fact - g.threshold, rel = g.threshold ? mg / g.threshold : null;
         const cls = !g.ok ? 'fail' : rel !== null && rel < thin ? 'thin' : 'ok';
-        return `<tr class="${g.ok ? '' : 'bad'}"><td><div class="name">${esc(gateName(g))}<span class="unit">${esc(g.metric)}</span></div>${g.ok ? '' : `<div class="sub fail">${esc(gateFailText(g))}</div>`}</td><td class="num req">${OP[g.op]} ${fmt(g.threshold, 2)}</td><td class="num"><b>${fmt(g.fact, 3)}</b></td><td class="num ${cls === 'fail' ? 'neg' : cls === 'thin' ? 'warn' : ''}">${signed(mg, 3)}${rel !== null && g.ok ? `<span class="rel">${pct(Math.abs(rel))}</span>` : ''}</td><td>${cls === 'fail' ? stChip(false, 'FAIL') : cls === 'thin' ? '<span class="st thin">PASS · тонкий запас</span>' : stChip(true, 'PASS')}</td></tr>`;
+        return `<tr class="${g.ok ? '' : 'bad'}"><td><div class="name">${esc(gateName(g))}<span class="unit">${esc(g.metric)}</span></div>${g.ok ? '' : `<div class="sub fail">${esc(gateFailText(g))}</div>`}</td><td class="num req">${OP[g.op]} ${fmt(g.threshold, 2)}</td><td class="num"><b>${fmt(g.fact, 3)}</b></td><td class="num ${cls === 'fail' ? 'neg' : cls === 'thin' ? 'warn' : ''}">${signed(mg, 3)}${rel !== null && g.ok ? `<span class="rel">${pct(Math.abs(rel))}</span>` : ''}</td><td>${cls === 'fail' ? stChip(false, 'FAIL') : cls === 'thin' ? '<span class="st thin">PASS, тонкий запас</span>' : stChip(true, 'PASS')}</td></tr>`;
       };
       const groupGates = () => gates.length ? `<tr class="grp"><td colspan="5"><span class="circ${gatesBad.length ? ' bad' : ''}">${gatesBad.length ? ICON.x : ICON.check}</span>Проверка команды S2 — стресс спроса <span class="tag warn">не канон кейса</span><span class="cnt">${gates.length - gatesBad.length} из ${gates.length}</span></td></tr>${gates.map(gateRow).join('')}` : '';
       const table = `<div class="card"><h2>Все девять ограничений ${tag(sc)} ${portfolioTag()}${help(helpChecks + ` Запас: для «≤» порог минус факт, для «≥» факт минус порог; рядом доля от порога. Жёлтый статус — запас меньше ${Math.round(thin * 100)} % порога.`)}</h2>
@@ -309,29 +311,29 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       const helpSug = `Инструмент перебирает все ${fmt(t.combinations, 0)} комбинаций «4 лота × режимы» через канонический <b>case_core.py</b>, оставляет ${t.stress_feasible} допустимых в STRESS${d.meta.gates_filter ? `, из них ${t.ranked} проходят проверку команды S2,` : ''} и ранжирует их моделью выбора команды: min–max нормализация по ${t.ranked} допустимым вариантам, веса — ${weightsTxt}. Здесь предложены лучшие по баллу наборы лотов относительно показанного портфеля (клик по строке выбирает), отличия показаны относительно него: жёлтый лот — замена, жёлтая буква — другой режим. Серая строка — максимум ценности среди проходящих BASE, но она не проходит STRESS и не предлагается. Варианты, стоящие выше FINAL по баллу, не скрываются — см. «Почему FINAL».${gateHelp(d)}`;
       const rows = [...d.suggestions, ...d.rejected.filter((id) => !d.suggestions.includes(id))].map((id) => {
         const c = combo(id), isSel = id === state.selected, dim = !(c.admitted ?? c.ok.STRESS), nm = isFinalId(id) ? finBadge() : '';
-        const why = isSel ? 'показана' : describeChange(s, c) + (!c.ok.STRESS ? ' · не проходит STRESS' : dim ? ' · не проходит S2' : '');
-        return `<tr class="pick${isSel ? ' hl' : ''}${dim ? ' dim' : ''}" data-id="${esc(id)}"><td><span class="radio${isSel ? ' on' : ''}"></span></td><td>${chips(c, s)}${nm ? ' ' + nm : ''}</td><td class="why">${esc(why)}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL · ' + stressWhy(c))}</td>${gateCells(c)}<td class="num">${isSel ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`;
+        const why = isSel ? 'показана' : describeChange(s, c) + (!c.ok.STRESS ? ', не проходит STRESS' : dim ? ', не проходит S2' : '');
+        return `<tr class="pick${isSel ? ' hl' : ''}${dim ? ' dim' : ''}" data-id="${esc(id)}"><td><span class="radio${isSel ? ' on' : ''}"></span></td><td>${chips(c, s)}${nm ? ' ' + nm : ''}</td><td class="why">${esc(why)}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL, ' + stressWhy(c))}</td>${gateCells(c)}<td class="num">${isSel ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`;
       }).join('');
       const gatesToggle = (d.meta.gates || []).length ? `<label class="tog"><input type="checkbox" id="gates-filter"${d.meta.gates_filter ? ' checked' : ''}> S2 как фильтр</label>` : '';
       return `<div class="card"><h2>Предложенные комбинации ${portfolioTag()}${gatesToggle}${help(helpSug)}</h2>
-<div class="tw wide"><table><tr><th></th><th>Состав и режимы</th><th>Отличие от показанной</th><th class="num">c0</th><th class="num">Ценность</th><th class="num">Cash / OPEX</th><th>BASE</th><th>STRESS</th>${gateHead(d)}<th class="num">Балл · место</th></tr>${rows}</table></div></div>`;
+<div class="tw wide"><table><tr><th></th><th>Состав и режимы</th><th>Отличие от показанной</th><th class="num">c0</th><th class="num">Ценность</th><th class="num">Cash / OPEX</th><th>BASE</th><th>STRESS</th>${gateHead(d)}<th class="num">Балл, место</th></tr>${rows}</table></div></div>`;
     },
     lots() {
       const lotRow = (r) => {
         const L = d.lots[r.lot];
-        return `<tr><td><div class="name"><span class="code">${r.lot}</span> · ${esc(L.name)}</div><div class="sub">${esc(L.archetype)} архетип · ${L.groups.join(', ')}</div></td><td><span class="mode">${r.mode}${r.public_core ? ' · public core' : ''}</span></td><td class="num">${fmt(r.c0)}</td><td class="num">${fmt(r.opex, 2)}</td><td class="num">${fmt(r.vpub)}</td><td class="num">${fmt(r.cash, 2)}</td><td class="num">${fmt(r.t_rep, 2)}</td><td class="num">${fmt(r.readiness, 1)}</td><td class="num">${fmt(r.resilience, 1)}</td><td class="num">${fmt(r.scale, 1)}</td></tr>`;
+        return `<tr><td><div class="name"><span class="code">${r.lot}</span>, ${esc(L.name)}</div><div class="sub">${esc(L.archetype)} архетип, ${L.groups.join(', ')}</div></td><td><span class="mode">${r.mode}${r.public_core ? ', public core' : ''}</span></td><td class="num">${fmt(r.c0)}</td><td class="num">${fmt(r.opex, 2)}</td><td class="num">${fmt(r.vpub)}</td><td class="num">${fmt(r.cash, 2)}</td><td class="num">${fmt(r.t_rep, 2)}</td><td class="num">${fmt(r.readiness, 1)}</td><td class="num">${fmt(r.resilience, 1)}</td><td class="num">${fmt(r.scale, 1)}</td></tr>`;
       };
       const modesTxt = Object.entries(d.modes).map(([k, v]) => `<b>Режим ${k}:</b> k_c0 ${v.k_c0}, k_opex ${v.k_opex}, ценность ×${v.k_vpub}, якорные ×${v.k_anchor}, коммерческие ×${v.k_commercial}${v.public_core ? ', public core' : ''}`).join('. ');
       const helpLots = `c0, OPEX и cash — млн руб.; ценность — усл. млн руб./год; готовность, устойчивость и тираж — индексы 1–5 из <b>lots.csv</b>. Значения после применения режима: c0 и OPEX умножены на k_c0 и k_opex, ценность — на k_vpub, поступления = якорные × k_anchor + коммерческие × k_commercial. ${modesTxt}. t_rep — показатель воспроизводимости лота (коэффициент масштабируемости решения). В строке «Портфель» — суммы; для t_rep и индексов — средние.`;
       // карточки сервисов: название для интерфейса и тексты из app/config/lots_ui.csv (файл участника записки)
       const svcCard = (r) => {
         const L = d.lots[r.lot], c = L.card;
-        const head = `<div class="sv-h"><div class="name"><span class="code">${r.lot}</span> · ${esc(L.name)}</div><span class="mode">${r.mode}${r.public_core ? ' · public core' : ''}</span></div>`;
+        const head = `<div class="sv-h"><div class="name"><span class="code">${r.lot}</span>, ${esc(L.name)}</div><span class="mode">${r.mode}${r.public_core ? ', public core' : ''}</span></div>`;
         if (!c) return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}</div><p class="muted">Карточка сервиса не подготовлена</p></div>`;
         const sameMode = !c.mode || c.mode === r.mode;
         const row = (k, v) => (v ? `<dt>${k}</dt><dd>${esc(v)}</dd>` : '');
         const access = sameMode ? row('Базовый доступ', c.access_base) + row('Дополнительно', c.access_extra) : `<dt>Доступ</dt><dd class="muted">описан для режима ${esc(c.mode)}, в комбинации — ${r.mode}</dd>`;
-        return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}${c.user ? ' · ' + esc(c.user) : ''}</div>${c.problem ? `<div class="sv-p"><b>Проблема:</b> ${esc(c.problem)}</div>` : ''}<p>${esc(c.description)}</p><dl>${access}${row('KPI', c.kpi)}${c.payer ? `<dt>Плательщик</dt><dd>${esc(c.payer)} <span class="hyp">предположение</span></dd>` : ''}${row('Ключевой риск', c.risk)}${row('При сбое', c.on_failure)}</dl></div>`;
+        return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}${c.user ? ', ' + esc(c.user) : ''}</div>${c.problem ? `<div class="sv-p"><b>Проблема:</b> ${esc(c.problem)}</div>` : ''}<p>${esc(c.description)}</p><dl>${access}${row('KPI', c.kpi)}${c.payer ? `<dt>Плательщик</dt><dd>${esc(c.payer)} <span class="hyp">предположение</span></dd>` : ''}${row('Ключевой риск', c.risk)}${row('При сбое', c.on_failure)}</dl></div>`;
       };
       const helpSvc = `Что получает пользователь каждого лота. Карточки сервисов из <b>app/config/lots_ui.csv</b> — файла участника записки: проблема, короткое описание, основной пользователь, базовый и дополнительный доступ, главный KPI, предполагаемый плательщик, ключевой риск, что показать при сбое. Плательщики — гипотезы по консультации трекера 12.09, не подтверждённые назначения. Название лота берётся отсюда же, поэтому в интерфейсе и записке оно одно. Правила доступа описаны для режима из карточки; если в комбинации режим другой, строки доступа не показываются. Оператор, приёмка и полный текст рисков — в записке.`;
       return `<div class="card"><h2>Лоты портфеля ${portfolioTag()}${help(helpLots)}</h2>
@@ -345,6 +347,26 @@ ${s.per_lot.map(lotRow).join('')}
 }
 
 // конструктор: проверка строк и id в порядке лотов кейса
+// Состав в конструкторе не совпадает с рассчитанным: уходить молча нельзя.
+function builderDirty() {
+  if (state.page !== 'portfolio' || curTab() !== 'builder' || !state.builder) return false;
+  const order = Object.keys(state.data.lots);
+  const id = state.builder.slice().sort((a, b) => order.indexOf(a.lot) - order.indexOf(b.lot)).map((r) => `${r.lot}:${r.mode}`).join('|');
+  return id !== state.selected;
+}
+let pendingNav = null;   // куда хотели уйти, пока висит вопрос
+function askBeforeLeave(goThere) {
+  pendingNav = goThere;
+  const st = builderStatus();
+  const calc = st.error ? '' : '<span class="btn" data-leave="calc">Рассчитать и перейти</span>';
+  const why = st.error ? esc(st.error) : 'Собранный состав ещё не рассчитан: другие экраны показывают прежний портфель.';
+  $('#dlg').innerHTML = `<div class="dlg-box" role="dialog" aria-modal="true" aria-labelledby="dlg-t">
+<h3 id="dlg-t">Состав изменён</h3><p>${why}</p>
+<div class="dlg-a">${calc}<span class="btn ghost" data-leave="drop">Уйти без расчёта</span><span class="btn ghost" data-leave="stay">Остаться</span></div></div>`;
+  $('#dlg').classList.add('open');
+}
+function closeDialog() { $('#dlg').classList.remove('open'); $('#dlg').innerHTML = ''; pendingNav = null; }
+
 function builderStatus() {
   const d = state.data, rows = state.builder;
   const lots = rows.map((r) => r.lot);
@@ -364,7 +386,7 @@ function renderWhy() {
   if (!state.comparator || !alts.some((a) => a.name === state.comparator)) state.comparator = alts.some((a) => a.name === why.comparator) ? why.comparator : alts[0]?.name;
   const cmpA = alts.find((a) => a.name === state.comparator), cmp = cmpA ? combo(cmpA.id) : null;
   const mS = d.meta.scenarios.STRESS.c0_max - f.metrics.c0;
-  const pill = `<div class="pill"><span class="dot">${ICON.check}</span>${f.rank ? `${f.rank}-е место из ${t.ranked}` : 'вне ranking'} · балл ${f.score.toFixed(2)}</div>`;
+  const pill = `<div class="pill"><span class="dot">${ICON.check}</span>${f.rank ? `${f.rank}-е место из ${t.ranked}` : 'вне ranking'}, балл ${f.score.toFixed(2)}</div>`;
   const notFinal = isFinal() ? '' : `<div class="callout warn">Сейчас на других экранах показан произвольный портфель; этот экран — про решение команды FINAL. <a class="more" data-final="1">Вернуть FINAL ${ICON.arrow}</a></div>`;
   const metricsRow = [
     ['vpub', 'Общественная ценность', 'усл. млн руб./год', 0, +1],
@@ -384,7 +406,7 @@ function renderWhy() {
       const alt = (d.alternatives || []).map((a) => combo(a.id) && { ...a, c: combo(a.id) }).filter(Boolean).sort((a, b) => (a.id === d.final ? -1 : b.id === d.final ? 1 : (b.c.rank ?? 1e9) === (a.c.rank ?? 1e9) ? 0 : (a.c.rank ?? 1e9) - (b.c.rank ?? 1e9)));
       const rows = alt.map(({ name, id, note, c }) => `<tr class="${id === d.final ? 'hl' : ''}"><td><div class="alt-h">${chips(c, f)}${id === d.final ? finBadge() : ''}</div><div class="sub">${esc(note)}</div></td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex, 2)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 3)}</td><td class="num ${c.ok.STRESS ? '' : 'neg'}">${signed(val(c, 'margin'))}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')} ${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL')}</td><td class="num">${c.rank ? `<b>${c.score.toFixed(3)}</b><span class="rk">${c.rank}-е</span>` : '<span class="muted">без места</span>'}</td></tr>`).join('');
       const table = `<div class="card"><h2>Ближайшие альтернативы${help(`Сопоставимые варианты записки из <b>config/alternatives.json</b>, подписанные составом и режимами, все посчитаны по одним правилам. Жёлтый лот — отличие от FINAL по составу, жёлтая буква — по режиму. Место — среди ${t.ranked} STRESS-допустимых комбинаций; вариант, не проходящий STRESS, места не получает. Варианты выше FINAL по баллу показаны, а не скрыты.`)}</h2>
-<div class="tw wide"><table class="alts"><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">K_cash</th><th class="num">Запас STRESS</th><th>BASE · STRESS</th><th class="num">Балл · место</th></tr>${rows}</table></div></div>`;
+<div class="tw wide"><table class="alts"><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">K_cash</th><th class="num">Запас STRESS</th><th>BASE, STRESS</th><th class="num">Балл, место</th></tr>${rows}</table></div></div>`;
       let wl = '';
       if (cmp) {
         const win = [], lose = [], even = [];
@@ -407,7 +429,7 @@ ${why.price ? `<div class="callout">${esc(why.price)}</div>` : ''}</div>`;
       const bar = (b) => (b ? `<div class="mini"><i style="width:${((b.contribution / maxW) * 100).toFixed(1)}%"></i><span>${b.contribution.toFixed(3)}</span></div>` : '');
       const rows = bf.map((b, i) => {
         const c = bc[i];
-        return `<tr><td><div class="name">${CRIT[b.key] || b.key}</div><div class="sub">${b.direction === 'max' ? 'больше — лучше' : 'меньше — лучше'} · min ${fmt(b.lo, CRIT_DEC[b.key])} · max ${fmt(b.hi, CRIT_DEC[b.key])}</div></td><td class="num">${b.weight.toFixed(2)}</td><td class="num">${fmt(b.raw, CRIT_DEC[b.key])}</td><td class="num">${b.z.toFixed(2)}</td><td>${bar(b)}</td>${c ? `<td class="num">${fmt(c.raw, CRIT_DEC[b.key])}</td><td class="num">${c.z.toFixed(2)}</td><td>${bar(c)}</td>` : ''}</tr>`;
+        return `<tr><td><div class="name">${CRIT[b.key] || b.key}</div><div class="sub">${b.direction === 'max' ? 'больше — лучше' : 'меньше — лучше'}, min ${fmt(b.lo, CRIT_DEC[b.key])}, max ${fmt(b.hi, CRIT_DEC[b.key])}</div></td><td class="num">${b.weight.toFixed(2)}</td><td class="num">${fmt(b.raw, CRIT_DEC[b.key])}</td><td class="num">${b.z.toFixed(2)}</td><td>${bar(b)}</td>${c ? `<td class="num">${fmt(c.raw, CRIT_DEC[b.key])}</td><td class="num">${c.z.toFixed(2)}</td><td>${bar(c)}</td>` : ''}</tr>`;
       }).join('');
       const total = `<tr class="total"><td>Балл</td><td class="num">${bf.reduce((a, b) => a + b.weight, 0).toFixed(2)}</td><td></td><td></td><td class="num"><b>${f.score.toFixed(3)}</b>${f.rank ? `<span class="rk">${f.rank}-е</span>` : ''}</td>${cmp ? `<td></td><td></td><td class="num"><b>${cmp.score.toFixed(3)}</b>${cmp.rank ? `<span class="rk">${cmp.rank}-е</span>` : ''}</td>` : ''}</tr>`;
       return notFinal + `<div class="card"><h2>Из чего сложился балл <span class="cmp-pick">${alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}">${esc(cmpLabel(a))}</span>`).join('')}</span>${help(`Балл = Σ вес × z. Для каждого критерия z — min–max нормализация по ${t.ranked} STRESS-допустимым комбинациям: 0 — худшее значение среди них, 1 — лучшее (для c0 шкала перевёрнута). Вклад = вес × z; сумма вкладов и есть балл. Веса из <b>config/weights.json</b> (участник 3), утверждены до просмотра результата. Комбинация вне STRESS получает z по той же шкале, но места не получает.`)}</h2>
@@ -421,7 +443,7 @@ ${why.price ? `<div class="callout">${esc(why.price)}</div>` : ''}</div>`;
 <div class="tiles four">
 ${tile('Якорные поступления', fmt(s2.cash), 'млн руб./год', `коммерческие ${fmt(m.commercial_cash)} → 0`)}
 ${tile('OPEX', fmt(m.opex), 'млн руб./год')}
-${tile('K_cash в S2', fmt(s2.kcash, 3), 'anchor / OPEX', `порог ${cons.kcash_min.toFixed(2)} · ${s2.kcash_ok ? 'выполнен, запас ' + fmt(above) + ' млн руб./год' : 'нарушен'}`, s2.kcash_ok ? ' thin' : ' bad')}
+${tile('K_cash в S2', fmt(s2.kcash, 3), 'anchor / OPEX', `порог ${cons.kcash_min.toFixed(2)}, ${s2.kcash_ok ? 'выполнен, запас ' + fmt(above) + ' млн руб./год' : 'нарушен'}`, s2.kcash_ok ? ' thin' : ' bad')}
 ${tile('Непокрытый OPEX', fmt(s2.opex_gap), 'млн руб./год', 'требует ежегодного покрытия', ' bad')}
 </div>
 <div class="callout warn">Формальный порог K_cash ≥ ${cons.kcash_min.toFixed(2)} ${s2.kcash_ok ? 'сохраняется только за счёт якорных поступлений' : 'не выполняется'}; для эксплуатации потребуется покрытие ${fmt(s2.opex_gap)} млн руб./год. Это анализ чувствительности команды, а не требование организаторов.</div></div>`;
@@ -447,7 +469,7 @@ function barChart(items) {
     g += `<rect x="${(cx - bw - 2).toFixed(1)}" y="${(base - hv).toFixed(1)}" width="${bw}" height="${hv.toFixed(1)}" rx="3" style="fill:var(--s1)"></rect><rect x="${(cx + 2).toFixed(1)}" y="${(base - hc).toFixed(1)}" width="${bw}" height="${hc.toFixed(1)}" rx="3" style="fill:var(--s2)"></rect>`;
     g += `<text class="n t" x="${(cx - bw / 2 - 2).toFixed(1)}" y="${(base - hv - 6).toFixed(1)}" text-anchor="middle">${fmt(c.metrics.vpub, 0)}</text>`;
     const lots = c.selection.map((s) => s.lot);
-    g += `<g class="xl"><text x="${cx.toFixed(1)}" y="204" text-anchor="middle">${lots.slice(0, 2).join(' · ')}</text><text x="${cx.toFixed(1)}" y="215" text-anchor="middle">${lots.slice(2).join(' · ')}</text></g><g class="xm"><text x="${cx.toFixed(1)}" y="228" text-anchor="middle">${modesOf(c)}</text></g>`;
+    g += `<g class="xl"><text x="${cx.toFixed(1)}" y="204" text-anchor="middle">${lots.slice(0, 2).join(', ')}</text><text x="${cx.toFixed(1)}" y="215" text-anchor="middle">${lots.slice(2).join(', ')}</text></g><g class="xm"><text x="${cx.toFixed(1)}" y="228" text-anchor="middle">${modesOf(c)}</text></g>`;
   });
   return `<svg viewBox="0 0 ${W} 244" width="100%" role="img" aria-label="Общественная ценность и поступления"><line class="axis" x1="${x0}" x2="${x1}" y1="${base}" y2="${base}"></line>${g}</svg>
 <div class="legend"><span><i style="background:var(--s1)"></i>Общественная ценность</span><span><i style="background:var(--s2)"></i>Поступления cash</span><span><i class="line"></i>порог ${fmt(floor, 0)}</span></div>`;
@@ -460,11 +482,11 @@ function c0Chart(items) {
   const top = 40, rowH = 24, base = top + rowH * items.length + 8;
   let g = `<rect x="${x0}" y="${top}" width="${(X(lo0) - x0).toFixed(1)}" height="${base - top}" style="fill:var(--good-soft)"></rect><rect x="${X(lo0).toFixed(1)}" y="${top}" width="${(X(hi0) - X(lo0)).toFixed(1)}" height="${base - top}" style="fill:var(--warn-soft)"></rect>`;
   if (X(hi0) < x1) g += `<rect x="${X(hi0).toFixed(1)}" y="${top}" width="${(x1 - X(hi0)).toFixed(1)}" height="${base - top}" style="fill:var(--crit-soft)"></rect>`;
-  g += `<text class="xl" x="${((x0 + X(lo0)) / 2).toFixed(1)}" y="30" text-anchor="middle" style="fill:var(--good-ink)">≤ ${fmt(lo0, 0)} · STRESS и BASE</text><text class="xl" x="${((X(lo0) + X(hi0)) / 2).toFixed(1)}" y="30" text-anchor="middle" style="fill:var(--warn-ink)">${fmt(lo0, 0)}–${fmt(hi0, 0)} · только BASE</text>`;
+  g += `<text class="xl" x="${((x0 + X(lo0)) / 2).toFixed(1)}" y="30" text-anchor="middle" style="fill:var(--good-ink)">≤ ${fmt(lo0, 0)}, STRESS и BASE</text><text class="xl" x="${((X(lo0) + X(hi0)) / 2).toFixed(1)}" y="30" text-anchor="middle" style="fill:var(--warn-ink)">${fmt(lo0, 0)}–${fmt(hi0, 0)}, только BASE</text>`;
   g += `<line x1="${X(lo0).toFixed(1)}" x2="${X(lo0).toFixed(1)}" y1="${top - 4}" y2="${base + 4}" style="stroke:var(--warn)" stroke-width="2"></line><line x1="${X(hi0).toFixed(1)}" x2="${X(hi0).toFixed(1)}" y1="${top - 4}" y2="${base + 4}" style="stroke:var(--crit)" stroke-width="2"></line>`;
   items.forEach((c, i) => {
     const y = top + rowH * (i + 0.7), cx = X(c.metrics.c0), ok = c.ok.STRESS;
-    g += `<text class="xl" x="200" y="${(y + 4).toFixed(1)}" text-anchor="end" style="fill:var(--ink)">${lotsOf(c)} · ${modesOf(c)}</text><line class="grid" x1="${x0}" x2="${x1}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"></line><circle cx="${cx.toFixed(1)}" cy="${y.toFixed(1)}" r="6" style="fill:var(${ok ? '--good' : c.ok.BASE ? '--warn' : '--crit'});stroke:var(--surface)" stroke-width="2"></circle>`;
+    g += `<text class="xl" x="200" y="${(y + 4).toFixed(1)}" text-anchor="end" style="fill:var(--ink)">${lotsOf(c)}, ${modesOf(c)}</text><line class="grid" x1="${x0}" x2="${x1}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"></line><circle cx="${cx.toFixed(1)}" cy="${y.toFixed(1)}" r="6" style="fill:var(${ok ? '--good' : c.ok.BASE ? '--warn' : '--crit'});stroke:var(--surface)" stroke-width="2"></circle>`;
     const right = cx + 70 <= x1; // подпись справа от точки, у правого края — слева
     g += right ? `<text class="n t" x="${(cx + 11).toFixed(1)}" y="${(y + 4).toFixed(1)}">${fmt(c.metrics.c0)}</text>` : `<text class="n t" x="${(cx - 11).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end">${fmt(c.metrics.c0)}</text>`;
   });
@@ -488,9 +510,9 @@ function renderCompare() {
     },
     table() {
       const helpTable = `${items.length} комбинаций, посчитанных по одним правилам: предложенные относительно показанного портфеля и отвергнутая с максимумом ценности. Балл — взвешенная сумма нормированных (min–max по ${d.meta.totals.ranked} комбинациям, допустимым в STRESS${d.meta.gates_filter ? ' и прошедшим S2' : ''}) критериев с весами: ценность ${w.vpub}, c0 ${w.c0}, cash / OPEX ${w.kcash}, готовность ${w.readiness}, устойчивость ${w.resilience}, тираж ${w.scale}, запас по STRESS ${w.stress_margin}. Подсвечен показанный портфель; S2 — диагностическая проверка команды, на балл не влияет. c0, OPEX и cash — млн руб., ценность — усл. млн руб./год. Именованные варианты записки — на экране «Почему FINAL».${gateHelp(d)}`;
-      const rows = items.map((c) => `<tr class="${c.id === s.id ? 'hl' : ''}"><td>${chips(c)}${isFinalId(c.id) ? ' ' + finBadge() : ''}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td class="num">${fmt(c.metrics.t_rep, 3)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL · ' + stressWhy(c))}</td>${gateCells(c)}<td class="num">${c.id === s.id ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`).join('');
+      const rows = items.map((c) => `<tr class="${c.id === s.id ? 'hl' : ''}"><td>${chips(c)}${isFinalId(c.id) ? ' ' + finBadge() : ''}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td class="num">${fmt(c.metrics.t_rep, 3)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL, ' + stressWhy(c))}</td>${gateCells(c)}<td class="num">${c.id === s.id ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`).join('');
       return `<div class="card"><h2>Комбинации в сравнении${help(helpTable)}</h2>
-<div class="tw wide"><table><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">Cash / OPEX</th><th class="num">t_rep</th><th>BASE</th><th>STRESS</th>${gateHead(d)}<th class="num">Балл · место</th></tr>${rows}</table></div></div>`;
+<div class="tw wide"><table><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">Cash / OPEX</th><th class="num">t_rep</th><th>BASE</th><th>STRESS</th>${gateHead(d)}<th class="num">Балл, место</th></tr>${rows}</table></div></div>`;
     },
   };
   return pageHead('Сравнение вариантов', pill) + body[curTab('compare')]();
@@ -511,10 +533,10 @@ function renderStress() {
       const cell = (r) => {
         const margin = r.op === '<=' ? r.threshold - r.fact : r.fact - r.threshold;
         const rel = r.threshold ? margin / r.threshold : 0;
-        if (r.id === 'public_core_lots') return { cls: !r.ok ? 'bad' : margin === 0 ? 'thin' : 'ok', text: `${r.fact} · ${margin === 0 ? 'граница' : signed(margin, 0)}`, rel: margin === 0 ? 0 : rel };
+        if (r.id === 'public_core_lots') return { cls: !r.ok ? 'bad' : margin === 0 ? 'thin' : 'ok', text: `${r.fact}, ${margin === 0 ? 'граница' : signed(margin, 0)}`, rel: margin === 0 ? 0 : rel };
         const dec = r.id === 'kcash_floor' || r.id === 't_rep_floor' || r.metric ? 2 : r.id === 'vpub_floor' ? 0 : 1;
         const relTxt = Math.abs(rel) < 0.1 ? (rel * 100).toFixed(1) : Math.round(rel * 100);
-        return { cls: !r.ok ? 'bad' : rel < thin ? 'thin' : 'ok', text: `${signed(margin, dec)} · ${relTxt} %`, rel };
+        return { cls: !r.ok ? 'bad' : rel < thin ? 'thin' : 'ok', text: `${signed(margin, dec)}, ${relTxt} %`, rel };
       };
       const gcols = (d.meta.gates || []).map((g) => g.id);
       const rows = items.map((c) => {
@@ -523,8 +545,8 @@ function renderStress() {
         const all = [...cols, ...gcols];
         const cells = all.map((k) => cell(rs[k]));
         const badCols = all.filter((k, i) => cells[i].cls === 'bad');
-        const weakest = badCols.length ? badCols.map((k) => short[k]).join(' · ') + ' · нарушение' : all.filter((k, i) => cells[i].cls === 'thin').map((k) => short[k]).join(' · ') || short[all[cells.map((x) => x.rel).indexOf(Math.min(...cells.map((x) => x.rel)))]];
-        return `<tr class="${c.id === s.id ? 'hl' : ''}"><td><div class="name">${lotsOf(c)}</div><div class="sub">${modesOf(c)}${c.id === s.id ? ' · показана' : ''}${isFinalId(c.id) ? ' · FINAL' : ''}</div></td>${cells.map((x) => `<td><span class="cell ${x.cls}">${x.text}</span></td>`).join('')}<td>${weakest}</td></tr>`;
+        const weakest = badCols.length ? badCols.map((k) => short[k]).join(', ') + ', нарушение' : all.filter((k, i) => cells[i].cls === 'thin').map((k) => short[k]).join(', ') || short[all[cells.map((x) => x.rel).indexOf(Math.min(...cells.map((x) => x.rel)))]];
+        return `<tr class="${c.id === s.id ? 'hl' : ''}"><td><div class="name">${lotsOf(c)}</div><div class="sub">${modesOf(c)}${c.id === s.id ? ', показана' : ''}${isFinalId(c.id) ? ', FINAL' : ''}</div></td>${cells.map((x) => `<td><span class="cell ${x.cls}">${x.text}</span></td>`).join('')}<td>${weakest}</td></tr>`;
       }).join('');
       const helpMatrix = `<div class="lg"><span><i class="sw ok"></i>запас ≥ ${Math.round(thin * 100)} %</span><span><i class="sw thin"></i>тонкий запас или граница</span><span><i class="sw bad"></i>нарушение</span></div>В ячейке — факт минус порог и доля от порога в сценарии STRESS (c0 ≤ ${fmt(d.meta.scenarios.STRESS.c0_max, 0)}). Состав (4 лота, архетипы, группы) выполнен у всех и в таблицу не вынесен. «Слабое место» — нарушенное или самое тонкое условие. Счётчик в заголовке относится к сравниваемым вариантам, а не к FINAL.${gateHelp(d)}`;
       const gateHeads = (d.meta.gates || []).map((g) => `<th>S2: якорь / OPEX ${OP[g.op]} ${fmt(g.threshold, 2)}</th>`).join('');
@@ -540,7 +562,7 @@ function renderStress() {
       const rowD = (label, a, b, dec) => `<tr><td>${label}</td><td class="num">${fmt(a, dec)}</td><td class="num">${fmt(b, dec)}</td><td class="num">${signed(b - a, dec)}</td></tr>`;
       const change = describeChange(fail, s);
       return `<div class="row2 w">
-<div class="card"><h2>Что можно сделать${chips(fail)}${help(`Комбинация ${lotsOf(fail)} · ${modesOf(fail)} не проходит STRESS. Правило кейса: лимит бюджета не меняет исходную стоимость лотов, c0 снижается только сменой режима или состава. Перевод лота из A в B даёт −5 % его c0 и −18 % ценности, но лот перестаёт быть public core. Каждая строка пересчитана через case_core; в столбце STRESS — запас до лимита c0.`)}</h2>
+<div class="card"><h2>Что можно сделать${chips(fail)}${help(`Комбинация ${lotsOf(fail)}, ${modesOf(fail)} не проходит STRESS. Правило кейса: лимит бюджета не меняет исходную стоимость лотов, c0 снижается только сменой режима или состава. Перевод лота из A в B даёт −5 % его c0 и −18 % ценности, но лот перестаёт быть public core. Каждая строка пересчитана через case_core; в столбце STRESS — запас до лимита c0.`)}</h2>
 <div class="tw"><table><tr><th>Действие</th><th class="num">c0</th><th class="num">Ценность</th><th>STRESS</th></tr>${rowsA}</table></div></div>
 <div class="card"><h2>Замена: ${esc(change)}${help('Что меняется — цена управленческого решения при сокращении бюджета: разница между отвергнутой комбинацией с максимальной ценностью и показанным портфелем. Решение принимает межрегиональный заказчик; договоры по исключённому лоту не заключаются до второго этапа.')}</h2>
 <div class="tw"><table><tr><th></th><th class="num">до</th><th class="num">после</th><th class="num">Δ</th></tr>
@@ -553,12 +575,16 @@ ${rowD('Стартовые затраты c0', fail.metrics.c0, s.metrics.c0, 1)
 
 // ---------- сборка ----------
 const ctx = { state, esc, help, icon: ICON, head: (title, pill) => pageHead(title, pill), tab: () => curTab(), toast: (...a) => toast(...a), render: () => render(), reload: async () => { state.data = await loadDashboard(); state.selected = state.data.selected; state.builder = null; store.del('kp.selected'); render(); } };
+let lastView = null;   // страница/вкладка последнего рендера
 function render() {
   renderChrome();
   const pages = { portfolio: renderPortfolio, why: renderWhy, compare: renderCompare, stress: renderStress, data: () => renderData(ctx) };
   $('#main').innerHTML = (pages[state.page] || renderPortfolio)();
   if (state.page === 'data') mountData(ctx);
-  window.scrollTo(0, 0);
+  // Наверх — только при переходе на другую страницу или вкладку. Перерисовка на месте
+  // (смена варианта сравнения, фильтр S2, выбор комбинации) не должна сбрасывать прокрутку.
+  const view = `${state.page}/${curTab()}`;
+  if (view !== lastView) { window.scrollTo(0, 0); lastView = view; }
 }
 function go(page, tab) {
   state.page = page;
@@ -599,12 +625,24 @@ document.addEventListener('click', async (e) => {
   const it = e.target.closest('#scenario .dd-it');
   if (it) { state.scenario = it.dataset.s; closeMenus(); render(); return; }
   if (!e.target.closest('.pop')) closeMenus();
+  const leave = e.target.closest('[data-leave]');
+  if (leave) {
+    const how = leave.dataset.leave, next = pendingNav;
+    if (how === 'stay') return closeDialog();
+    if (how === 'calc') { const st = builderStatus(); closeDialog(); if (!st.error) await select(st.id); next?.(); return; }
+    state.builder = null;                      // вернуть форму к рассчитанному составу
+    closeDialog(); next?.(); return;
+  }
   const nav = e.target.closest('#nav a');
-  if (nav) { go(nav.dataset.page); return; }
+  if (nav) { const p = nav.dataset.page; if (p !== state.page && builderDirty()) return askBeforeLeave(() => go(p)); go(p); return; }
   const fin = e.target.closest('[data-final]');
   if (fin) { await select(state.data.final); return; }
   const tab = e.target.closest('[data-tab]');
-  if (tab) { go(tab.dataset.page || state.page, tab.dataset.tab); return; }
+  if (tab) {
+    const pg = tab.dataset.page || state.page, tb = tab.dataset.tab;
+    if ((pg !== state.page || tb !== curTab()) && builderDirty()) return askBeforeLeave(() => go(pg, tb));
+    go(pg, tb); return;
+  }
   const cmp = e.target.closest('[data-cmp]');
   if (cmp) { state.comparator = cmp.dataset.cmp; render(); return; }
   const mode = e.target.closest('.bld-mode span');

@@ -91,11 +91,11 @@ export function renderData(ctx) {
     return `<tr><td><span class="code">${n}</span></td><td>${f.missing ? '<span class="st fail">нет файла</span>' : esc(what)}</td><td class="mono">${f.sha || '—'}</td><td class="num">${f.bytes ?? '—'}</td></tr>`;
   }).join('')}</table></div><div class="note">${esc(ds.source === 'организаторы' ? 'Файлы организаторов (копия cases/case02 в data/ и config/, сверена движком по контрольным суммам). Расчёт идёт по ним через src/kosmo.' : `Загруженный набор, активирован ${ds.activated_at || ''}. Папка: ${ds.root}`)}</div>`
     : `<div class="empty">${state.api ? 'Загрузка…' : 'Сведения о наборе доступны только с сервером (python app/server.py). Проверка файлов ниже работает и без него.'}</div>`;
-  const pill = ds ? `<div class="pill"><span class="dot">${ctx.icon.check}</span>${ds.source === 'организаторы' ? 'файлы организаторов' : 'загруженный набор'} · v${ds.case_version ?? '—'}</div>` : '';
+  const pill = ds ? `<div class="pill"><span class="dot">${ctx.icon.check}</span>${ds.source === 'организаторы' ? 'файлы организаторов' : 'загруженный набор'}, v${ds.case_version ?? '—'}</div>` : '';
 
   const slot = (n) => {
     const rep = upload.report[n];
-    const st = !rep ? '' : rep.ok ? `<span class="st ok">OK${rep.warnings.length ? ' · ' + rep.warnings.length + ' предупр.' : ''}</span>` : `<span class="st fail">${rep.errors.length} ошиб.</span>`;
+    const st = !rep ? '' : rep.ok ? `<span class="st ok">OK${rep.warnings.length ? ', ' + rep.warnings.length + ' предупр.' : ''}</span>` : `<span class="st fail">${rep.errors.length} ошиб.</span>`;
     return `<label class="slot${rep ? (rep.ok ? ' ok' : ' bad') : ''}" data-file="${n}"><input type="file" accept="${ACCEPT[n]}" data-file="${n}"><div class="slot-t"><b>${n}</b><span>${TITLE[n]}</span></div><div class="slot-s">${st || '<span class="muted">перетащите или выберите</span>'}</div></label>`;
   };
   const issues = FILES.filter((n) => upload.report[n]).map((n) => {
@@ -130,12 +130,12 @@ function previewOf(n, ctx) {
     const c = rep.cfg;
     const rows = Object.entries(c.constraints_common || {}).map(([k, v]) => `<tr><td><span class="code">${k}</span></td><td class="num">${esc(String(v))}</td></tr>`).join('');
     const sc = Object.entries(c.scenarios || {}).map(([k, v]) => `<tr><td><span class="code">scenarios.${k}.c0_max_mrub</span></td><td class="num">${esc(String(v.c0_max_mrub))}</td></tr>`).join('');
-    return `<div class="card"><h2>Предпросмотр · case_config.json<span class="u">версия ${esc(String(c.case_version ?? '—'))}</span></h2><div class="tw"><table class="half"><tr><th>Параметр</th><th class="num">Значение</th></tr>${rows}${sc}</table></div></div>`;
+    return `<div class="card"><h2>Предпросмотр, case_config.json<span class="u">версия ${esc(String(c.case_version ?? '—'))}</span></h2><div class="tw"><table class="half"><tr><th>Параметр</th><th class="num">Значение</th></tr>${rows}${sc}</table></div></div>`;
   }
   const { header, rows } = rep.table;
   const cols = (n === 'lots.csv' ? LOT_COLUMNS : MODE_COLUMNS).filter((c) => header.includes(c));
   const numeric = n === 'lots.csv' ? LOT_NUMERIC : MODE_COLUMNS.slice(1, 6);
-  return `<div class="card"><h2>Предпросмотр · ${n}<span class="u">${rows.length} строк</span></h2><div class="scroll"><table><tr>${cols.map((c) => `<th${numeric.includes(c) ? ' class="num"' : ''}>${c}</th>`).join('')}</tr>${rows.map((r) => `<tr>${cols.map((c) => numeric.includes(c) ? `<td class="num">${esc(r[c])}</td>` : `<td>${c.endsWith('_id') ? '<span class="code">' + esc(r[c]) + '</span>' : esc(r[c])}</td>`).join('')}</tr>`).join('')}</table></div></div>`;
+  return `<div class="card"><h2>Предпросмотр, ${n}<span class="u">${rows.length} строк</span></h2><div class="scroll"><table><tr>${cols.map((c) => `<th${numeric.includes(c) ? ' class="num"' : ''}>${c}</th>`).join('')}</tr>${rows.map((r) => `<tr>${cols.map((c) => numeric.includes(c) ? `<td class="num">${esc(r[c])}</td>` : `<td>${c.endsWith('_id') ? '<span class="code">' + esc(r[c]) + '</span>' : esc(r[c])}</td>`).join('')}</tr>`).join('')}</table></div></div>`;
 }
 
 // ---------- события ----------

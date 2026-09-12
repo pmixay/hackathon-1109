@@ -95,7 +95,7 @@ class Handler(SimpleHTTPRequestHandler):
         return self._json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint"})
 
     def log_message(self, fmt, *args):  # тише
-        if "/api/" in (args[0] if args else ""):
+        if "/api/" in str(args[0] if args else ""):
             super().log_message(fmt, *args)
 
 

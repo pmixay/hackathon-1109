@@ -49,3 +49,35 @@ def test_event_fields_match_the_handover_note(assumptions):
 def test_every_capability_group_has_two_sources(assumptions):
     for group in ("EO", "PNT/InSAR"):
         assert len(assumptions["data_sources"][group]) >= 2
+
+
+def test_financing_block_agrees_with_results(root, assumptions):
+    base = json.loads((root / "results" / "base.json").read_text(encoding="utf-8"))
+    metrics = base["metrics"]
+    block = assumptions["financing_and_contracts"]
+    assert block["c0_funding"]["total"] == metrics["c0"]
+    public = sum(lot["c0"] for lot in base["lots"] if lot["public_core"])
+    assert block["c0_funding"]["public_budget"]["amount"] == public
+    assert block["c0_funding"]["private_partner"]["amount"] == metrics["c0"] - public
+    assert block["commercial_demand_risk"]["commercial_cash_per_year"] == metrics["commercial_cash"]
+    assert block["commercial_demand_risk"]["anchor_cash_per_year"] == metrics["anchor_cash"]
+    assert block["commercial_demand_risk"]["kcash_with_zero_commercial"] == pytest.approx(metrics["anchor_cash"] / metrics["opex"], abs=5e-4)
+    assert block["commercial_demand_risk"]["opex_gap_with_zero_commercial"] == pytest.approx(metrics["opex"] - metrics["anchor_cash"])
+    for lot in base["lots"]:
+        assert block["pooling_of_flows"]["per_lot_kcash"][lot["lot_id"]] == pytest.approx(lot["cash"] / lot["opex"], abs=5e-4)
+    gap = sum(lot["opex_gap"] for lot in base["lots"] if lot["opex_gap"] > 0)
+    surplus = -sum(lot["opex_gap"] for lot in base["lots"] if lot["opex_gap"] < 0)
+    assert block["pooling_of_flows"]["public_lots_gap_per_year"] == pytest.approx(gap)
+    assert block["pooling_of_flows"]["commercial_lots_surplus_per_year"] == pytest.approx(surplus)
+    assert metrics["anchor_cash"] / metrics["opex"] >= 0.6
+
+
+def test_ppp_term_argument_holds(root, assumptions):
+    base = json.loads((root / "results" / "base.json").read_text(encoding="utf-8"))
+    term = assumptions["financing_and_contracts"]["c0_funding"]["ppp_term_years"]
+    for lot in base["lots"]:
+        if lot["public_core"]:
+            continue
+        net = lot["cash"] - lot["opex"]
+        assert net > 0
+        assert 7 * net < lot["c0"] < term * net

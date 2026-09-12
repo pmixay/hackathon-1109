@@ -9,7 +9,7 @@
 | `data/lots.csv`, `data/access_modes.csv`, `config/case_config.json`, `src/case_core.py` | неизменённые файлы организаторов | никто; хэши зафиксированы в `config/case_checksums.json`, при расхождении движок падает с `CaseIntegrityError` |
 | `config/portfolio.json` | итоговый портфель FINAL: FIRE-A, ENV-A, AGRI-B, TRANS-B (подтверждён 12.09 11:02) | E/B при смене решения |
 | `config/alternatives.json` | сравниваемые варианты: FINAL (итоговый) и V1–V6 | B |
-| `config/weights.json` | критерии, направления, веса модели выбора | B |
+| `config/weights.json` | критерии, направления, веса модели выбора и `gates` — проверки команды (S2: `anchor_kcash ≥ 0.6`) | B |
 | `config/custom_mode.json` | режим D; если файла нет — D недоступен; `custom_mode.example.json` — шаблон | C/D |
 | `config/assumptions.json` | допущения команды: SLA по каждому сервису, источники данных, правила по облачности, истории, API, журналу доступа, контрольной выборке поставщика; проектное описание, движком не читается | участник 4 (роль D) |
 | `config/team.json` | карточка решения: команда, метод, тезис, шесть управленческих полей для `team_decision_config.json` | C, D, E |
@@ -33,7 +33,7 @@ python -m kosmo repairs --lots FIRE:A FLOOD:A TRANS:A ENV:A
 python -m kosmo export                              # всё в results/
 python -m kosmo variant save V1 --lots FIRE:A AGRI:A TRANS:A ENV:A
 python -m kosmo variant check V1                    # пересчёт совпал с сохранённым?
-python -m pytest -q                                 # 353 теста, ~25 с; сверка с case_core.py на всех 5670 комбинациях, плюс тесты интерфейсного слоя app/tests
+python -m pytest -q                                 # 368 тестов, ~40 с; сверка с case_core.py на всех 5670 комбинациях, плюс тесты интерфейсного слоя app/tests
 python app/build.py                                 # dashboard.json интерфейса из движка
 python app/server.py                                # интерфейс на http://127.0.0.1:8765
 ```
@@ -144,7 +144,7 @@ z_i = 1 − (x_i − min) / (max − min)      для direction = min
 score = Σ w_i z_i / Σ w_i                 ∈ [0, 1]
 ```
 
-Недопустимые варианты (по сценарию `feasibility_scenario`) в нормализацию не входят и ранга не получают. Критерий `margin:STRESS:c0_limit` — запас по лимиту c0 в стрессе. Чувствительность: каждый вес ±20 % → сменился ли лидер; `vpub`/`cash` портфеля ±20 % → проходят ли ограничения.
+Недопустимые варианты (по сценарию `feasibility_scenario`) в нормализацию не входят и ранга не получают. То же с проверками команды `gates`: каждая — `metric operator threshold` над `PortfolioMetrics` (сейчас одна, S2 «коммерческая выручка = 0»: `anchor_kcash = anchor_cash / opex ≥ 0.6`, порог равен `kcash_min` кейса); `kosmo.run_team_checks` считает их той же `build_check` со `scope = "team"`, `score_variants` ранжирует только `admitted` = допустимые и прошедшие все gates, в `scores.csv` — столбцы `admitted`, `gate_<code>` и значение метрики. Это не канон кейса: девять проверок `run_checks` не меняются, gates живут в модели выбора. Критерий `margin:STRESS:c0_limit` — запас по лимиту c0 в стрессе. Чувствительность: каждый вес ±20 % → сменился ли лидер; `vpub`/`cash` портфеля ±20 % → проходят ли ограничения.
 
 ## Что движок не считает и не реализует
 

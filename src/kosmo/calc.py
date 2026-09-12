@@ -42,6 +42,7 @@ class PortfolioMetrics:
     anchor_cash: float
     commercial_cash: float
     kcash: float
+    anchor_kcash: float
     opex_gap: float
     t_rep: float
     readiness: float
@@ -126,6 +127,7 @@ def aggregate(rows) -> PortfolioMetrics:
     rows = list(rows)
     opex = math.fsum(row.opex for row in rows)
     cash = math.fsum(row.cash for row in rows)
+    anchor_cash = math.fsum(row.anchor_cash for row in rows)
     capabilities = set()
     for row in rows:
         capabilities.update(row.capability_set)
@@ -136,9 +138,10 @@ def aggregate(rows) -> PortfolioMetrics:
         opex=opex,
         vpub=math.fsum(row.vpub for row in rows),
         cash=cash,
-        anchor_cash=math.fsum(row.anchor_cash for row in rows),
+        anchor_cash=anchor_cash,
         commercial_cash=math.fsum(row.commercial_cash for row in rows),
         kcash=coverage(cash, opex),
+        anchor_kcash=coverage(anchor_cash, opex),
         opex_gap=opex - cash,
         t_rep=mean(row.t_rep for row in rows),
         readiness=mean(row.readiness for row in rows),

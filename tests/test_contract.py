@@ -12,7 +12,7 @@ LOT_KEYS = {
     "t_rep", "readiness", "resilience", "scale",
 }
 METRIC_KEYS = {
-    "selected_lots", "c0", "opex", "vpub", "cash", "anchor_cash", "commercial_cash", "kcash", "opex_gap",
+    "selected_lots", "c0", "opex", "vpub", "cash", "anchor_cash", "commercial_cash", "kcash", "anchor_kcash", "opex_gap",
     "t_rep", "readiness", "resilience", "scale", "territorial_archetypes", "capability_groups", "capability_set", "public_core_lots",
 }
 CHECK_KEYS = {"code", "label", "metric", "operator", "threshold", "actual", "unit", "scope", "passed", "margin", "status"}

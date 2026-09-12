@@ -35,6 +35,10 @@ def evaluate_portfolio(selection, case: Case) -> dict:
     return calculate_all_scenarios(case, list(selection))
 
 
+def gate_details(checks) -> list:
+    return [{"id": check.code, "ok": check.passed, "fact": check.actual, "op": OPERATORS[check.operator], "threshold": check.threshold, "label": check.label, "metric": check.metric} for check in checks]
+
+
 def check_details(result) -> list:
     return [
         {"id": check.code, "ok": check.passed, "fact": check.actual, "op": OPERATORS[check.operator], "threshold": check.threshold}

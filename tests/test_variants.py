@@ -12,7 +12,7 @@ def test_repo_portfolio_and_alternatives_load(root, case):
     assert portfolio.selection == (("FIRE", "A"), ("ENV", "A"), ("AGRI", "B"), ("TRANS", "B"))
     assert calculate_all_scenarios(case, portfolio.selection)["STRESS"].feasible
     alternatives = load_variants(root / "config" / "alternatives.json")
-    assert [variant.name for variant in alternatives] == ["FINAL", "V1", "V2", "V3", "V4", "V5", "V6"]
+    assert [variant.name for variant in alternatives] == ["FINAL", "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"]
     assert alternatives[0].selection == portfolio.selection
 
 

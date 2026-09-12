@@ -20,15 +20,15 @@ INVALID = {
 }
 
 EXPECTED = {
-    "01-original": dict(totals=(5670, 1031, 143), c0=1140.0, ok=(True, True), failed=(), rank=3, modes="ABC"),
-    "02-stress-1130": dict(totals=(5670, 1031, 13), c0=1140.0, ok=(True, False), failed=("c0_limit",), rank=None, modes="ABC"),
-    "03-opex-310": dict(totals=(5670, 35, 35), c0=1140.0, ok=(False, False), failed=("opex_limit",), rank=None, modes="ABC"),
-    "04-kcash-1.2": dict(totals=(5670, 143, 28), c0=1140.0, ok=(False, False), failed=("kcash_floor",), rank=None, modes="ABC"),
-    "05-boundary-1180": dict(totals=(5670, 945, 35), c0=1180.0, ok=(True, True), failed=(), rank=10, modes="ABC"),
-    "06-fire-plus-10pct": dict(totals=(5670, 907, 97), c0=1173.6, ok=(True, True), failed=(), rank=28, modes="ABC"),
-    "07-nine-lots": dict(totals=(10206, 2044, 486), c0=1140.0, ok=(True, True), failed=(), rank=3, modes="ABC"),
-    "08-mode-d": dict(totals=(17920, 2061, 491), c0=1140.0, ok=(True, True), failed=(), rank=18, modes="ABCD"),
-    "14-nothing-feasible": dict(totals=(5670, 0, 0), c0=1140.0, ok=(False, False), failed=("vpub_floor",), rank=None, modes="ABC"),
+    "01-original": dict(totals=(5670, 1031, 143, 18), c0=1140.0, ok=(True, True), failed=(), rank=1, s2=True, modes="ABC"),
+    "02-stress-1130": dict(totals=(5670, 1031, 13, 0), c0=1140.0, ok=(True, False), failed=("c0_limit",), rank=None, s2=True, modes="ABC"),
+    "03-opex-310": dict(totals=(5670, 35, 35, 0), c0=1140.0, ok=(False, False), failed=("opex_limit",), rank=None, s2=True, modes="ABC"),
+    "04-kcash-1.2": dict(totals=(5670, 143, 28, 2), c0=1140.0, ok=(False, False), failed=("kcash_floor",), rank=None, s2=True, modes="ABC"),
+    "05-boundary-1180": dict(totals=(5670, 945, 35, 2), c0=1180.0, ok=(True, True), failed=(), rank=1, s2=True, modes="ABC"),
+    "06-fire-plus-10pct": dict(totals=(5670, 907, 97, 10), c0=1173.6, ok=(True, True), failed=(), rank=None, s2=False, modes="ABC"),
+    "07-nine-lots": dict(totals=(10206, 2044, 486, 115), c0=1140.0, ok=(True, True), failed=(), rank=1, s2=True, modes="ABC"),
+    "08-mode-d": dict(totals=(17920, 2061, 491, 31), c0=1140.0, ok=(True, True), failed=(), rank=1, s2=True, modes="ABCD"),
+    "14-nothing-feasible": dict(totals=(5670, 0, 0, 0), c0=1140.0, ok=(False, False), failed=("vpub_floor",), rank=None, s2=True, modes="ABC"),
 }
 
 
@@ -84,7 +84,7 @@ class TestData(unittest.TestCase):
                 self.assertTrue(all(r["ok"] for r in report.values()), (name, report))
                 dashboard = payload.build_dashboard(None, root=self.root_for(name))
                 totals = dashboard["meta"]["totals"]
-                self.assertEqual((totals["combinations"], totals["base_feasible"], totals["stress_feasible"]), expected["totals"])
+                self.assertEqual((totals["combinations"], totals["base_feasible"], totals["stress_feasible"], totals["admitted"]), expected["totals"])
                 self.assertEqual(dashboard["selected"], SELECTED)
                 combo = dashboard["combinations"][SELECTED]
                 self.assertAlmostEqual(combo["metrics"]["c0"], expected["c0"])
@@ -92,10 +92,20 @@ class TestData(unittest.TestCase):
                 failed = tuple(check["id"] for check in combo["checks"]["STRESS"] if not check["ok"])
                 self.assertEqual(failed, expected["failed"])
                 self.assertEqual(combo["rank"], expected["rank"])
+                self.assertEqual(combo["gates"][0]["ok"], expected["s2"])
+                self.assertEqual(combo["admitted"], expected["s2"] and expected["ok"][1])
                 self.assertEqual("".join(sorted(dashboard["modes"])), expected["modes"])
                 self.assertIn(SELECTED, dashboard["suggestions"])
                 self.assertFalse(dashboard["meta"]["engine"]["verified"])
                 self.assertEqual(dashboard["meta"]["dataset"]["source"], "загружено")
+
+    def test_dearer_fire_opex_breaks_the_team_gate(self):
+        dashboard = payload.build_dashboard(None, root=self.root_for("06-fire-plus-10pct"))
+        gate = dashboard["combinations"][SELECTED]["gates"][0]
+        self.assertAlmostEqual(gate["fact"], 190.0 / (313.0 + 8.5 * 1.05), places=9)
+        self.assertFalse(gate["ok"])
+        self.assertNotIn(SELECTED, dashboard["rejected"])
+        self.assertIn(SELECTED, dashboard["suggestions"])
 
     def test_boundary_set_passes_with_zero_margin(self):
         dashboard = payload.build_dashboard(None, root=self.root_for("05-boundary-1180"))

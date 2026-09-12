@@ -19,7 +19,7 @@
 - `config/` — итоговый портфель, альтернативы, веса, карточка решения
   (`team.json`) и допущения команды; общие для движка и интерфейса.
 - `data/` — неизменённые данные организаторов; `results/` — единственный источник цифр для записки и слайдов.
-- `tests/` — 335 тестов движка, включая сверку с каноническим ядром на всех 5670 комбинациях;
+- `tests/` — 343 теста движка, включая сверку с каноническим ядром на всех 5670 комбинациях;
   `app/tests/` — сверка интерфейса с движком и `results/`.
 - `cases/case02/` — материалы организаторов Кейса 02: README, канонический расчёт
   `case_core.py`, данные, конфиг и стартовый Colab-ноутбук
@@ -52,7 +52,7 @@ python -m kosmo calc                                # итоговый порт�
 python -m kosmo calc --lots FIRE:A ENV:A AGRI:B TRANS:B --scenario STRESS
 python -m kosmo compare --weights config/weights.json
 python -m kosmo export                              # перевыгрузить results/
-python -m pytest -q                                 # 353 теста (движок + app/tests), около 25 секунд
+python -m pytest -q                                 # 368 тестов (движок + app/tests), около 40 секунд
 python app/build.py                                 # собрать app/static/data/dashboard.json из движка
 python app/server.py                                # интерфейс на http://127.0.0.1:8765
 ```

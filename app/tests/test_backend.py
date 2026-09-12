@@ -110,19 +110,28 @@ class Model(unittest.TestCase):
 
     def test_scores_match_the_engine_selection_model(self):
         sel_model = payload.selection_model()
+        model.admit(self.records, sel_model, "STRESS")
         score, rank = model.make_scorer(self.records, sel_model, "STRESS")
         from dataclasses import replace
 
         engine = {item.name: item for item in score_variants({cid: r["results"] for cid, r in self.records.items()}, replace(sel_model, feasibility_scenario="STRESS"))}
         for cid, rec in self.records.items():
-            if rec["ok"]["STRESS"]:
+            self.assertEqual(rec["admitted"], engine[cid].admitted)
+            if rec["admitted"]:
+                self.assertTrue(rec["ok"]["STRESS"] and rec["gates"][0]["ok"])
                 self.assertAlmostEqual(score(rec), engine[cid].score, places=12)
                 self.assertEqual(rank[cid], engine[cid].rank)
             else:
                 self.assertNotIn(cid, rank)
                 self.assertTrue(0.0 <= score(rec) <= 1.0)
-        self.assertEqual(len(rank), 143)
-        self.assertEqual(rank[SELECTED], 3)
+        self.assertEqual(sum(r["ok"]["STRESS"] for r in self.records.values()), 143)
+        self.assertEqual(len(rank), 18)
+        self.assertEqual(rank[SELECTED], 1)
+        leader_without_gate = "FIRE:A|AGRI:C|TRANS:C|ENV:A"
+        self.assertTrue(self.records[leader_without_gate]["ok"]["STRESS"])
+        self.assertFalse(self.records[leader_without_gate]["admitted"])
+        self.assertAlmostEqual(self.records[leader_without_gate]["gates"][0]["fact"], 0.5356, places=4)
+        self.assertAlmostEqual(self.records[SELECTED]["gates"][0]["fact"], 0.6070, places=4)
 
     def test_dashboard_shape(self):
         d = payload.build_dashboard(SELECTED)
@@ -139,11 +148,20 @@ class Model(unittest.TestCase):
         self.assertLessEqual(abs(sum(d["meta"]["weights"].values()) - 1.0), 1e-9)
         self.assertEqual(set(d["meta"]["weights"]), {"vpub", "c0", "kcash", "readiness", "resilience", "scale", "stress_margin"})
         for rid in d["rejected"]:
-            self.assertFalse(d["combinations"][rid]["ok"]["STRESS"])
+            self.assertFalse(d["combinations"][rid]["admitted"])
+        self.assertEqual(d["rejected"], ["FIRE:A|AGRI:C|TRANS:C|ENV:A", d["stress"]["failing"]])
+        self.assertTrue(d["combinations"][d["rejected"][0]]["ok"]["STRESS"])
+        self.assertFalse(d["combinations"][d["rejected"][0]]["gates"][0]["ok"])
+        self.assertFalse(d["combinations"][d["stress"]["failing"]]["ok"]["STRESS"])
+        self.assertEqual(d["meta"]["totals"]["admitted"], 18)
+        self.assertEqual(d["meta"]["totals"]["ranked"], 18)
+        self.assertEqual([g["id"] for g in d["meta"]["gates"]], ["anchor_coverage"])
+        self.assertTrue(all(d["combinations"][cid]["admitted"] for cid in d["suggestions"]))
+        self.assertEqual(d["combinations"][SELECTED]["rank"], 1)
         self.assertEqual(d["meta"]["engine"]["name"], "kosmo")
         self.assertTrue(d["meta"]["engine"]["verified"])
         self.assertEqual(d["meta"]["engine"]["portfolio"], "FINAL")
-        self.assertEqual(d["meta"]["totals"], {"combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "ranked": 143})
+        self.assertEqual(d["meta"]["totals"], {"combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "admitted": 18, "ranked": 18})
         self.assertEqual(d["meta"]["constraints"]["opex_max_mrub_per_year"], 360.0)
         self.assertEqual(d["meta"]["dataset"]["source"], "организаторы")
         json.dumps(d, ensure_ascii=False)
@@ -245,7 +263,8 @@ class Export(unittest.TestCase):
             self.assertEqual(set(metrics), set(NOTEBOOK_METRICS))
             self.assertAlmostEqual(metrics["c0_mrub"], d["combinations"][SELECTED]["metrics"]["c0"])
             card = json.loads((out / "team_decision_config.json").read_text(encoding="utf-8"))
-            self.assertEqual(set(card), {"team", "decision_method", "strategy_thesis", "selection", "weights", "management"})
+            self.assertEqual(set(card), {"team", "decision_method", "strategy_thesis", "selection", "weights", "gates", "management"})
+            self.assertEqual(card["gates"][0]["threshold"], 0.6)
             self.assertEqual([tuple(p) for p in card["selection"]], [("FIRE", "A"), ("ENV", "A"), ("AGRI", "B"), ("TRANS", "B")])
             self.assertEqual(card["weights"], d["meta"]["weights"])
             self.assertEqual(set(card["management"]), {"payer_opex", "operator_model", "supplier_switch_rule", "replicable_core", "local_adaptation", "stress_decision"})
@@ -263,7 +282,7 @@ class Export(unittest.TestCase):
             self.assertEqual(base["portfolio"]["name"], other)
             self.assertEqual([f"{s['lot_id']}:{s['mode_id']}" for s in base["selection"]], other.split("|"))
             rows = (out / "alternatives.csv").read_text(encoding="utf-8").splitlines()
-            self.assertEqual(len(rows), 1 + 2 * 8)
+            self.assertEqual(len(rows), 1 + 2 * 10)
             self.assertTrue(rows[1].startswith(other))
 
 

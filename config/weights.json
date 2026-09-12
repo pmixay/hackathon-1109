@@ -10,5 +10,9 @@
     {"key": "resilience", "direction": "max", "weight": 0.10, "rationale": "устойчивость сервиса к сбоям и изменению условий"},
     {"key": "scale", "direction": "max", "weight": 0.10, "rationale": "тиражируемость между регионами"},
     {"key": "margin:STRESS:c0_limit", "direction": "max", "weight": 0.10, "rationale": "запас по лимиту стресс-сценария (1180 − c0)"}
+  ],
+  "gates_comment": "проверки команды (не канон кейса): портфель участвует в ранжировании, только если допустим в feasibility_scenario и проходит каждую проверку ниже; S2 — стресс спроса «коммерческая выручка = 0», порог равен kcash_min кейса, цифра 0,607 подтверждена в config/assumptions.json (commercial_zero_sensitivity) и docs/D-confirmations.md",
+  "gates": [
+    {"code": "anchor_coverage", "metric": "anchor_kcash", "operator": ">=", "threshold": 0.6, "label": "S2: покрытие OPEX якорными платежами", "unit": "доля", "rationale": "при нулевой коммерческой выручке якорные (бюджетные) платежи должны покрывать OPEX не хуже порога кейса kcash_min = 0,6; коммерческий спрос на данные ДЗЗ в России только формируется, якорный контракт — нижняя граница поступлений"}
   ]
 }

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,7 +15,7 @@ from .selection import SelectionModel, parameter_sensitivity, score_variants, we
 from .variants import Variant, used_custom_modes
 
 METRIC_COLUMNS = (
-    "c0", "opex", "vpub", "cash", "anchor_cash", "commercial_cash", "kcash", "opex_gap",
+    "c0", "opex", "vpub", "cash", "anchor_cash", "commercial_cash", "kcash", "anchor_kcash", "opex_gap",
     "t_rep", "readiness", "resilience", "scale",
     "territorial_archetypes", "capability_groups", "public_core_lots",
 )
@@ -158,13 +159,22 @@ def write_scored(scored: list, path) -> Path:
         for key in item.values:
             if key not in keys:
                 keys.append(key)
+    gate_columns = []
     for item in scored:
-        row = {"variant": item.name, "feasible": item.feasible, "score": item.score, "rank": item.rank}
+        for check in item.gates:
+            for column in (f"gate_{check.code}", check.metric):
+                if column not in gate_columns and column not in keys:
+                    gate_columns.append(column)
+    for item in scored:
+        row = {"variant": item.name, "feasible": item.feasible, "admitted": item.admitted, "score": item.score, "rank": item.rank}
+        for check in item.gates:
+            row[f"gate_{check.code}"] = check.passed
+            row.setdefault(check.metric, check.actual)
         for key in keys:
             row[key] = item.values.get(key, "")
             row[f"z_{key}"] = item.normalized.get(key, "")
         rows.append(row)
-    columns = ("variant", "feasible", "score", "rank") + tuple(keys) + tuple(f"z_{key}" for key in keys)
+    columns = ("variant", "feasible", "admitted", "score", "rank") + tuple(gate_columns) + tuple(keys) + tuple(f"z_{key}" for key in keys)
     return write_csv(Path(path), rows, columns)
 
 
@@ -258,6 +268,7 @@ def team_decision_config(variant: Variant, model: SelectionModel, team: dict) ->
         "strategy_thesis": team.get("strategy_thesis", ""),
         "selection": [[lot_id, mode_id] for lot_id, mode_id in variant.selection],
         "weights": display_weights(model),
+        "gates": [asdict(gate) for gate in model.gates],
         "management": {key: management.get(key, "") for key in MANAGEMENT_FIELDS},
     }
 

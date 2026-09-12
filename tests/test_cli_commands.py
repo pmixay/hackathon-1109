@@ -190,10 +190,12 @@ def test_export_writes_every_artifact(case_root, capsys):
     base = json.loads((out_dir / "base.json").read_text(encoding="utf-8"))
     assert base["portfolio"]["name"] == "FINAL" and base["scenario"] == "BASE"
     assert base["metrics"]["c0"] == 1140.0 and base["feasible"] is True
-    assert len(read_csv(out_dir / "alternatives.csv")) == 14
+    assert len(read_csv(out_dir / "alternatives.csv")) == 18
     scores = read_csv(out_dir / "scores.csv")
-    assert {row["variant"] for row in scores} == {"FINAL", "V1", "V2", "V3", "V4", "V5", "V6"}
-    assert all(row["rank"] for row in scores)
+    assert {row["variant"] for row in scores} == {"FINAL", "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"}
+    assert {row["variant"] for row in scores if row["rank"]} == {"FINAL", "V1", "V2", "V3"}
+    assert {row["variant"]: row["gate_anchor_coverage"] for row in scores}["V7"] == "False"
+    assert card["gates"][0]["code"] == "anchor_coverage"
 
 
 def test_export_with_enumeration(case_root, capsys):
@@ -209,7 +211,7 @@ def test_export_adds_portfolio_when_it_is_not_among_alternatives(case_root, caps
     assert code == 0, err
     rows = read_csv(case_root / "out" / "alternatives.csv")
     assert [row["variant"] for row in rows][:2] == ["GATE", "GATE"]
-    assert len(rows) == 16
+    assert len(rows) == 20
 
 
 def test_export_with_custom_mode_records_it(case_root, capsys):

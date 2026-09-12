@@ -124,6 +124,8 @@ def _combo_payload(rec, score, rank):
         },
         "checks": rec["checks"],
         "ok": rec["ok"],
+        "gates": rec.get("gates", []),
+        "admitted": bool(rec.get("admitted", rec["ok"]["STRESS"])),
         "notes": {scenario: [{"code": note.code, "message": note.message, "lots": list(note.lots)} for note in result.notes] for scenario, result in rec["results"].items()},
         "score": round(score(rec), 4),
         "rank": rank.get(rec["id"]),
@@ -148,12 +150,14 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None) ->
 
     sel_model = selection_model()
     feasible_scenario = ui_cfg.get("feasible_scenario", "STRESS")
+    model.admit(records, sel_model, feasible_scenario)
     score, rank = model.make_scorer(records, sel_model, feasible_scenario)
-    feasible = [r for r in records.values() if r["ok"][feasible_scenario]]
+    admitted = [r for r in enumerated.values() if r["admitted"]]
 
     allowed = ui_cfg.get("allowed_modes")
-    suggestions, rejected = model.suggest(records, score, selected_id, n=int(ui_cfg.get("suggestions", 6)), allowed_modes=allowed, pinned=(default_id,))
-    comparison = list(suggestions) + ([rejected] if rejected else [])
+    suggestions, rejected, gate_rejected = model.suggest(records, score, selected_id, n=int(ui_cfg.get("suggestions", 6)), allowed_modes=allowed, pinned=(default_id,))
+    rejected_ids = [cid for cid in (gate_rejected, rejected) if cid]
+    comparison = list(suggestions) + rejected_ids
     actions = model.stress_actions(records, rejected, selected_id, score, case, allowed_modes=allowed) if rejected else []
 
     wanted = set(comparison) | {selected_id} | {a["id"] for a in actions}
@@ -176,6 +180,7 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None) ->
             "constraints": {name: getattr(case.constraints, attr) for attr, name in CONSTRAINT_KEYS.items()},
             "weights": model.ui_weights(sel_model),
             "rationale": model.ui_rationale(sel_model),
+            "gates": [{"id": gate.code, "label": gate.label, "metric": gate.metric, "op": ev.OPERATORS[gate.operator], "threshold": gate.threshold, "unit": gate.unit, "rationale": gate.rationale} for gate in sel_model.gates],
             "feasible_scenario": feasible_scenario,
             "thin_margin_pct": ui_cfg.get("thin_margin_pct", 0.03),
             "allowed_modes": allowed,
@@ -184,7 +189,8 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None) ->
                 "combinations": len(enumerated),
                 "base_feasible": sum(1 for r in enumerated.values() if r["ok"]["BASE"]),
                 "stress_feasible": sum(1 for r in enumerated.values() if r["ok"]["STRESS"]),
-                "ranked": len(feasible),
+                "admitted": len(admitted),
+                "ranked": len(admitted),
             },
         },
         "lots": {
@@ -212,7 +218,7 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None) ->
         },
         "selected": selected_id,
         "suggestions": suggestions,
-        "rejected": [rejected] if rejected else [],
+        "rejected": rejected_ids,
         "comparison": comparison,
         "stress": {"failing": rejected, "actions": actions},
         "combinations": combos,

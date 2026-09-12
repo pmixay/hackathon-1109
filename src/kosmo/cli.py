@@ -153,10 +153,14 @@ def cmd_compare(args, root: Path) -> int:
         scored = score_variants(evaluated, model)
         print()
         print(f"Модель выбора: {model.method}, допустимость по сценарию {model.feasibility_scenario}")
+        for gate in model.gates:
+            print(f"Проверка команды {gate.code}: {gate.label} — {gate.metric} {gate.operator} {gate.threshold}")
+        gate_columns = [gate.code for gate in model.gates]
         print(table(
             [{"вариант": item.name, "ранг": item.rank if item.rank is not None else "-", "балл": item.score if item.score is not None else "-",
+              **{check.code: ("PASS" if check.passed else "FAIL") for check in item.gates},
               **{criterion.key: item.values[criterion.key] for criterion in model.criteria}} for item in scored],
-            ["вариант", "ранг", "балл"] + [criterion.key for criterion in model.criteria],
+            ["вариант", "ранг", "балл"] + gate_columns + [criterion.key for criterion in model.criteria],
         ))
         print()
         print("Чувствительность к весам (±20%):")

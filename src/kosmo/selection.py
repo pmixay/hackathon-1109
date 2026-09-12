@@ -7,10 +7,11 @@ from pathlib import Path
 
 from .calc import coverage, evaluate
 from .case import Case
-from .checks import run_checks
+from .checks import run_checks, run_team_checks
 from .validation import InputError, require_valid_selection
 
 DIRECTIONS = ("max", "min")
+OPERATORS = ("==", "<=", ">=")
 MARGIN_PREFIX = "margin:"
 
 
@@ -27,10 +28,22 @@ class Criterion:
 
 
 @dataclass(frozen=True)
+class Gate:
+    code: str
+    metric: str
+    operator: str
+    threshold: float
+    label: str = ""
+    unit: str = ""
+    rationale: str = ""
+
+
+@dataclass(frozen=True)
 class SelectionModel:
     method: str
     feasibility_scenario: str
     criteria: tuple
+    gates: tuple = ()
 
     @property
     def total_weight(self) -> float:
@@ -45,6 +58,8 @@ class SelectionModel:
 class ScoredVariant:
     name: str
     feasible: bool
+    gates: tuple
+    admitted: bool
     values: dict
     normalized: dict
     score: float | None
@@ -101,13 +116,55 @@ def parse_selection_model(raw) -> SelectionModel:
         problems.append("список критериев пуст")
     elif sum(c.weight for c in criteria) <= 0:
         problems.append("сумма весов должна быть больше нуля")
+    gates = parse_gates(raw.get("gates", []), problems)
     if problems:
         raise WeightsError(problems)
     return SelectionModel(
         method=str(raw.get("method") or "weighted_sum_minmax"),
         feasibility_scenario=str(raw.get("feasibility_scenario") or "BASE"),
         criteria=tuple(criteria),
+        gates=gates,
     )
+
+
+def parse_gates(items, problems: list) -> tuple:
+    if items is None:
+        return ()
+    if not isinstance(items, list):
+        problems.append("gates: ожидается список проверок команды")
+        return ()
+    gates = []
+    seen = set()
+    for index, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            problems.append(f"проверка команды {index}: ожидается объект с полями code, metric, operator, threshold")
+            continue
+        code = str(item.get("code") or "").strip()
+        metric = str(item.get("metric") or "").strip()
+        operator = str(item.get("operator") or "").strip()
+        threshold = item.get("threshold")
+        if not code:
+            problems.append(f"проверка команды {index}: пустой code")
+        elif code in seen:
+            problems.append(f"проверка команды {index}: code {code} повторяется")
+        seen.add(code)
+        if not metric:
+            problems.append(f"проверка команды {code or index}: пустой metric")
+        if operator not in OPERATORS:
+            problems.append(f"проверка команды {code or index}: operator должен быть одним из {', '.join(OPERATORS)}, получено {operator!r}")
+        if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not math.isfinite(threshold):
+            problems.append(f"проверка команды {code or index}: threshold должен быть числом, получено {threshold!r}")
+            threshold = 0.0
+        gates.append(Gate(
+            code=code,
+            metric=metric,
+            operator=operator,
+            threshold=float(threshold),
+            label=str(item.get("label") or code),
+            unit=str(item.get("unit") or ""),
+            rationale=str(item.get("rationale") or ""),
+        ))
+    return tuple(gates)
 
 
 def load_selection_model(path) -> SelectionModel:
@@ -139,9 +196,17 @@ def normalize(values: dict, direction: str) -> dict:
     return normalized
 
 
+def team_checks(results: dict, model: SelectionModel) -> tuple:
+    return run_team_checks(results[model.feasibility_scenario].metrics, model.gates)
+
+
+def admitted(results: dict, model: SelectionModel) -> bool:
+    return results[model.feasibility_scenario].feasible and all(check.passed for check in team_checks(results, model))
+
+
 def score_variants(evaluated: dict, model: SelectionModel) -> list:
     scenario = model.feasibility_scenario
-    candidates = [name for name, results in evaluated.items() if results[scenario].feasible]
+    candidates = [name for name, results in evaluated.items() if admitted(results, model)]
     values = {c.key: {name: criterion_value(evaluated[name], c.key, scenario) for name in candidates} for c in model.criteria}
     normalized = {c.key: normalize(values[c.key], c.direction) for c in model.criteria}
     total = model.total_weight
@@ -150,13 +215,15 @@ def score_variants(evaluated: dict, model: SelectionModel) -> list:
     ranks = {name: position for position, name in enumerate(order, start=1)}
     scored = []
     for name, results in evaluated.items():
-        feasible = name in ranks
+        ranked = name in ranks
         scored.append(ScoredVariant(
             name=name,
-            feasible=feasible,
+            feasible=results[scenario].feasible,
+            gates=team_checks(results, model),
+            admitted=ranked,
             values={c.key: criterion_value(results, c.key, scenario) for c in model.criteria},
-            normalized={c.key: normalized[c.key][name] for c in model.criteria} if feasible else {},
-            score=scores[name] if feasible else None,
+            normalized={c.key: normalized[c.key][name] for c in model.criteria} if ranked else {},
+            score=scores[name] if ranked else None,
             rank=ranks.get(name),
         ))
     scored.sort(key=lambda item: (item.rank is None, item.rank or 0, item.name))
@@ -198,12 +265,14 @@ def perturb(metrics, parameter: str, factor: float):
         return replace(metrics, vpub=metrics.vpub * factor)
     if parameter == "cash":
         cash = metrics.cash * factor
+        anchor_cash = metrics.anchor_cash * factor
         return replace(
             metrics,
             cash=cash,
-            anchor_cash=metrics.anchor_cash * factor,
+            anchor_cash=anchor_cash,
             commercial_cash=metrics.commercial_cash * factor,
             kcash=coverage(cash, metrics.opex),
+            anchor_kcash=coverage(anchor_cash, metrics.opex),
             opex_gap=metrics.opex - cash,
         )
     if parameter == "opex":
@@ -212,6 +281,7 @@ def perturb(metrics, parameter: str, factor: float):
             metrics,
             opex=opex,
             kcash=coverage(metrics.cash, opex),
+            anchor_kcash=coverage(metrics.anchor_cash, opex),
             opex_gap=opex - metrics.cash,
         )
     if parameter == "c0":

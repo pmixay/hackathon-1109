@@ -333,14 +333,24 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
         const sameMode = !c.mode || c.mode === r.mode;
         const row = (k, v) => (v ? `<dt>${k}</dt><dd>${esc(v)}</dd>` : '');
         const access = sameMode ? row('Базовый доступ', c.access_base) + row('Дополнительно', c.access_extra) : `<dt>Доступ</dt><dd class="muted">описан для режима ${esc(c.mode)}, в комбинации — ${r.mode}</dd>`;
-        return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}${c.user ? ', ' + esc(c.user) : ''}</div>${c.problem ? `<div class="sv-p"><b>Проблема:</b> ${esc(c.problem)}</div>` : ''}<p>${esc(c.description)}</p><dl>${access}${row('KPI', c.kpi)}${c.payer ? `<dt>Плательщик</dt><dd>${esc(c.payer)} <span class="hyp">предположение</span></dd>` : ''}${row('Ключевой риск', c.risk)}${row('При сбое', c.on_failure)}</dl></div>`;
+        return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}${c.user ? ', ' + esc(c.user) : ''}</div>${c.problem ? `<div class="sv-p"><b>Проблема:</b> ${esc(c.problem)}</div>` : ''}<p>${esc(c.description)}</p><dl>${access}${row('KPI', c.kpi)}${row('Эффект', c.effect)}${c.payer ? `<dt>Плательщик</dt><dd>${esc(c.payer)} <span class="hyp">предположение</span></dd>` : ''}${row('Ключевой риск', c.risk)}${row('При сбое', c.on_failure)}</dl></div>`;
       };
-      const helpSvc = `Что получает пользователь каждого лота. Карточки сервисов из <b>app/config/lots_ui.csv</b> — файла участника записки: проблема, короткое описание, основной пользователь, базовый и дополнительный доступ, главный KPI, предполагаемый плательщик, ключевой риск, что показать при сбое. Плательщики — гипотезы по консультации трекера 12.09, не подтверждённые назначения. Название лота берётся отсюда же, поэтому в интерфейсе и записке оно одно. Правила доступа описаны для режима из карточки; если в комбинации режим другой, строки доступа не показываются. Оператор, приёмка и полный текст рисков — в записке.`;
+      const helpSvc = `Что получает пользователь каждого лота. Карточки сервисов из <b>app/config/lots_ui.csv</b> — файла участника записки: проблема, короткое описание, основной пользователь, базовый и дополнительный доступ, главный KPI, общественный эффект (что меняется в решениях пользователя; ущерб отдельно не заявляется), предполагаемый плательщик, ключевой риск, что показать при сбое. Плательщики — гипотезы по консультации трекера 12.09, не подтверждённые назначения. Название лота берётся отсюда же, поэтому в интерфейсе и записке оно одно. Правила доступа описаны для режима из карточки; если в комбинации режим другой, строки доступа не показываются. Оператор, приёмка и полный текст рисков — в записке.`;
+      // тиражирование (П8): что переносится между регионами без изменений и что настраивается на месте —
+      // столбцы «Повторно используемая часть» и «Местная адаптация» тех же карточек
+      const helpRep = `Тиражирование между регионами: для каждого лота — что переносится в следующий регион без изменений (ядро) и что настраивается на месте. Формулировки — из карточек сервисов (<b>app/config/lots_ui.csv</b>, столбцы «Повторно используемая часть» и «Местная адаптация»; полные карточки — <b>docs/team/participant-2/service_cards_full.csv</b>). Общее ядро портфеля и правила адаптации — в карточке решения <b>config/team.json</b> (replicable_core, local_adaptation) и в разделе записки о тиражировании; оператор и приёмка в инструмент не выносятся.`;
+      const repRow = (r) => {
+        const L = d.lots[r.lot], c = L.card;
+        const name = `<td><div class="name"><span class="code">${r.lot}</span>, ${esc(L.name)}</div><div class="sub">${esc(L.region)}</div></td>`;
+        return c && (c.core || c.adaptation) ? `<tr>${name}<td>${esc(c.core || '—')}</td><td>${esc(c.adaptation || '—')}</td></tr>` : `<tr>${name}<td colspan="2" class="muted">Карточка сервиса не подготовлена</td></tr>`;
+      };
+      const rep = `<div class="card"><h2>Тиражирование: ядро и адаптация${help(helpRep)}</h2>
+<div class="tw"><table class="rep"><tr><th>Лот</th><th>Переносится без изменений</th><th>Настраивается в регионе</th></tr>${s.per_lot.map(repRow).join('')}</table></div></div>`;
       return `<div class="card"><h2>Лоты портфеля ${portfolioTag()}${help(helpLots)}</h2>
 <div class="tw wide"><table><tr><th>Лот</th><th>Режим</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">t_rep</th><th class="num">Готовность</th><th class="num">Устойчивость</th><th class="num">Тираж</th></tr>
 ${s.per_lot.map(lotRow).join('')}
 <tr class="total"><td>Портфель</td><td></td><td class="num">${fmt(m.c0)}</td><td class="num">${fmt(m.opex, 2)}</td><td class="num">${fmt(m.vpub)}</td><td class="num">${fmt(m.cash, 2)}</td><td class="num">${fmt(m.t_rep, 3)}</td><td class="num">${fmt(m.readiness, 2)}</td><td class="num">${fmt(m.resilience, 2)}</td><td class="num">${fmt(m.scale, 2)}</td></tr></table></div></div>
-<div class="card"><h2>Сервисы портфеля${help(helpSvc)}</h2><div class="svc">${s.per_lot.map(svcCard).join('')}</div></div>`;
+<div class="card"><h2>Сервисы портфеля${help(helpSvc)}</h2><div class="svc">${s.per_lot.map(svcCard).join('')}</div></div>${rep}`;
     },
   };
   return pageHead('Портфель', pill) + body[curTab('portfolio')]();
@@ -572,7 +582,7 @@ function renderStress() {
       const rowD = (label, a, b, dec) => `<tr><td>${label}</td><td class="num">${fmt(a, dec)}</td><td class="num">${fmt(b, dec)}</td><td class="num">${signed(b - a, dec)}</td></tr>`;
       const change = describeChange(fail, s);
       return `<div class="row2 w">
-<div class="card"><h2>Что можно сделать${chips(fail)}${help(`Комбинация ${lotsOf(fail)}, ${modesOf(fail)} не проходит STRESS. Правило кейса: лимит бюджета не меняет исходную стоимость лотов, c0 снижается только сменой режима или состава. Перевод лота из A в B даёт −5 % его c0 и −18 % ценности, но лот перестаёт быть public core. Каждая строка пересчитана через case_core; в столбце STRESS — запас до лимита c0.`)}</h2>
+<div class="card"><h2>Что можно сделать${chips(fail)}${help(`Комбинация ${lotsOf(fail)}, ${modesOf(fail)} не проходит STRESS. Правило кейса: лимит бюджета не меняет исходную стоимость лотов, c0 снижается только сменой режима или состава. Перевод лота из A в B даёт −5 % его c0 и −18 % ценности, но лот перестаёт быть public core. Каждая строка пересчитана через case_core; в столбце STRESS — запас до лимита c0. Это машинные рекомендации движка, а не вывод аналитика: полный список одношаговых замен для портфеля команды — <b>results/repairs_stress.csv</b> (для BASE — <b>repairs_base.csv</b>).`)}</h2>
 <div class="tw"><table><tr><th>Действие</th><th class="num">c0</th><th class="num">Ценность</th><th>STRESS</th></tr>${rowsA}</table></div></div>
 <div class="card"><h2>Замена: ${esc(change)}${help('Что меняется — цена управленческого решения при сокращении бюджета: разница между отвергнутой комбинацией с максимальной ценностью и показанным портфелем. Решение принимает межрегиональный заказчик; договоры по исключённому лоту не заключаются до второго этапа.')}</h2>
 <div class="tw"><table><tr><th></th><th class="num">до</th><th class="num">после</th><th class="num">Δ</th></tr>

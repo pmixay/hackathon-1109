@@ -385,6 +385,8 @@ class Payload2(unittest.TestCase):
         for lid in ("FIRE", "ENV", "AGRI", "TRANS"):
             card = self.d["lots"][lid]["card"]
             self.assertTrue(card["payer"] and card["risk"] and card["problem"], lid)
+            self.assertTrue(card["core"] and card["adaptation"], lid)   # блок «Тиражирование» (П8)
+            self.assertTrue(card["effect"], lid)                          # цепочка «проблема → KPI → эффект» (П1, П9)
 
 
 class EdgeCases(unittest.TestCase):

@@ -256,6 +256,9 @@ tr.hl .lot{background:var(--hl-chip)}
 .sv dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;margin:4px 0 0;font-size:13px;line-height:1.45}
 .sv dt{color:var(--ink-2);font-weight:600;white-space:nowrap}.sv dd{margin:0;color:var(--ink)}
 .sv .muted{color:var(--muted)}
+/* тиражирование: ядро и адаптация по лотам */
+table.rep td{vertical-align:top;line-height:1.45}
+table.rep th:nth-child(2),table.rep th:nth-child(3){width:38%}
 
 /* ---- вкладка «Данные» ---- */
 .slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}

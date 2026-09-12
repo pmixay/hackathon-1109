@@ -10,16 +10,9 @@ from .case import Case, CaseFormatError, CaseIntegrityError, load_case
 from .checks import format_value
 from .custom_mode import load_custom_mode
 from .enumeration import enumerate_portfolios, failure_counts, feasible_in, lot_frequency, lot_set_summary
-from .export import (
-    write_alternatives,
-    write_enumeration,
-    write_repairs,
-    write_scenario_results,
-    write_scored,
-    write_sensitivity,
-)
+from .export import export_bundle, load_team_card, write_enumeration
 from .repairs import single_step_repairs
-from .selection import load_selection_model, parameter_sensitivity, score_variants, weight_sensitivity
+from .selection import load_selection_model, score_variants, weight_sensitivity
 from .validation import InputError, SelectionError
 from .variants import Variant, VariantStore, load_portfolio, load_variants
 
@@ -160,10 +153,15 @@ def cmd_compare(args, root: Path) -> int:
         scored = score_variants(evaluated, model)
         print()
         print(f"Модель выбора: {model.method}, допустимость по сценарию {model.feasibility_scenario}")
+        for gate in model.gates:
+            role = "фильтр ранжирования" if model.gates_filter else "диагностика, на ранг не влияет"
+            print(f"Проверка команды {gate.code}: {gate.label} — {gate.metric} {gate.operator} {gate.threshold} ({role})")
+        gate_columns = [gate.code for gate in model.gates]
         print(table(
             [{"вариант": item.name, "ранг": item.rank if item.rank is not None else "-", "балл": item.score if item.score is not None else "-",
+              **{check.code: ("PASS" if check.passed else "FAIL") for check in item.gates},
               **{criterion.key: item.values[criterion.key] for criterion in model.criteria}} for item in scored],
-            ["вариант", "ранг", "балл"] + [criterion.key for criterion in model.criteria],
+            ["вариант", "ранг", "балл"] + gate_columns + [criterion.key for criterion in model.criteria],
         ))
         print()
         print("Чувствительность к весам (±20%):")
@@ -231,32 +229,28 @@ def cmd_repairs(args, root: Path) -> int:
 
 def cmd_export(args, root: Path) -> int:
     case = open_case(root)
-    out = root / args.out
     portfolio = load_portfolio(root / args.portfolio)
-    written = write_scenario_results(case, portfolio, out)
-    for scenario_id, path in written.items():
-        print(f"{scenario_id}: {path}")
     variants = load_variants(root / args.alternatives)
-    if portfolio.name not in {variant.name for variant in variants}:
-        variants.insert(0, portfolio)
-    print(f"альтернативы: {write_alternatives(case, variants, out / 'alternatives.csv')}")
-    evaluated = {variant.name: calculate_all_scenarios(case, variant.selection) for variant in variants}
     model = load_selection_model(root / args.weights)
-    print(f"баллы модели выбора: {write_scored(score_variants(evaluated, model), out / 'scores.csv')}")
-    print(f"чувствительность: {write_sensitivity(weight_sensitivity(evaluated, model), parameter_sensitivity(case, portfolio.selection), out / 'sensitivity.csv')}")
-    portfolios = enumerate_portfolios(case)
-    full_evaluated = {
-        "|".join(f"{lot}:{mode}" for lot, mode in zip(item.lots, item.modes)): calculate_all_scenarios(case, tuple(zip(item.lots, item.modes)))
-        for item in portfolios
-        if item.feasible[model.feasibility_scenario]
+    team = load_team_card(root / args.team)
+    written = export_bundle(case, portfolio, variants, model, root / args.out, with_enumeration=not args.skip_enumeration, team=team)
+    labels = {
+        "alternatives": "альтернативы",
+        "scores": "баллы модели выбора",
+        "sensitivity": "чувствительность",
+        "ranking_full": "полный ranking по допустимым комбинациям",
+        "sensitivity_full": "полная чувствительность",
+        "enumeration": "перебор",
+        "portfolio_detail": "формат notebook организаторов, лоты",
+        "portfolio_metrics": "формат notebook организаторов, показатели",
+        "team_decision_config": "карточка решения команды",
     }
-    print(f"полный ranking: {write_scored(score_variants(full_evaluated, model), out / 'ranking_full.csv')}")
-    print(f"полная чувствительность: {write_sensitivity(weight_sensitivity(full_evaluated, model), parameter_sensitivity(case, portfolio.selection, parameters=('vpub', 'cash', 'opex', 'c0')), out / 'sensitivity_full.csv')}")
-    for scenario_id in case.scenarios:
-        repairs = single_step_repairs(case, portfolio.selection, scenario_id)
-        print(f"варианты с одним изменением ({scenario_id}): {write_repairs(repairs, list(case.scenarios), out / f'repairs_{scenario_id.lower()}.csv')}")
-    if not args.skip_enumeration:
-        print(f"перебор: {write_enumeration(portfolios, list(case.scenarios), out / 'enumeration.csv')}")
+    for key, path in written.items():
+        if key.startswith("repairs_"):
+            label = f"варианты с одним изменением ({key.removeprefix('repairs_')})"
+        else:
+            label = labels.get(key, key)
+        print(f"{label}: {path}")
     return 0
 
 
@@ -315,6 +309,7 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--portfolio", default="config/portfolio.json")
     export.add_argument("--alternatives", default="config/alternatives.json")
     export.add_argument("--weights", default="config/weights.json")
+    export.add_argument("--team", default="config/team.json")
     export.add_argument("--out", default="results")
     export.add_argument("--skip-enumeration", action="store_true")
     export.set_defaults(handler=cmd_export)

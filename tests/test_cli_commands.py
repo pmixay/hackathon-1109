@@ -181,7 +181,13 @@ def test_export_writes_every_artifact(case_root, capsys):
     code, out, err = run(capsys, "--root", case_root, "export", "--out", "out", "--skip-enumeration")
     assert code == 0, err
     names = sorted(path.name for path in out_dir.iterdir())
-    assert names == ["alternatives.csv", "base.json", "ranking_full.csv", "repairs_base.csv", "repairs_stress.csv", "scores.csv", "sensitivity.csv", "sensitivity_full.csv", "stress.json"]
+    assert names == ["alternatives.csv", "base.json", "portfolio_detail.csv", "portfolio_metrics.json", "ranking_full.csv", "repairs_base.csv", "repairs_stress.csv", "scores.csv", "sensitivity.csv", "sensitivity_full.csv", "stress.json", "team_decision_config.json"]
+    card = json.loads((out_dir / "team_decision_config.json").read_text(encoding="utf-8"))
+    assert card["selection"] == [["FIRE", "A"], ["ENV", "A"], ["AGRI", "B"], ["TRANS", "B"]]
+    assert card["weights"]["stress_margin"] == 0.1
+    assert card["gates"][0]["code"] == "anchor_coverage" and card["gates_filter"] is False
+    metrics = json.loads((out_dir / "portfolio_metrics.json").read_text(encoding="utf-8"))
+    assert metrics["c0_mrub"] == 1140.0 and metrics["capability_set"] == ["EO", "PNT/InSAR"]
     base = json.loads((out_dir / "base.json").read_text(encoding="utf-8"))
     assert base["portfolio"]["name"] == "FINAL" and base["scenario"] == "BASE"
     assert base["metrics"]["c0"] == 1140.0 and base["feasible"] is True
@@ -193,6 +199,8 @@ def test_export_writes_every_artifact(case_root, capsys):
     assert len(full) == 143
     assert full[0]["variant"] == "FIRE:A|AGRI:C|TRANS:C|ENV:A"
     assert next(row for row in full if row["variant"] == "FIRE:A|AGRI:B|TRANS:B|ENV:A")["rank"] == "3"
+    assert full[0]["gate_anchor_coverage"] == "False" and full[0]["admitted"] == "True"
+    assert sum(row["gate_anchor_coverage"] == "True" for row in full) == 18
 
 
 def test_export_with_enumeration(case_root, capsys):

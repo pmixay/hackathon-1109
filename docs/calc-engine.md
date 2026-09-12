@@ -9,12 +9,14 @@
 | `data/lots.csv`, `data/access_modes.csv`, `config/case_config.json`, `src/case_core.py` | неизменённые файлы организаторов | никто; хэши зафиксированы в `config/case_checksums.json`, при расхождении движок падает с `CaseIntegrityError` |
 | `config/portfolio.json` | итоговый портфель FINAL: FIRE-A, ENV-A, AGRI-B, TRANS-B (подтверждён 12.09 11:02) | E/B при смене решения |
 | `config/alternatives.json` | сравниваемые варианты: FINAL (итоговый) и V1–V6 | B |
-| `config/weights.json` | критерии, направления, веса модели выбора | B |
+| `config/weights.json` | критерии, направления, веса модели выбора и `gates` — диагностические проверки команды (S2: `anchor_kcash ≥ 0.6`, `gates_filter: false`) | B |
 | `config/custom_mode.json` | режим D; если файла нет — D недоступен; `custom_mode.example.json` — шаблон | C/D |
 | `config/assumptions.json` | допущения команды: SLA по каждому сервису, источники данных, правила по облачности, истории, API, журналу доступа, контрольной выборке поставщика; проектное описание, движком не читается | участник 4 (роль D) |
-| `results/` | выгрузка для записки: `base.json`, `stress.json`, `alternatives.csv`, `scores.csv`, `sensitivity.csv`, `ranking_full.csv`, `sensitivity_full.csv`, `repairs_*.csv`, `enumeration.csv` | только `python -m kosmo export` |
+| `config/team.json` | карточка решения: команда, метод, тезис, шесть управленческих полей для `team_decision_config.json` | C, D, E |
+| `results/` | выгрузка для записки: `base.json`, `stress.json`, `alternatives.csv`, `scores.csv`, `sensitivity.csv`, `ranking_full.csv`, `sensitivity_full.csv`, `repairs_*.csv`, `enumeration.csv`, плюс `portfolio_detail.csv`, `portfolio_metrics.json`, `team_decision_config.json` в формате стартового notebook организаторов | только `python -m kosmo export` или кнопка «Экспорт results/» интерфейса (та же `export_bundle`) |
 
 `scores.csv` и `sensitivity.csv` относятся к презентационному shortlist из `config/alternatives.json`. Математический ranking и sensitivity модели определяются по полному множеству 143 STRESS-допустимых комбинаций и находятся в `ranking_full.csv` и `sensitivity_full.csv`.
+| `app/` | интерфейс команды; тонкий слой `app/backend` вызывает движок и собирает `dashboard.json` (`app/CONTRACT.md`) | участник 5 (экраны), участник 4 (слой над движком) |
 | `variants/` | сохранённые варианты с настройками и результатами | `python -m kosmo variant save` |
 | `examples/` | зафиксированный пример входа/выхода для интерфейса | — |
 
@@ -33,7 +35,9 @@ python -m kosmo repairs --lots FIRE:A FLOOD:A TRANS:A ENV:A
 python -m kosmo export                              # всё в results/
 python -m kosmo variant save V1 --lots FIRE:A AGRI:A TRANS:A ENV:A
 python -m kosmo variant check V1                    # пересчёт совпал с сохранённым?
-python -m pytest -q                                 # 333 теста, ~25 с; сверка с case_core.py на всех 5670 комбинациях
+python -m pytest -q                                 # 372 теста, ~45 с; сверка с case_core.py на всех 5670 комбинациях, плюс тесты интерфейсного слоя app/tests
+python app/build.py                                 # dashboard.json интерфейса из движка
+python app/server.py                                # интерфейс на http://127.0.0.1:8765
 ```
 
 Коды выхода `calc`: 0 — все ограничения выполнены, 1 — есть нарушения, 2 — некорректный вход (портфель, режим D, веса), 3 — исходные файлы изменены или не читаются, 4 — файл не найден / битый JSON / конфликт имён варианта.
@@ -62,6 +66,10 @@ else:
 ```
 
 `calculate_all_scenarios(case, selection)` возвращает `{"BASE": result, "STRESS": result}` за один проход.
+
+`export_bundle(case, portfolio, variants, model, out, with_enumeration=True, team=None)` пишет весь набор `results/` и возвращает словарь `{"BASE": path, "STRESS": path, "portfolio_detail": path, "portfolio_metrics": path, "team_decision_config": path, "alternatives": path, "scores": path, "sensitivity": path, "repairs_BASE": path, "repairs_STRESS": path, "enumeration": path}`; `python -m kosmo export` и интерфейс вызывают именно её. `team` — словарь из `config/team.json` (`load_team_card`).
+
+Так устроен интерфейс (`app/backend`): `enumerate_all` прогоняет `calculate_all_scenarios` по всем 5670 комбинациям, `make_scorer` берёт балл и ранг из `score_variants` с `config/weights.json` (нормализация по допустимым в STRESS), строки проверок для экрана — `{"id": check.code, "ok": check.passed, "fact": check.actual, "op": check.operator, "threshold": check.threshold}` (оператор `==` показывается как `=`). Тест `app/tests/test_backend.py` сверяет dashboard с `results/base.json` и с прямым вызовом движка.
 
 Пары можно передавать кортежами `("FIRE", "A")` или словарями `{"lot_id": "FIRE", "mode_id": "A"}`.
 
@@ -138,7 +146,7 @@ z_i = 1 − (x_i − min) / (max − min)      для direction = min
 score = Σ w_i z_i / Σ w_i                 ∈ [0, 1]
 ```
 
-Недопустимые варианты (по сценарию `feasibility_scenario`) в нормализацию не входят и ранга не получают. Критерий `margin:STRESS:c0_limit` — запас по лимиту c0 в стрессе. Чувствительность: каждый вес ±20 % → сменился ли лидер; `vpub`/`cash` портфеля ±20 % → проходят ли ограничения.
+Недопустимые варианты (по сценарию `feasibility_scenario`) в нормализацию не входят и ранга не получают. Проверки команды `gates` — каждая `metric operator threshold` над `PortfolioMetrics` (сейчас одна, S2 «коммерческая выручка = 0»: `anchor_kcash = anchor_cash / opex ≥ 0.6`, порог равен `kcash_min` кейса) — считаются `kosmo.run_team_checks` той же `build_check` со `scope = "team"` и попадают в `scores.csv`/`ranking_full.csv` столбцами `gate_<code>` и значением метрики. По решению участника 3 (12.09) это диагностика, а не правило отбора: при `gates_filter: false` (по умолчанию) `admitted` = допустимые в `feasibility_scenario`, и S2 на ранг не влияет; `gates_filter: true` (или `?gates=filter` в интерфейсе) исключает не прошедших gates из нормализации и ранжирования — только для исследования. Это не канон кейса: девять проверок `run_checks` не меняются. Критерий `margin:STRESS:c0_limit` — запас по лимиту c0 в стрессе. Чувствительность: каждый вес ±20 % → сменился ли лидер; `vpub`/`cash` портфеля ±20 % → проходят ли ограничения.
 
 ## Что движок не считает и не реализует
 

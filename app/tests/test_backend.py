@@ -1,20 +1,19 @@
-"""Проверки расчётного слоя. Запуск: python -m unittest discover -s app/tests -v
-
-Те же проверки роль A прогоняет после замены evaluate/check на case_core.py:
-цифры обязаны совпасть.
-"""
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from backend import evaluate as ev, ingest, model, payload  # noqa: E402
 
+from kosmo import calculate, calculate_all_scenarios, load_portfolio, score_variants  # noqa: E402
+
+REPO = Path(__file__).resolve().parents[2]
 SELECTED = "FIRE:A|AGRI:B|TRANS:B|ENV:A"
 
-# Вывод исполненных ячеек стартового notebook организаторов (округление до 3 знаков — как в display(...round(3))).
 NOTEBOOK_SELECTION = [("FIRE", "A"), ("AGRI", "C"), ("TRANS", "C"), ("ENV", "A")]
-NOTEBOOK_DETAIL = {  # lot: (c0, opex, vpub, cash, t_rep)
+NOTEBOOK_DETAIL = {
     "FIRE": (336.0, 89.25, 560.0, 83.75, 0.68),
     "AGRI": (254.8, 71.25, 142.6, 127.5, 0.74),
     "TRANS": (245.0, 66.5, 136.4, 110.5, 0.77),
@@ -31,66 +30,112 @@ NOTEBOOK_METRICS = {
 class Evaluate(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.lots, cls.modes, cls.config = ev.load_case()
+        cls.case = ev.load_case()
 
-    def test_apply_mode_fire_a(self):
-        r = ev.apply_mode(self.lots["FIRE"], self.modes["A"])
-        self.assertAlmostEqual(r["c0_mrub"], 320 * 1.05)
-        self.assertAlmostEqual(r["cash_mrub_per_year"], 75 * 1.0 + 35 * 0.25)
-        self.assertTrue(r["public_core"])
+    def test_case_is_the_verified_team_copy(self):
+        self.assertTrue(self.case.verified)
+        self.assertEqual(ev.CASE_DIR, REPO)
+        self.assertEqual(set(self.case.checksums), {"data/lots.csv", "data/access_modes.csv", "config/case_config.json", "src/case_core.py"})
 
     def test_selected_portfolio(self):
-        _, m = ev.evaluate_portfolio(model.parse_id(SELECTED), self.lots, self.modes, self.config)
-        self.assertAlmostEqual(m["c0_mrub"], 1140.0)
-        self.assertAlmostEqual(m["opex_mrub_per_year"], 313.0)
-        self.assertAlmostEqual(m["vpub_mrub_per_year"], 1289.0)
-        self.assertAlmostEqual(m["cash_mrub_per_year"], 370.5)
-        self.assertAlmostEqual(m["kcash"], 370.5 / 313.0)
-        self.assertAlmostEqual(m["t_rep"], 0.73)
-        self.assertEqual(m["public_core_lots"], 2)
-        self.assertEqual(m["capability_groups"], 2)
-        self.assertEqual(m["territorial_archetypes"], 4)
+        results = ev.evaluate_portfolio(model.parse_id(SELECTED), self.case)
+        m = results["BASE"].metrics
+        self.assertAlmostEqual(m.c0, 1140.0)
+        self.assertAlmostEqual(m.opex, 313.0)
+        self.assertAlmostEqual(m.vpub, 1289.0)
+        self.assertAlmostEqual(m.cash, 370.5)
+        self.assertAlmostEqual(m.kcash, 370.5 / 313.0)
+        self.assertAlmostEqual(m.t_rep, 0.73)
+        self.assertEqual(m.public_core_lots, 2)
+        self.assertEqual(m.capability_groups, 2)
+        self.assertEqual(m.territorial_archetypes, 4)
+        self.assertTrue(results["BASE"].feasible and results["STRESS"].feasible)
 
-    def test_boundaries_inclusive(self):
-        _, m = ev.evaluate_portfolio(model.parse_id(SELECTED), self.lots, self.modes, self.config)
-        for c0, scenario, expected in [(1300, "BASE", True), (1300.01, "BASE", False), (1180, "STRESS", True), (1180.01, "STRESS", False)]:
-            mm = dict(m, c0_mrub=c0)
-            ok = {r["constraint"]: r["ok"] for r in ev.check_constraints(mm, self.config, scenario)}
-            self.assertEqual(ok["c0_limit"], expected, (c0, scenario))
-        ok = {r["constraint"]: r["ok"] for r in ev.check_constraints(dict(m, kcash=0.6, t_rep=0.63), self.config, "BASE")}
-        self.assertTrue(ok["kcash_floor"] and ok["t_rep_floor"])
-        self.assertFalse({r["constraint"]: r["ok"] for r in ev.check_constraints(dict(m, kcash=0.599), self.config, "BASE")}["kcash_floor"])
-
-    def test_check_order_matches_case_core(self):
-        _, m = ev.evaluate_portfolio(model.parse_id(SELECTED), self.lots, self.modes, self.config)
-        self.assertEqual([r["constraint"] for r in ev.check_constraints(m, self.config)], ev.CHECK_ORDER)
+    def test_check_rows_follow_the_contract(self):
+        result = calculate(self.case, model.parse_id(SELECTED), "STRESS")
+        rows = ev.check_details(result)
+        self.assertEqual([r["id"] for r in rows], ev.CHECK_ORDER)
+        self.assertEqual({r["op"] for r in rows}, {"=", "<=", ">="})
+        by_id = {r["id"]: r for r in rows}
+        self.assertEqual(by_id["c0_limit"], {"id": "c0_limit", "ok": True, "fact": 1140.0, "op": "<=", "threshold": 1180.0})
+        self.assertEqual(by_id["exact_lot_count"]["op"], "=")
+        for r in rows:
+            self.assertIsInstance(r["ok"], bool)
+            self.assertIsInstance(r["fact"], float)
+            self.assertIsInstance(r["threshold"], float)
+        self.assertEqual([r["constraint"] for r in ev.check_constraints(result)], ev.CHECK_ORDER)
 
     def test_notebook_control_example(self):
-        """Контрольный пример Т1: исполненный запуск стартового notebook организаторов
-        (cases/case02/Космос_как_инфраструктура.ipynb, ячейка «Канонический расчет BASE/STRESS»)
-        для FIRE:A, AGRI:C, TRANS:C, ENV:A. Цифры взяты из вывода ячейки как есть."""
-        detail, m = ev.evaluate_portfolio(NOTEBOOK_SELECTION, self.lots, self.modes, self.config)
-        for row, (c0, opex, vpub, cash, t_rep) in zip(detail, NOTEBOOK_DETAIL.values()):
-            self.assertAlmostEqual(row["c0_mrub"], c0, places=3, msg=row["lot_id"])
-            self.assertAlmostEqual(row["opex_mrub_per_year"], opex, places=3, msg=row["lot_id"])
-            self.assertAlmostEqual(row["vpub_mrub_per_year"], vpub, places=3, msg=row["lot_id"])
-            self.assertAlmostEqual(row["cash_mrub_per_year"], cash, places=3, msg=row["lot_id"])
-            self.assertAlmostEqual(row["t_rep"], t_rep, places=3, msg=row["lot_id"])
+        from kosmo.export import template_metrics
+
+        results = ev.evaluate_portfolio(NOTEBOOK_SELECTION, self.case)
+        for row, (c0, opex, vpub, cash, t_rep) in zip(results["BASE"].lots, NOTEBOOK_DETAIL.values()):
+            self.assertAlmostEqual(row.c0, c0, places=3, msg=row.lot_id)
+            self.assertAlmostEqual(row.opex, opex, places=3, msg=row.lot_id)
+            self.assertAlmostEqual(row.vpub, vpub, places=3, msg=row.lot_id)
+            self.assertAlmostEqual(row.cash, cash, places=3, msg=row.lot_id)
+            self.assertAlmostEqual(row.t_rep, t_rep, places=3, msg=row.lot_id)
+        metrics = template_metrics(results["BASE"].metrics)
+        self.assertEqual(list(metrics), list(NOTEBOOK_METRICS))
         for key, expected in NOTEBOOK_METRICS.items():
             if isinstance(expected, float):
-                self.assertAlmostEqual(m[key], expected, places=3, msg=key)
+                self.assertAlmostEqual(metrics[key], expected, places=3, msg=key)
             else:
-                self.assertEqual(m[key], expected, key)
+                self.assertEqual(metrics[key], expected, key)
         for scenario in ("BASE", "STRESS"):
-            self.assertTrue(all(r["ok"] for r in ev.check_constraints(m, self.config, scenario)), scenario)
+            self.assertTrue(results[scenario].feasible, scenario)
+
+    def test_boundaries_come_from_the_engine(self):
+        base = calculate(self.case, [("FIRE", "A"), ("FLOOD", "A"), ("INFRA", "B"), ("ENV", "A")], "BASE")
+        stress = calculate(self.case, [("FIRE", "A"), ("FLOOD", "A"), ("INFRA", "B"), ("ENV", "A")], "STRESS")
+        self.assertTrue(base.feasible)
+        self.assertFalse(stress.feasible)
+        self.assertEqual([r["id"] for r in ev.check_details(stress) if not r["ok"]], ["c0_limit"])
 
 
 class Model(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.case, cls.records = payload._enumerated()
+
     def test_enumeration_totals(self):
-        lots, modes, config, records = payload._enumerated()
-        self.assertEqual(len(records), 5670)
-        self.assertEqual(sum(r["ok"]["BASE"] for r in records.values()), 1031)
-        self.assertEqual(sum(r["ok"]["STRESS"] for r in records.values()), 143)
+        self.assertEqual(len(self.records), 5670)
+        self.assertEqual(sum(r["ok"]["BASE"] for r in self.records.values()), 1031)
+        self.assertEqual(sum(r["ok"]["STRESS"] for r in self.records.values()), 143)
+
+    def test_canonical_id_orders_lots_as_in_lots_csv(self):
+        portfolio = load_portfolio(REPO / "config" / "portfolio.json")
+        self.assertEqual(model.canonical_id(self.case, portfolio.selection), SELECTED)
+        self.assertEqual(model.canonical_id(self.case, [("ENV", "A"), ("TRANS", "B"), ("AGRI", "B"), ("FIRE", "A")]), SELECTED)
+
+    def test_scores_match_the_engine_selection_model(self):
+        sel_model = payload.selection_model()
+        model.admit(self.records, sel_model, "STRESS")
+        score, rank = model.make_scorer(self.records, sel_model, "STRESS")
+        from dataclasses import replace
+
+        engine = {item.name: item for item in score_variants({cid: r["results"] for cid, r in self.records.items()}, replace(sel_model, feasibility_scenario="STRESS"))}
+        for cid, rec in self.records.items():
+            self.assertEqual(rec["admitted"], engine[cid].admitted)
+            if rec["admitted"]:
+                self.assertTrue(rec["ok"]["STRESS"])
+                self.assertAlmostEqual(score(rec), engine[cid].score, places=12)
+                self.assertEqual(rank[cid], engine[cid].rank)
+            else:
+                self.assertNotIn(cid, rank)
+                self.assertTrue(0.0 <= score(rec) <= 1.0)
+        self.assertEqual(sum(r["ok"]["STRESS"] for r in self.records.values()), 143)
+        self.assertEqual(len(rank), 143)
+        self.assertEqual(rank[SELECTED], 3)
+        self.assertFalse(sel_model.gates_filter)
+        leader_without_gate = "FIRE:A|AGRI:C|TRANS:C|ENV:A"
+        self.assertTrue(self.records[leader_without_gate]["ok"]["STRESS"])
+        self.assertTrue(self.records[leader_without_gate]["admitted"])
+        self.assertEqual(rank[leader_without_gate], 1)
+        self.assertFalse(self.records[leader_without_gate]["gates"][0]["ok"])
+        self.assertEqual(sum(1 for r in self.records.values() if r["ok"]["STRESS"] and r["gates"][0]["ok"]), 18)
+        self.assertAlmostEqual(self.records[leader_without_gate]["gates"][0]["fact"], 0.5356, places=4)
+        self.assertAlmostEqual(self.records[SELECTED]["gates"][0]["fact"], 0.6070, places=4)
 
     def test_dashboard_shape(self):
         d = payload.build_dashboard(SELECTED)
@@ -101,64 +146,169 @@ class Model(unittest.TestCase):
             self.assertEqual(len(c["checks"]["BASE"]), 9)
             self.assertEqual(len(c["checks"]["STRESS"]), 9)
             self.assertEqual(len(c["per_lot"]), 4)
+            self.assertIsInstance(c["score"], float)
         s = d["combinations"][SELECTED]
         self.assertTrue(s["ok"]["BASE"] and s["ok"]["STRESS"])
         self.assertLessEqual(abs(sum(d["meta"]["weights"].values()) - 1.0), 1e-9)
+        self.assertEqual(set(d["meta"]["weights"]), {"vpub", "c0", "kcash", "readiness", "resilience", "scale", "stress_margin"})
         for rid in d["rejected"]:
             self.assertFalse(d["combinations"][rid]["ok"]["STRESS"])
+        self.assertEqual(d["rejected"], [d["stress"]["failing"]])
+        self.assertEqual(d["meta"]["totals"]["admitted"], 143)
+        self.assertEqual(d["meta"]["totals"]["ranked"], 143)
+        self.assertFalse(d["meta"]["gates_filter"])
+        self.assertEqual([g["id"] for g in d["meta"]["gates"]], ["anchor_coverage"])
+        self.assertTrue(all(d["combinations"][cid]["admitted"] for cid in d["suggestions"]))
+        self.assertEqual(d["combinations"][SELECTED]["rank"], 3)
+        self.assertEqual(d["suggestions"][0], "FIRE:A|AGRI:C|TRANS:C|ENV:A")
+        self.assertFalse(d["combinations"]["FIRE:A|AGRI:C|TRANS:C|ENV:A"]["gates"][0]["ok"])
+        self.assertTrue(d["combinations"][SELECTED]["gates"][0]["ok"])
+        self.assertEqual(d["meta"]["engine"]["name"], "kosmo")
+        self.assertTrue(d["meta"]["engine"]["verified"])
+        self.assertEqual(d["meta"]["engine"]["portfolio"], "FINAL")
+        self.assertEqual(d["meta"]["totals"], {"combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "admitted": 143, "ranked": 143})
+        self.assertEqual(d["meta"]["constraints"]["opex_max_mrub_per_year"], 360.0)
+        self.assertEqual(d["meta"]["dataset"]["source"], "организаторы")
+        json.dumps(d, ensure_ascii=False)
+
+    def test_gates_as_a_filter_is_an_explicit_switch(self):
+        d = payload.build_dashboard(SELECTED, gates_filter=True)
+        self.assertTrue(d["meta"]["gates_filter"])
+        self.assertEqual(d["meta"]["totals"]["admitted"], 18)
+        self.assertEqual(d["combinations"][SELECTED]["rank"], 1)
+        self.assertEqual(d["rejected"], ["FIRE:A|AGRI:C|TRANS:C|ENV:A", d["stress"]["failing"]])
+        self.assertFalse(d["combinations"]["FIRE:A|AGRI:C|TRANS:C|ENV:A"]["admitted"])
+        self.assertTrue(all(d["combinations"][cid]["gates"][0]["ok"] for cid in d["suggestions"]))
+        back = payload.build_dashboard(SELECTED, gates_filter=False)
+        self.assertEqual(back["combinations"][SELECTED]["rank"], 3)
+
+    def test_team_portfolio_stays_in_suggestions(self):
+        d = payload.build_dashboard("FLOOD:A|AGRI:C|TRANS:B|ENV:A")
+        self.assertIn(SELECTED, d["suggestions"])
+        self.assertIn("FLOOD:A|AGRI:C|TRANS:B|ENV:A", d["suggestions"])
+        scores = [d["combinations"][cid]["score"] for cid in d["suggestions"]]
+        self.assertEqual(scores, sorted(scores, reverse=True))
+        self.assertEqual(len(d["suggestions"]), 6)
+
+    def test_default_selection_is_the_team_portfolio(self):
+        d = payload.build_dashboard()
+        self.assertEqual(d["selected"], SELECTED)
+        self.assertEqual(d["selected"], d["meta"]["engine"]["portfolio_id"])
+        self.assertEqual(payload.build_dashboard("ENV:A|TRANS:B|AGRI:B|FIRE:A")["selected"], SELECTED)
+
+    def test_dashboard_numbers_equal_results_base_json(self):
+        d = payload.build_dashboard(SELECTED)
+        s = d["combinations"][SELECTED]
+        base = json.loads((REPO / "results" / "base.json").read_text(encoding="utf-8"))
+        stress = json.loads((REPO / "results" / "stress.json").read_text(encoding="utf-8"))
+        keys = {"c0": "c0", "opex": "opex", "vpub": "vpub", "cash": "cash", "kcash": "kcash", "t_rep": "t_rep", "archetypes": "territorial_archetypes", "groups": "capability_groups", "public_core": "public_core_lots"}
+        for ui_key, engine_key in keys.items():
+            self.assertEqual(s["metrics"][ui_key], base["metrics"][engine_key], ui_key)
+        by_lot = {lot["lot_id"]: lot for lot in base["lots"]}
+        for row in s["per_lot"]:
+            lot = by_lot[row["lot"]]
+            for key in ("c0", "opex", "vpub", "cash", "anchor_cash", "commercial_cash", "opex_gap", "t_rep"):
+                self.assertEqual(row[key], lot[key], (row["lot"], key))
+            self.assertEqual(row["mode"], lot["mode_id"])
+        for scenario, exported in (("BASE", base), ("STRESS", stress)):
+            expected = [{"id": c["code"], "ok": c["passed"], "fact": c["actual"], "op": ev.OPERATORS[c["operator"]], "threshold": c["threshold"]} for c in exported["checks"]]
+            self.assertEqual(s["checks"][scenario], expected)
+            self.assertEqual([n["code"] for n in s["notes"][scenario]], [n["code"] for n in exported["notes"]])
+
+    def test_every_dashboard_combination_equals_a_direct_engine_call(self):
+        d = payload.build_dashboard(SELECTED)
+        for cid, c in d["combinations"].items():
+            results = calculate_all_scenarios(self.case, model.parse_id(cid))
+            self.assertEqual(c["metrics"]["c0"], results["BASE"].metrics.c0)
+            self.assertEqual(c["metrics"]["kcash"], results["BASE"].metrics.kcash)
+            self.assertEqual(c["ok"], {sid: r.feasible for sid, r in results.items()})
 
     def test_lot_names_and_service_cards(self):
         d = payload.build_dashboard(SELECTED)
         self.assertEqual(d["lots"]["FIRE"]["name"], "Лесные пожары")
         self.assertEqual(d["lots"]["ENV"]["region"], "Волго-Каспийский регион")
+        self.assertEqual(d["lots"]["AGRI"]["groups"], ["EO", "PNT/InSAR"])
         for lid, mode in [("FIRE", "A"), ("ENV", "A"), ("AGRI", "B"), ("TRANS", "B")]:
             card = d["lots"][lid]["card"]
             self.assertEqual(card["mode"], mode, lid)
             for key in ("description", "user", "access_base", "access_extra", "kpi", "on_failure"):
                 self.assertTrue(card[key], (lid, key))
         self.assertIsNone(d["lots"]["FLOOD"]["card"])
+        self.assertEqual(set(d["modes"]), {"A", "B", "C"})
+        self.assertTrue(d["modes"]["A"]["public_core"])
 
     def test_unknown_selection(self):
         with self.assertRaises(ValueError):
             payload.build_dashboard("FIRE:A|FIRE:A|FIRE:A|FIRE:A")
+        with self.assertRaises(ValueError):
+            payload.build_dashboard("FIRE:A|AGRI:B|TRANS:B|ENV:Z")
+
+
+class Export(unittest.TestCase):
+    def test_export_writes_the_engine_bundle(self):
+        d = payload.build_dashboard(SELECTED)
+        with tempfile.TemporaryDirectory() as tmp:
+            written = payload.export_results(d, Path(tmp))
+            names = sorted(Path(p).name for p in written.values())
+            self.assertEqual(names, ["alternatives.csv", "base.json", "portfolio_detail.csv", "portfolio_metrics.json", "ranking_full.csv", "repairs_base.csv", "repairs_stress.csv", "scores.csv", "sensitivity.csv", "sensitivity_full.csv", "stress.json", "team_decision_config.json"])
+            fresh = json.loads((Path(tmp) / "base.json").read_text(encoding="utf-8"))
+            committed = json.loads((REPO / "results" / "base.json").read_text(encoding="utf-8"))
+            fresh.pop("generated_at")
+            committed.pop("generated_at")
+            self.assertEqual(fresh, committed)
+            self.assertEqual(fresh["portfolio"]["name"], "FINAL")
+            for name in ("portfolio_detail.csv", "portfolio_metrics.json", "team_decision_config.json"):
+                norm = lambda b: b.replace(b"\r\n", b"\n")  # csv пишет CRLF, а в checkout git может быть LF: сравниваем содержимое, не переводы строк
+            self.assertEqual(norm((Path(tmp) / name).read_bytes()), norm((REPO / "results" / name).read_bytes()), name)
 
     def test_export_matches_template_format(self):
-        """results/ содержит наши base/stress/alternatives и три файла в формате notebook организаторов."""
         import csv
-        import json
-        import tempfile
+
+        from kosmo.export import TEMPLATE_DETAIL_COLUMNS
 
         d = payload.build_dashboard(SELECTED)
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
             payload.export_results(d, out)
-            names = {p.name for p in out.iterdir()}
-            self.assertEqual(names, {"base.json", "stress.json", "alternatives.csv",
-                                     "portfolio_detail.csv", "portfolio_metrics.json", "team_decision_config.json"})
             with open(out / "portfolio_detail.csv", encoding="utf-8", newline="") as f:
                 rows = list(csv.DictReader(f))
-            self.assertEqual(list(rows[0]), payload.TEMPLATE_DETAIL_COLUMNS)
-            self.assertEqual([(r["lot_id"], r["mode_id"]) for r in rows], model.parse_id(SELECTED))
+            self.assertEqual(tuple(rows[0]), TEMPLATE_DETAIL_COLUMNS)
+            self.assertEqual([(r["lot_id"], r["mode_id"]) for r in rows], [("FIRE", "A"), ("ENV", "A"), ("AGRI", "B"), ("TRANS", "B")])
             self.assertEqual(rows[0]["territorial_archetype"], "Siberian")
-            with open(out / "portfolio_metrics.json", encoding="utf-8") as f:
-                metrics = json.load(f)
+            self.assertEqual(rows[2]["capability_groups"], "EO;PNT/InSAR")
+            metrics = json.loads((out / "portfolio_metrics.json").read_text(encoding="utf-8"))
             self.assertEqual(set(metrics), set(NOTEBOOK_METRICS))
             self.assertAlmostEqual(metrics["c0_mrub"], d["combinations"][SELECTED]["metrics"]["c0"])
-            with open(out / "team_decision_config.json", encoding="utf-8") as f:
-                card = json.load(f)
-            self.assertEqual(set(card), {"team", "decision_method", "strategy_thesis", "selection", "weights", "management"})
-            self.assertEqual([tuple(p) for p in card["selection"]], model.parse_id(SELECTED))
+            card = json.loads((out / "team_decision_config.json").read_text(encoding="utf-8"))
+            self.assertEqual(set(card), {"team", "decision_method", "strategy_thesis", "selection", "weights", "gates", "gates_filter", "management"})
+            self.assertEqual(card["gates"][0]["threshold"], 0.6)
+            self.assertFalse(card["gates_filter"])
+            self.assertEqual([tuple(p) for p in card["selection"]], [("FIRE", "A"), ("ENV", "A"), ("AGRI", "B"), ("TRANS", "B")])
             self.assertEqual(card["weights"], d["meta"]["weights"])
-            self.assertEqual(set(card["management"]), {"payer_opex", "operator_model", "supplier_switch_rule",
-                                                       "replicable_core", "local_adaptation", "stress_decision"})
+            self.assertEqual(set(card["management"]), {"payer_opex", "operator_model", "supplier_switch_rule", "replicable_core", "local_adaptation", "stress_decision"})
+            self.assertTrue(card["management"]["operator_model"])
 
+    def test_export_of_another_combination_keeps_team_alternatives(self):
+        other = "FIRE:A|AGRI:C|TRANS:C|ENV:A"
+        d = payload.build_dashboard(other)
+        with tempfile.TemporaryDirectory() as tmp:
+            written = payload.export_results(d, Path(tmp))
+            out = Path(tmp) / "variants" / "fire-a-agri-c-trans-c-env-a"
+            self.assertEqual({Path(p).parent for p in written.values()}, {out})
+            self.assertFalse((Path(tmp) / "base.json").exists())
+            base = json.loads((out / "base.json").read_text(encoding="utf-8"))
+            self.assertEqual(base["portfolio"]["name"], other)
+            self.assertEqual([f"{s['lot_id']}:{s['mode_id']}" for s in base["selection"]], other.split("|"))
+            rows = (out / "alternatives.csv").read_text(encoding="utf-8").splitlines()
+            self.assertEqual(len(rows), 1 + 2 * 10)
+            self.assertTrue(rows[1].startswith(other))
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class Payload2(unittest.TestCase):
     """Поля контракта для конструктора, экрана «Почему FINAL» и сценария S2."""
+
+    FINAL = "FIRE:A|AGRI:B|TRANS:B|ENV:A"
 
     @classmethod
     def setUpClass(cls):
@@ -166,25 +316,41 @@ class Payload2(unittest.TestCase):
 
     def test_final_and_alternatives_present(self):
         d = self.d
-        self.assertEqual(d["final"], SELECTED)
+        self.assertEqual(d["final"], self.FINAL)
+        self.assertEqual(d["final_name"], "FINAL")
         self.assertIn(d["final"], d["combinations"])
         names = [a["name"] for a in d["alternatives"]]
         self.assertIn("FINAL", names)
         self.assertIn("V2", names)
         for a in d["alternatives"]:
             self.assertIn(a["id"], d["combinations"], a["name"])
-        final = next(a for a in d["alternatives"] if a["name"] == "FINAL")
-        self.assertEqual(final["id"], SELECTED)  # config/alternatives.json и app/config/portfolio.json согласованы
+        self.assertEqual(next(a for a in d["alternatives"] if a["name"] == "FINAL")["id"], self.FINAL)
+        self.assertTrue(d["why_final"].get("status"))
 
     def test_score_breakdown_sums_to_score(self):
+        keys = [b["key"] for b in self.d["combinations"][self.FINAL]["breakdown"]]
+        self.assertEqual(keys, ["vpub", "c0", "kcash", "readiness", "resilience", "scale", "margin:STRESS:c0_limit"])
         for c in self.d["combinations"].values():
             self.assertAlmostEqual(sum(b["contribution"] for b in c["breakdown"]), c["score"], places=3, msg=c["id"])
-            self.assertAlmostEqual(sum(b["weight"] for b in c["breakdown"]), 1.0)
             for b in c["breakdown"]:
                 self.assertTrue(0 <= b["z"] <= 1)
+                self.assertTrue(b["lo"] <= b["hi"])
+
+    def test_breakdown_matches_ranking_full_csv(self):
+        """z-значения FINAL те же, что в results/ranking_full.csv движка (участник 3)."""
+        import csv
+
+        path = Path(__file__).resolve().parents[2] / "results" / "ranking_full.csv"
+        if not path.exists():
+            self.skipTest("нет results/ranking_full.csv")
+        with open(path, encoding="utf-8", newline="") as f:
+            row = next(r for r in csv.DictReader(f) if r["variant"] == self.FINAL)
+        for b in self.d["combinations"][self.FINAL]["breakdown"]:
+            self.assertAlmostEqual(b["z"], float(row["z_" + b["key"]]), places=3, msg=b["key"])
+        self.assertAlmostEqual(self.d["combinations"][self.FINAL]["score"], float(row["score"]), places=3)
 
     def test_s2_commercial_zero(self):
-        f = self.d["combinations"][SELECTED]
+        f = self.d["combinations"][self.FINAL]
         self.assertAlmostEqual(f["metrics"]["anchor_cash"], 190.0)
         self.assertAlmostEqual(f["metrics"]["commercial_cash"], 180.5)
         self.assertAlmostEqual(f["s2"]["cash"], 190.0)
@@ -195,13 +361,14 @@ class Payload2(unittest.TestCase):
     def test_arbitrary_portfolio_keeps_final(self):
         d = payload.build_dashboard("FIRE:A|FLOOD:A|TRANS:A|ENV:A")
         self.assertEqual(d["selected"], "FIRE:A|FLOOD:A|TRANS:A|ENV:A")
-        self.assertEqual(d["final"], SELECTED)
-        self.assertIn(SELECTED, d["combinations"])
+        self.assertEqual(d["final"], self.FINAL)
+        self.assertIn(self.FINAL, d["combinations"])
         c = d["combinations"][d["selected"]]
         self.assertTrue(c["ok"]["BASE"]); self.assertFalse(c["ok"]["STRESS"])
         bad = [r for r in c["checks"]["STRESS"] if not r["ok"]]
         self.assertEqual([r["id"] for r in bad], ["c0_limit"])
         self.assertAlmostEqual(bad[0]["fact"] - bad[0]["threshold"], 69.5)
+        self.assertIsNone(c["rank"])
 
     def test_service_cards_have_payer_and_risk(self):
         for lid in ("FIRE", "ENV", "AGRI", "TRANS"):
@@ -210,21 +377,15 @@ class Payload2(unittest.TestCase):
 
 
 class EdgeCases(unittest.TestCase):
-    """Крайние входы: неполные альтернативы, team.json без why_final, FINAL вне набора, ни одной допустимой комбинации, набор без STRESS."""
+    """Крайние входы: неполные альтернативы, нет why_final.json, FINAL вне набора, набор без STRESS."""
 
-    def _with_load(self, name, value, fn):
-        orig = payload._load
-        payload._load = lambda n: value if n == name else orig(n)
-        try:
-            return fn()
-        finally:
-            payload._load = orig
+    FINAL = "FIRE:A|AGRI:B|TRANS:B|ENV:A"
 
     def test_broken_alternatives_are_skipped(self):
         import json
         import tempfile
 
-        lots, _, _, records = payload._enumerated()
+        case, records = payload._enumerated()
 
         def four(*pairs):
             return [{"lot_id": lot, "mode_id": mode} for lot, mode in pairs]
@@ -234,38 +395,45 @@ class EdgeCases(unittest.TestCase):
             {"name": "Y"},                                                                              # без selection
             {"selection": four(("FIRE", "A"))},                                                          # без name
             {"name": "Z", "selection": [{"lot_id": "FIRE"}]},                                             # без mode_id
-            {"name": "V1", "selection": four(("FIRE", "A"), ("AGRI", "A"), ("TRANS", "A"), ("ENV", "A"))},
+            "not a dict",
+            {"name": "V1", "selection": four(("ENV", "A"), ("FIRE", "A"), ("AGRI", "A"), ("TRANS", "A"))},  # порядок лотов произвольный
         ]}
         with tempfile.TemporaryDirectory() as tmp:
-            (Path(tmp) / "config").mkdir()
-            (Path(tmp) / "config" / "alternatives.json").write_text(json.dumps(variants), encoding="utf-8")
-            orig = payload.ROOT
-            payload.ROOT = Path(tmp)
+            path = Path(tmp) / "alternatives.json"
+            path.write_text(json.dumps(variants), encoding="utf-8")
+            recs = dict(records)
+            alts = payload._alternatives(case, recs, path)
+            orig = payload._alternatives
+            payload._alternatives = lambda c, r, p=None: orig(c, r, path)
             try:
-                alts = payload._alternatives(lots)
-                d = payload.build_dashboard(SELECTED)
+                d = payload.build_dashboard(self.FINAL)
             finally:
-                payload.ROOT = orig
-        self.assertEqual([a["name"] for a in alts], ["X", "V1"])
-        self.assertNotIn(alts[0]["id"], records)
-        self.assertEqual([a["name"] for a in d["alternatives"]], ["V1"])   # X отброшен: его нет в перечислении
+                payload._alternatives = orig
+        self.assertEqual([(a["name"], a["id"]) for a in alts], [("V1", "FIRE:A|AGRI:A|TRANS:A|ENV:A")])
+        self.assertEqual([a["name"] for a in d["alternatives"]], ["V1"])
         self.assertIn(d["alternatives"][0]["id"], d["combinations"])
 
-    def test_team_without_why_final(self):
-        d = self._with_load("team.json", {}, lambda: payload.build_dashboard(SELECTED))
+    def test_without_why_final_file(self):
+        self.assertEqual(payload._why_final(Path("/nonexistent/why_final.json")), {})
+        orig = payload._why_final
+        payload._why_final = lambda path=None: {}
+        try:
+            d = payload.build_dashboard(self.FINAL)
+        finally:
+            payload._why_final = orig
         self.assertEqual(d["why_final"], {})
-        self.assertEqual(d["final"], SELECTED)
+        self.assertEqual(d["final"], self.FINAL)
 
     def test_final_missing_in_dataset(self):
-        with self.assertRaisesRegex(ValueError, "portfolio.json"):
-            self._with_load("portfolio.json", {"selected": "NOPE:A|FIRE:A|ENV:A|AGRI:A"}, lambda: payload.build_dashboard(SELECTED))
+        from kosmo import Variant
 
-    def test_scorer_without_feasible_combinations(self):
-        _, _, config, records = payload._enumerated()
-        recs = {cid: dict(r, ok={"BASE": r["ok"]["BASE"], "STRESS": False}) for cid, r in records.items()}
-        score = model.make_scorer(recs, {"vpub": 0.5, "c0": 0.5}, config)
-        self.assertTrue(0 <= score(recs[SELECTED]) <= 1)
-        self.assertEqual(len(score.breakdown(recs[SELECTED])), 7)
+        orig = payload.team_portfolio
+        payload.team_portfolio = lambda: Variant(name="FINAL", selection=(("NOPE", "A"), ("FIRE", "A"), ("ENV", "A"), ("AGRI", "A")))
+        try:
+            with self.assertRaisesRegex(ValueError, "FINAL"):
+                payload.build_dashboard(self.FINAL)
+        finally:
+            payload.team_portfolio = orig
 
     def test_config_requires_base_and_stress(self):
         import json
@@ -278,31 +446,5 @@ class EdgeCases(unittest.TestCase):
         self.assertTrue(ingest.validate_config(json.dumps(cfg))["ok"])
 
 
-class CrossCheckKosmo(unittest.TestCase):
-    """UI и CLI дают одинаковые цифры: расчётный слой интерфейса против движка src/kosmo (участник 4)."""
-
-    @classmethod
-    def setUpClass(cls):
-        root = Path(__file__).resolve().parents[2]
-        sys.path.insert(0, str(root / "src"))
-        try:
-            import kosmo  # noqa: F401
-        except Exception as e:  # pragma: no cover
-            raise unittest.SkipTest(f"src/kosmo недоступен: {e}")
-        cls.kosmo = kosmo
-        cls.case = kosmo.load_case(str(root))
-        cls.d = payload.build_dashboard()
-
-    def test_metrics_and_checks_match_engine(self):
-        for cid, c in self.d["combinations"].items():
-            sel = [(s["lot"], s["mode"]) for s in c["selection"]]
-            for scenario in ("BASE", "STRESS"):
-                r = self.kosmo.calculate(self.case, sel, scenario).to_dict()
-                for ours, theirs in (("c0", "c0"), ("opex", "opex"), ("vpub", "vpub"), ("cash", "cash"), ("kcash", "kcash"), ("t_rep", "t_rep"), ("anchor_cash", "anchor_cash"), ("commercial_cash", "commercial_cash")):
-                    self.assertAlmostEqual(c["metrics"][ours], r["metrics"][theirs], places=6, msg=f"{cid} {scenario} {ours}")
-                theirs = {k["code"]: k for k in r["checks"]}
-                for row in c["checks"][scenario]:
-                    self.assertEqual(row["ok"], theirs[row["id"]]["passed"], f"{cid} {scenario} {row['id']}")
-                    self.assertAlmostEqual(row["fact"], theirs[row["id"]]["actual"], places=6)
-                    self.assertAlmostEqual(row["threshold"], theirs[row["id"]]["threshold"], places=6)
-                self.assertEqual(c["ok"][scenario], r["feasible"], f"{cid} {scenario}")
+if __name__ == "__main__":
+    unittest.main()

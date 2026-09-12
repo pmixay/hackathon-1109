@@ -2,13 +2,26 @@
  "meta": {
   "case_id": "SEP-KOSMOS-INFRA-2026",
   "case_version": "1.1",
-  "generated_at": "2026-09-12T14:54:26+00:00",
+  "engine": {
+   "name": "kosmo",
+   "verified": true,
+   "checksums": {
+    "data/lots.csv": "8e2b6244178344f9f97050ce5c9f337cd311e9f86bbd96bbbfbdde6999c4ba8b",
+    "data/access_modes.csv": "2669239db6c366c15b13df9d874dc3c8a790ba961bfeddbf9c428fa82fb861c7",
+    "config/case_config.json": "aae20d265b69fa8ec309ce8dc435fb1ae43ed34510c2746baa5024b472426463",
+    "src/case_core.py": "0a6da8b99dbb2e6ff03cb94012f539d8cd0b9c7dd05525bda5b202ebb461e20c"
+   },
+   "portfolio": "FINAL",
+   "portfolio_id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+   "weights_file": "config/weights.json"
+  },
+  "generated_at": "2026-09-12T15:33:31+00:00",
   "scenarios": {
    "BASE": {
-    "c0_max": 1300
+    "c0_max": 1300.0
    },
    "STRESS": {
-    "c0_max": 1180
+    "c0_max": 1180.0
    }
   },
   "constraints": {
@@ -16,8 +29,8 @@
    "min_territorial_archetypes": 3,
    "min_capability_groups": 2,
    "min_public_core_lots": 2,
-   "opex_max_mrub_per_year": 360,
-   "vpub_min_mrub_per_year": 1000,
+   "opex_max_mrub_per_year": 360.0,
+   "vpub_min_mrub_per_year": 1000.0,
    "kcash_min": 0.6,
    "t_rep_min": 0.63
   },
@@ -31,14 +44,27 @@
    "stress_margin": 0.1
   },
   "rationale": {
-   "vpub": "главная цель заказчика по постановке",
-   "c0": "жёсткий лимит и стресс-риск",
-   "kcash": "устойчивость эксплуатации",
-   "readiness": "скорость запуска пилота",
-   "resilience": "сохранение сервиса при сбоях",
-   "scale": "перенос между регионами",
-   "stress_margin": "производный критерий команды: 1180 − c0"
+   "vpub": "общественная ценность — главная цель заказчика по постановке",
+   "c0": "стартовые затраты ограничены лимитом бюджета",
+   "kcash": "устойчивое финансирование: покрытие OPEX поступлениями",
+   "readiness": "готовность к запуску снижает риск реализации",
+   "resilience": "устойчивость сервиса к сбоям и изменению условий",
+   "scale": "тиражируемость между регионами",
+   "stress_margin": "запас по лимиту стресс-сценария (1180 − c0)"
   },
+  "gates": [
+   {
+    "id": "anchor_coverage",
+    "label": "S2: покрытие OPEX якорными платежами",
+    "metric": "anchor_kcash",
+    "op": ">=",
+    "threshold": 0.6,
+    "unit": "доля",
+    "rationale": "стресс спроса команды «коммерческая выручка = 0»: якорные (бюджетные) платежи к OPEX; порог 0,6 равен kcash_min кейса и используется только для диагностики; цифра 0,607 подтверждена в config/assumptions.json (commercial_zero_sensitivity) и docs/D-confirmations.md"
+   }
+  ],
+  "feasible_scenario": "STRESS",
+  "gates_filter": false,
   "thin_margin_pct": 0.03,
   "allowed_modes": [
    "A",
@@ -46,14 +72,16 @@
    "C"
   ],
   "dataset": {
-   "root": "/home/user/hackathon-1109/cases/case02",
+   "root": ".",
    "source": "организаторы",
    "case_version": "1.1"
   },
   "totals": {
    "combinations": 5670,
    "base_feasible": 1031,
-   "stress_feasible": 143
+   "stress_feasible": 143,
+   "admitted": 143,
+   "ranked": 143
   }
  },
  "lots": {
@@ -192,7 +220,8 @@
    "k_vpub": 1.0,
    "k_anchor": 1.0,
    "k_commercial": 0.25,
-   "public_core": true
+   "public_core": true,
+   "custom": false
   },
   "B": {
    "k_c0": 1.0,
@@ -200,7 +229,8 @@
    "k_vpub": 0.82,
    "k_anchor": 0.8,
    "k_commercial": 0.7,
-   "public_core": false
+   "public_core": false,
+   "custom": false
   },
   "C": {
    "k_c0": 0.98,
@@ -208,11 +238,13 @@
    "k_vpub": 0.62,
    "k_anchor": 0.45,
    "k_commercial": 0.95,
-   "public_core": false
+   "public_core": false,
+   "custom": false
   }
  },
  "selected": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
  "final": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+ "final_name": "FINAL",
  "alternatives": [
   {
    "name": "FINAL",
@@ -315,7 +347,7 @@
    {
     "label": "TRANS вместо FLOOD · INFRA, ENV → C",
     "id": "FIRE:A|INFRA:C|TRANS:A|ENV:C",
-    "margin": 3.300000000000182
+    "margin": 3.2999999999999545
    },
    {
     "label": "TRANS вместо FLOOD · FIRE → C · INFRA → A",
@@ -361,6 +393,7 @@
      "cash": 60.0,
      "anchor_cash": 30.0,
      "commercial_cash": 30.0,
+     "opex_gap": 18.75,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -376,6 +409,7 @@
      "cash": 81.25,
      "anchor_cash": 55.0,
      "commercial_cash": 26.25,
+     "opex_gap": 2.75,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -391,6 +425,7 @@
      "cash": 68.75,
      "anchor_cash": 45.0,
      "commercial_cash": 23.75,
+     "opex_gap": 4.75,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -406,6 +441,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -417,73 +453,68 @@
     "opex": 315.0,
     "vpub": 1110.0,
     "cash": 286.25,
+    "anchor_cash": 185.0,
+    "commercial_cash": 101.25,
     "kcash": 0.9087301587301587,
-    "t_rep": 0.7374999999999999,
+    "opex_gap": 28.75,
+    "t_rep": 0.7375,
     "readiness": 4.475,
     "resilience": 4.175,
-    "scale": 4.699999999999999,
+    "scale": 4.7,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 4,
-    "anchor_cash": 185.0,
-    "commercial_cash": 101.25
-   },
-   "s2": {
-    "cash": 185.0,
-    "kcash": 0.5873015873015873,
-    "opex_gap": 130.0,
-    "kcash_ok": false
+    "public_core": 4
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1155.0,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 315.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1110.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -495,7 +526,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.7374999999999999,
+      "fact": 0.7375,
       "op": ">=",
       "threshold": 0.63
      }
@@ -504,51 +535,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1155.0,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 315.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1110.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -560,7 +591,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.7374999999999999,
+      "fact": 0.7375,
       "op": ">=",
       "threshold": 0.63
      }
@@ -570,14 +601,108 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5873015873015873,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1155.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 91% годового OPEX; непокрытые 28.8 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (185.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1155.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 91% годового OPEX; непокрытые 28.8 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (185.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 25.0 млн руб. (2.1%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.4361,
    "rank": 90,
+   "s2": {
+    "cash": 185.0,
+    "kcash": 0.5873015873015873,
+    "opex_gap": 130.0,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1110.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.2943,
      "weight": 0.3,
@@ -618,7 +743,7 @@
      "direction": "max",
      "raw": 4.175,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.8889,
      "weight": 0.1,
      "contribution": 0.0889
@@ -634,7 +759,7 @@
      "contribution": 0.0625
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 25.0,
      "lo": 0.5,
@@ -676,6 +801,7 @@
      "cash": 60.0,
      "anchor_cash": 30.0,
      "commercial_cash": 30.0,
+     "opex_gap": 18.75,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -691,6 +817,7 @@
      "cash": 68.75,
      "anchor_cash": 45.0,
      "commercial_cash": 23.75,
+     "opex_gap": 4.75,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -706,6 +833,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -721,6 +849,7 @@
      "cash": 90.0,
      "anchor_cash": 65.0,
      "commercial_cash": 25.0,
+     "opex_gap": 9.75,
      "t_rep": 0.64,
      "readiness": 3.6,
      "resilience": 3.1,
@@ -732,73 +861,68 @@
     "opex": 330.75,
     "vpub": 1150.0,
     "cash": 295.0,
+    "anchor_cash": 195.0,
+    "commercial_cash": 100.0,
     "kcash": 0.891912320483749,
-    "t_rep": 0.7200000000000001,
+    "opex_gap": 35.75,
+    "t_rep": 0.72,
     "readiness": 4.35,
-    "resilience": 3.9499999999999997,
+    "resilience": 3.95,
     "scale": 4.775,
     "archetypes": 3,
     "groups": 3,
-    "public_core": 4,
-    "anchor_cash": 195.0,
-    "commercial_cash": 100.0
-   },
-   "s2": {
-    "cash": 195.0,
-    "kcash": 0.5895691609977324,
-    "opex_gap": 135.75,
-    "kcash_ok": false
+    "public_core": 4
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 3,
+      "fact": 3.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 3,
+      "fact": 3.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1176.0,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 330.75,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1150.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -810,7 +934,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.7200000000000001,
+      "fact": 0.72,
       "op": ">=",
       "threshold": 0.63
      }
@@ -819,51 +943,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 3,
+      "fact": 3.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 3,
+      "fact": 3.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1176.0,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 330.75,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1150.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -875,7 +999,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.7200000000000001,
+      "fact": 0.72,
       "op": ">=",
       "threshold": 0.63
      }
@@ -885,14 +1009,122 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5895691609977324,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1176.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 89% годового OPEX; непокрытые 35.8 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (195.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "federal_lot",
+      "message": "Федеральный лот не входит в счётчик территориальных архетипов; нужен федеральный заказчик и схема софинансирования",
+      "lots": [
+       "SSA"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1176.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 89% годового OPEX; непокрытые 35.8 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (195.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "federal_lot",
+      "message": "Федеральный лот не входит в счётчик территориальных архетипов; нужен федеральный заказчик и схема софинансирования",
+      "lots": [
+       "SSA"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 4.0 млн руб. (0.3%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     }
+    ]
+   },
    "score": 0.2943,
    "rank": 131,
+   "s2": {
+    "cash": 195.0,
+    "kcash": 0.5895691609977324,
+    "opex_gap": 135.75,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1150.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.4027,
      "weight": 0.3,
@@ -933,7 +1165,7 @@
      "direction": "max",
      "raw": 3.95,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.3889,
      "weight": 0.1,
      "contribution": 0.0389
@@ -949,7 +1181,7 @@
      "contribution": 0.1
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 4.0,
      "lo": 0.5,
@@ -991,6 +1223,7 @@
      "cash": 108.0,
      "anchor_cash": 24.0,
      "commercial_cash": 84.0,
+     "opex_gap": -33.0,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -1006,6 +1239,7 @@
      "cash": 117.5,
      "anchor_cash": 44.0,
      "commercial_cash": 73.5,
+     "opex_gap": -37.5,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -1021,6 +1255,7 @@
      "cash": 68.75,
      "anchor_cash": 45.0,
      "commercial_cash": 23.75,
+     "opex_gap": 4.75,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -1036,6 +1271,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -1047,73 +1283,68 @@
     "opex": 307.25,
     "vpub": 1014.5999999999999,
     "cash": 370.5,
+    "anchor_cash": 168.0,
+    "commercial_cash": 202.5,
     "kcash": 1.2058584214808787,
-    "t_rep": 0.7374999999999999,
+    "opex_gap": -63.25,
+    "t_rep": 0.7375,
     "readiness": 4.475,
     "resilience": 4.175,
-    "scale": 4.699999999999999,
+    "scale": 4.7,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 168.0,
-    "commercial_cash": 202.5
-   },
-   "s2": {
-    "cash": 168.0,
-    "kcash": 0.5467860048820179,
-    "opex_gap": 139.25,
-    "kcash_ok": false
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1126.5,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 307.25,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1014.5999999999999,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -1125,7 +1356,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.7374999999999999,
+      "fact": 0.7375,
       "op": ">=",
       "threshold": 0.63
      }
@@ -1134,51 +1365,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1126.5,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 307.25,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1014.5999999999999,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -1190,7 +1421,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.7374999999999999,
+      "fact": 0.7375,
       "op": ">=",
       "threshold": 0.63
      }
@@ -1200,14 +1431,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5467860048820179,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1126.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (168.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1126.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (168.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 53.5 млн руб. (4.5%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.5848,
    "rank": 36,
+   "s2": {
+    "cash": 168.0,
+    "kcash": 0.5467860048820179,
+    "opex_gap": 139.25,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1014.6,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.0358,
      "weight": 0.3,
@@ -1248,7 +1553,7 @@
      "direction": "max",
      "raw": 4.175,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.8889,
      "weight": 0.1,
      "contribution": 0.0889
@@ -1264,7 +1569,7 @@
      "contribution": 0.0625
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 53.5,
      "lo": 0.5,
@@ -1306,6 +1611,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -1321,6 +1627,7 @@
      "cash": 60.0,
      "anchor_cash": 30.0,
      "commercial_cash": 30.0,
+     "opex_gap": 18.75,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -1336,6 +1643,7 @@
      "cash": 68.75,
      "anchor_cash": 45.0,
      "commercial_cash": 23.75,
+     "opex_gap": 4.75,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -1351,6 +1659,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -1362,73 +1671,68 @@
     "opex": 320.25,
     "vpub": 1370.0,
     "cash": 288.75,
+    "anchor_cash": 205.0,
+    "commercial_cash": 83.75,
     "kcash": 0.9016393442622951,
+    "opex_gap": 31.5,
     "t_rep": 0.73,
     "readiness": 4.525,
     "resilience": 4.05,
     "scale": 4.675,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 4,
-    "anchor_cash": 205.0,
-    "commercial_cash": 83.75
-   },
-   "s2": {
-    "cash": 205.0,
-    "kcash": 0.6401249024199844,
-    "opex_gap": 115.25,
-    "kcash_ok": true
+    "public_core": 4
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1165.5,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 320.25,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1370.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -1449,51 +1753,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1165.5,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 320.25,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1370.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -1515,14 +1819,108 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.6401249024199844,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1165.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 90% годового OPEX; непокрытые 31.5 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (205.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1165.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 90% годового OPEX; непокрытые 31.5 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (205.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 14.5 млн руб. (1.2%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.583,
    "rank": 37,
+   "s2": {
+    "cash": 205.0,
+    "kcash": 0.6401249024199844,
+    "opex_gap": 115.25,
+    "kcash_ok": true
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1370.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.9989,
      "weight": 0.3,
@@ -1563,7 +1961,7 @@
      "direction": "max",
      "raw": 4.05,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.6111,
      "weight": 0.1,
      "contribution": 0.0611
@@ -1579,7 +1977,7 @@
      "contribution": 0.05
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 14.5,
      "lo": 0.5,
@@ -1621,6 +2019,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -1636,6 +2035,7 @@
      "cash": 108.0,
      "anchor_cash": 24.0,
      "commercial_cash": 84.0,
+     "opex_gap": -33.0,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -1651,6 +2051,7 @@
      "cash": 81.25,
      "anchor_cash": 55.0,
      "commercial_cash": 26.25,
+     "opex_gap": 2.75,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -1666,6 +2067,7 @@
      "cash": 102.5,
      "anchor_cash": 36.0,
      "commercial_cash": 66.5,
+     "opex_gap": -32.5,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -1677,73 +2079,68 @@
     "opex": 318.25,
     "vpub": 1229.0,
     "cash": 375.5,
+    "anchor_cash": 190.0,
+    "commercial_cash": 185.5,
     "kcash": 1.1798900235663787,
+    "opex_gap": -57.25,
     "t_rep": 0.725,
     "readiness": 4.449999999999999,
     "resilience": 4.0,
     "scale": 4.65,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 190.0,
-    "commercial_cash": 185.5
-   },
-   "s2": {
-    "cash": 190.0,
-    "kcash": 0.5970149253731343,
-    "opex_gap": 128.25,
-    "kcash_ok": false
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1171.5,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 318.25,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1229.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -1764,51 +2161,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1171.5,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 318.25,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1229.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -1830,14 +2227,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5970149253731343,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1171.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (190.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1171.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (190.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 8.5 млн руб. (0.7%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     }
+    ]
+   },
    "score": 0.4732,
    "rank": 77,
+   "s2": {
+    "cash": 190.0,
+    "kcash": 0.5970149253731343,
+    "opex_gap": 128.25,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1229.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.6168,
      "weight": 0.3,
@@ -1878,7 +2349,7 @@
      "direction": "max",
      "raw": 4.0,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.5,
      "weight": 0.1,
      "contribution": 0.05
@@ -1894,7 +2365,7 @@
      "contribution": 0.0375
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 8.5,
      "lo": 0.5,
@@ -1936,6 +2407,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -1951,6 +2423,7 @@
      "cash": 108.0,
      "anchor_cash": 24.0,
      "commercial_cash": 84.0,
+     "opex_gap": -33.0,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -1966,6 +2439,7 @@
      "cash": 102.5,
      "anchor_cash": 36.0,
      "commercial_cash": 66.5,
+     "opex_gap": -32.5,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -1981,6 +2455,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -1992,73 +2467,68 @@
     "opex": 313.0,
     "vpub": 1289.0,
     "cash": 370.5,
+    "anchor_cash": 190.0,
+    "commercial_cash": 180.5,
     "kcash": 1.18370607028754,
+    "opex_gap": -57.5,
     "t_rep": 0.73,
     "readiness": 4.525,
     "resilience": 4.05,
     "scale": 4.675,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 190.0,
-    "commercial_cash": 180.5
-   },
-   "s2": {
-    "cash": 190.0,
-    "kcash": 0.6070287539936102,
-    "opex_gap": 123.0,
-    "kcash_ok": true
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1140.0,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 313.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1289.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -2079,51 +2549,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1140.0,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 313.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1289.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -2145,14 +2615,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.6070287539936102,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1140.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (190.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1140.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (190.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 40.0 млн руб. (3.4%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.7249,
    "rank": 3,
+   "s2": {
+    "cash": 190.0,
+    "kcash": 0.6070287539936102,
+    "opex_gap": 123.0,
+    "kcash_ok": true
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1289.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.7794,
      "weight": 0.3,
@@ -2193,7 +2737,7 @@
      "direction": "max",
      "raw": 4.05,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.6111,
      "weight": 0.1,
      "contribution": 0.0611
@@ -2209,7 +2753,7 @@
      "contribution": 0.05
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 40.0,
      "lo": 0.5,
@@ -2251,6 +2795,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -2266,6 +2811,7 @@
      "cash": 127.5,
      "anchor_cash": 13.5,
      "commercial_cash": 114.0,
+     "opex_gap": -56.25,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -2281,6 +2827,7 @@
      "cash": 117.5,
      "anchor_cash": 44.0,
      "commercial_cash": 73.5,
+     "opex_gap": -37.5,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -2296,6 +2843,7 @@
      "cash": 68.75,
      "anchor_cash": 45.0,
      "commercial_cash": 23.75,
+     "opex_gap": 4.75,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -2307,73 +2855,68 @@
     "opex": 314.0,
     "vpub": 1168.6,
     "cash": 397.5,
+    "anchor_cash": 177.5,
+    "commercial_cash": 220.0,
     "kcash": 1.265923566878981,
+    "opex_gap": -83.5,
     "t_rep": 0.725,
     "readiness": 4.449999999999999,
     "resilience": 4.0,
     "scale": 4.65,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 177.5,
-    "commercial_cash": 220.0
-   },
-   "s2": {
-    "cash": 177.5,
-    "kcash": 0.5652866242038217,
-    "opex_gap": 136.5,
-    "kcash_ok": false
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1163.3,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 314.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1168.6,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -2394,51 +2937,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1163.3,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 314.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1168.6,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -2460,14 +3003,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5652866242038217,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1163.3 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (177.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1163.3 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (177.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 16.7 млн руб. (1.4%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     }
+    ]
+   },
    "score": 0.4893,
    "rank": 70,
+   "s2": {
+    "cash": 177.5,
+    "kcash": 0.5652866242038217,
+    "opex_gap": 136.5,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1168.6,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.4531,
      "weight": 0.3,
@@ -2508,7 +3125,7 @@
      "direction": "max",
      "raw": 4.0,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.5,
      "weight": 0.1,
      "contribution": 0.05
@@ -2524,7 +3141,7 @@
      "contribution": 0.0375
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 16.7,
      "lo": 0.5,
@@ -2566,6 +3183,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -2581,6 +3199,7 @@
      "cash": 127.5,
      "anchor_cash": 13.5,
      "commercial_cash": 114.0,
+     "opex_gap": -56.25,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -2596,6 +3215,7 @@
      "cash": 102.5,
      "anchor_cash": 36.0,
      "commercial_cash": 66.5,
+     "opex_gap": -32.5,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -2611,6 +3231,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -2622,73 +3243,68 @@
     "opex": 309.25,
     "vpub": 1243.0,
     "cash": 390.0,
+    "anchor_cash": 179.5,
+    "commercial_cash": 210.5,
     "kcash": 1.2611156022635408,
+    "opex_gap": -80.75,
     "t_rep": 0.73,
     "readiness": 4.525,
     "resilience": 4.05,
     "scale": 4.675,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 179.5,
-    "commercial_cash": 210.5
-   },
-   "s2": {
-    "cash": 179.5,
-    "kcash": 0.5804365400161682,
-    "opex_gap": 129.75,
-    "kcash_ok": false
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1134.8,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 309.25,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1243.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -2709,51 +3325,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1134.8,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 309.25,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1243.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -2775,14 +3391,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5804365400161682,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1134.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (179.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1134.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (179.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 45.2 млн руб. (3.8%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.7366,
    "rank": 2,
+   "s2": {
+    "cash": 179.5,
+    "kcash": 0.5804365400161682,
+    "opex_gap": 129.75,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1243.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.6547,
      "weight": 0.3,
@@ -2823,7 +3513,7 @@
      "direction": "max",
      "raw": 4.05,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.6111,
      "weight": 0.1,
      "contribution": 0.0611
@@ -2839,7 +3529,7 @@
      "contribution": 0.05
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 45.2,
      "lo": 0.5,
@@ -2881,6 +3571,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -2896,6 +3587,7 @@
      "cash": 127.5,
      "anchor_cash": 13.5,
      "commercial_cash": 114.0,
+     "opex_gap": -56.25,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -2911,6 +3603,7 @@
      "cash": 110.5,
      "anchor_cash": 20.25,
      "commercial_cash": 90.25,
+     "opex_gap": -44.0,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -2926,6 +3619,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -2937,73 +3631,68 @@
     "opex": 305.75,
     "vpub": 1199.0,
     "cash": 398.0,
+    "anchor_cash": 163.75,
+    "commercial_cash": 234.25,
     "kcash": 1.3017170891251022,
+    "opex_gap": -92.25,
     "t_rep": 0.73,
     "readiness": 4.525,
     "resilience": 4.05,
     "scale": 4.675,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 163.75,
-    "commercial_cash": 234.25
-   },
-   "s2": {
-    "cash": 163.75,
-    "kcash": 0.53556827473426,
-    "opex_gap": 142.0,
-    "kcash_ok": false
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1129.8,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 305.75,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1199.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -3024,51 +3713,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1129.8,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 305.75,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1199.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -3090,14 +3779,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.53556827473426,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1129.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (163.8 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1129.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (163.8 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 50.2 млн руб. (4.3%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.7366,
    "rank": 1,
+   "s2": {
+    "cash": 163.75,
+    "kcash": 0.53556827473426,
+    "opex_gap": 142.0,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1199.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.5355,
      "weight": 0.3,
@@ -3138,7 +3901,7 @@
      "direction": "max",
      "raw": 4.05,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.6111,
      "weight": 0.1,
      "contribution": 0.0611
@@ -3154,7 +3917,7 @@
      "contribution": 0.05
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 50.2,
      "lo": 0.5,
@@ -3196,6 +3959,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -3211,6 +3975,7 @@
      "cash": 96.25,
      "anchor_cash": 85.0,
      "commercial_cash": 11.25,
+     "opex_gap": -1.75,
      "t_rep": 0.62,
      "readiness": 4.0,
      "resilience": 4.2,
@@ -3226,6 +3991,7 @@
      "cash": 117.5,
      "anchor_cash": 44.0,
      "commercial_cash": 73.5,
+     "opex_gap": -37.5,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -3241,6 +4007,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -3252,73 +4019,68 @@
     "opex": 342.5,
     "vpub": 1766.0,
     "cash": 373.75,
+    "anchor_cash": 259.0,
+    "commercial_cash": 114.75,
     "kcash": 1.0912408759124088,
-    "t_rep": 0.6849999999999999,
+    "opex_gap": -31.25,
+    "t_rep": 0.685,
     "readiness": 4.2,
-    "resilience": 3.9749999999999996,
+    "resilience": 3.975,
     "scale": 4.5,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 3,
-    "anchor_cash": 259.0,
-    "commercial_cash": 114.75
-   },
-   "s2": {
-    "cash": 259.0,
-    "kcash": 0.7562043795620438,
-    "opex_gap": 83.5,
-    "kcash_ok": true
+    "public_core": 3
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 3,
+      "fact": 3.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1297.0,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 342.5,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1766.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -3330,7 +4092,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.6849999999999999,
+      "fact": 0.685,
       "op": ">=",
       "threshold": 0.63
      }
@@ -3339,51 +4101,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 3,
+      "fact": 3.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": false,
       "fact": 1297.0,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 342.5,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1766.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -3395,7 +4157,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.6849999999999999,
+      "fact": 0.685,
       "op": ">=",
       "threshold": 0.63
      }
@@ -3405,14 +4167,88 @@
     "BASE": true,
     "STRESS": false
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.7562043795620438,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": false,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1297.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (259.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии BASE: 3.0 млн руб. (0.2%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1297.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (259.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.4173,
    "rank": null,
+   "s2": {
+    "cash": 259.0,
+    "kcash": 0.7562043795620438,
+    "opex_gap": 83.5,
+    "kcash_ok": true
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1766.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 1.0,
      "weight": 0.3,
@@ -3453,7 +4289,7 @@
      "direction": "max",
      "raw": 3.975,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.4444,
      "weight": 0.1,
      "contribution": 0.0444
@@ -3469,7 +4305,7 @@
      "contribution": 0.0
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": -117.0,
      "lo": 0.5,
@@ -3511,6 +4347,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -3526,6 +4363,7 @@
      "cash": 96.25,
      "anchor_cash": 85.0,
      "commercial_cash": 11.25,
+     "opex_gap": -1.75,
      "t_rep": 0.62,
      "readiness": 4.0,
      "resilience": 4.2,
@@ -3541,6 +4379,7 @@
      "cash": 68.75,
      "anchor_cash": 45.0,
      "commercial_cash": 23.75,
+     "opex_gap": 4.75,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -3556,6 +4395,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -3567,73 +4407,68 @@
     "opex": 336.0,
     "vpub": 1740.0,
     "cash": 325.0,
+    "anchor_cash": 260.0,
+    "commercial_cash": 65.0,
     "kcash": 0.9672619047619048,
-    "t_rep": 0.7000000000000001,
+    "opex_gap": 11.0,
+    "t_rep": 0.7,
     "readiness": 4.375,
     "resilience": 4.075,
-    "scale": 4.5249999999999995,
+    "scale": 4.525,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 4,
-    "anchor_cash": 260.0,
-    "commercial_cash": 65.0
-   },
-   "s2": {
-    "cash": 260.0,
-    "kcash": 0.7738095238095238,
-    "opex_gap": 76.0,
-    "kcash_ok": true
+    "public_core": 4
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1249.5,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 336.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1740.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -3645,7 +4480,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.7000000000000001,
+      "fact": 0.7,
       "op": ">=",
       "threshold": 0.63
      }
@@ -3654,51 +4489,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": false,
       "fact": 1249.5,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 336.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1740.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -3710,7 +4545,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.7000000000000001,
+      "fact": 0.7,
       "op": ">=",
       "threshold": 0.63
      }
@@ -3720,14 +4555,106 @@
     "BASE": true,
     "STRESS": false
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.7738095238095238,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": false,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1249.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 97% годового OPEX; непокрытые 11.0 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "FIRE",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (260.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии BASE: 50.5 млн руб. (3.9%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1249.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 97% годового OPEX; непокрытые 11.0 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "FIRE",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (260.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.4232,
    "rank": null,
+   "s2": {
+    "cash": 260.0,
+    "kcash": 0.7738095238095238,
+    "opex_gap": 76.0,
+    "kcash_ok": true
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1740.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 1.0,
      "weight": 0.3,
@@ -3768,7 +4695,7 @@
      "direction": "max",
      "raw": 4.075,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.6667,
      "weight": 0.1,
      "contribution": 0.0667
@@ -3784,7 +4711,7 @@
      "contribution": 0.0
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": -69.5,
      "lo": 0.5,
@@ -3826,6 +4753,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -3841,6 +4769,7 @@
      "cash": 99.5,
      "anchor_cash": 68.0,
      "commercial_cash": 31.499999999999996,
+     "opex_gap": -9.5,
      "t_rep": 0.62,
      "readiness": 4.0,
      "resilience": 4.2,
@@ -3856,6 +4785,7 @@
      "cash": 117.5,
      "anchor_cash": 44.0,
      "commercial_cash": 73.5,
+     "opex_gap": -37.5,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -3871,6 +4801,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -3882,73 +4813,68 @@
     "opex": 338.0,
     "vpub": 1658.0,
     "cash": 377.0,
+    "anchor_cash": 242.0,
+    "commercial_cash": 135.0,
     "kcash": 1.1153846153846154,
-    "t_rep": 0.6849999999999999,
+    "opex_gap": -39.0,
+    "t_rep": 0.685,
     "readiness": 4.2,
-    "resilience": 3.9749999999999996,
+    "resilience": 3.975,
     "scale": 4.5,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 242.0,
-    "commercial_cash": 135.0
-   },
-   "s2": {
-    "cash": 242.0,
-    "kcash": 0.7159763313609467,
-    "opex_gap": 96.0,
-    "kcash_ok": true
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1280.0,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 338.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1658.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -3960,7 +4886,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.6849999999999999,
+      "fact": 0.685,
       "op": ">=",
       "threshold": 0.63
      }
@@ -3969,51 +4895,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": false,
       "fact": 1280.0,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 338.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1658.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -4025,7 +4951,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.6849999999999999,
+      "fact": 0.685,
       "op": ">=",
       "threshold": 0.63
      }
@@ -4035,14 +4961,88 @@
     "BASE": true,
     "STRESS": false
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.7159763313609467,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": false,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1280.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (242.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии BASE: 20.0 млн руб. (1.5%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1280.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (242.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.4254,
    "rank": null,
+   "s2": {
+    "cash": 242.0,
+    "kcash": 0.7159763313609467,
+    "opex_gap": 96.0,
+    "kcash_ok": true
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1658.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 1.0,
      "weight": 0.3,
@@ -4083,7 +5083,7 @@
      "direction": "max",
      "raw": 3.975,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.4444,
      "weight": 0.1,
      "contribution": 0.0444
@@ -4099,7 +5099,7 @@
      "contribution": 0.0
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": -100.0,
      "lo": 0.5,
@@ -4141,6 +5141,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -4156,6 +5157,7 @@
      "cash": 124.5,
      "anchor_cash": 24.75,
      "commercial_cash": 99.75,
+     "opex_gap": -48.5,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -4171,6 +5173,7 @@
      "cash": 68.75,
      "anchor_cash": 45.0,
      "commercial_cash": 23.75,
+     "opex_gap": 4.75,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -4186,6 +5189,7 @@
      "cash": 105.5,
      "anchor_cash": 24.75,
      "commercial_cash": 80.75,
+     "opex_gap": -34.25,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -4193,77 +5197,72 @@
     }
    ],
    "metrics": {
-    "c0": 1176.6999999999998,
+    "c0": 1176.7,
     "opex": 310.0,
     "vpub": 1189.2,
     "cash": 382.5,
+    "anchor_cash": 169.5,
+    "commercial_cash": 213.0,
     "kcash": 1.2338709677419355,
+    "opex_gap": -72.5,
     "t_rep": 0.7225,
     "readiness": 4.4,
     "resilience": 4.025,
     "scale": 4.625,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 169.5,
-    "commercial_cash": 213.0
-   },
-   "s2": {
-    "cash": 169.5,
-    "kcash": 0.5467741935483871,
-    "opex_gap": 140.5,
-    "kcash_ok": false
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
-      "fact": 1176.6999999999998,
+      "fact": 1176.7,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 310.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1189.2,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -4284,51 +5283,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
-      "fact": 1176.6999999999998,
+      "fact": 1176.7,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 310.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1189.2,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -4350,14 +5349,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5467741935483871,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1176.7 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (169.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1176.7 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (169.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 3.3 млн руб. (0.3%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.4036,
    "rank": 102,
+   "s2": {
+    "cash": 169.5,
+    "kcash": 0.5467741935483871,
+    "opex_gap": 140.5,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1189.2,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.5089,
      "weight": 0.3,
@@ -4398,7 +5471,7 @@
      "direction": "max",
      "raw": 4.025,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.5556,
      "weight": 0.1,
      "contribution": 0.0556
@@ -4414,7 +5487,7 @@
      "contribution": 0.025
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 3.3,
      "lo": 0.5,
@@ -4456,6 +5529,7 @@
      "cash": 83.75,
      "anchor_cash": 75.0,
      "commercial_cash": 8.75,
+     "opex_gap": 5.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -4471,6 +5545,7 @@
      "cash": 124.5,
      "anchor_cash": 24.75,
      "commercial_cash": 99.75,
+     "opex_gap": -48.5,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -4486,6 +5561,7 @@
      "cash": 110.5,
      "anchor_cash": 20.25,
      "commercial_cash": 90.25,
+     "opex_gap": -44.0,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -4501,6 +5577,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -4512,73 +5589,68 @@
     "opex": 310.5,
     "vpub": 1242.4,
     "cash": 395.0,
+    "anchor_cash": 175.0,
+    "commercial_cash": 220.0,
     "kcash": 1.2721417069243157,
+    "opex_gap": -84.5,
     "t_rep": 0.7225,
     "readiness": 4.4,
     "resilience": 4.025,
     "scale": 4.625,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 175.0,
-    "commercial_cash": 220.0
-   },
-   "s2": {
-    "cash": 175.0,
-    "kcash": 0.5636070853462157,
-    "opex_gap": 135.5,
-    "kcash_ok": false
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1178.8,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 310.5,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1242.4,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -4599,51 +5671,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1178.8,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 310.5,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1242.4,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -4665,14 +5737,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5636070853462157,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1178.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (175.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1178.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (175.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 1.2 млн руб. (0.1%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.4503,
    "rank": 86,
+   "s2": {
+    "cash": 175.0,
+    "kcash": 0.5636070853462157,
+    "opex_gap": 135.5,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1242.4,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.6531,
      "weight": 0.3,
@@ -4713,7 +5859,7 @@
      "direction": "max",
      "raw": 4.025,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.5556,
      "weight": 0.1,
      "contribution": 0.0556
@@ -4729,7 +5875,7 @@
      "contribution": 0.025
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 1.2,
      "lo": 0.5,
@@ -4771,6 +5917,7 @@
      "cash": 84.5,
      "anchor_cash": 60.0,
      "commercial_cash": 24.5,
+     "opex_gap": 0.5,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -4786,6 +5933,7 @@
      "cash": 99.5,
      "anchor_cash": 68.0,
      "commercial_cash": 31.499999999999996,
+     "opex_gap": -9.5,
      "t_rep": 0.62,
      "readiness": 4.0,
      "resilience": 4.2,
@@ -4801,6 +5949,7 @@
      "cash": 117.5,
      "anchor_cash": 44.0,
      "commercial_cash": 73.5,
+     "opex_gap": -37.5,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -4816,6 +5965,7 @@
      "cash": 103.5,
      "anchor_cash": 44.0,
      "commercial_cash": 59.49999999999999,
+     "opex_gap": -28.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -4827,73 +5977,68 @@
     "opex": 330.0,
     "vpub": 1492.3999999999999,
     "cash": 405.0,
+    "anchor_cash": 216.0,
+    "commercial_cash": 189.0,
     "kcash": 1.2272727272727273,
-    "t_rep": 0.6849999999999999,
+    "opex_gap": -75.0,
+    "t_rep": 0.685,
     "readiness": 4.2,
-    "resilience": 3.9749999999999996,
+    "resilience": 3.975,
     "scale": 4.5,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 0,
-    "anchor_cash": 216.0,
-    "commercial_cash": 189.0
-   },
-   "s2": {
-    "cash": 216.0,
-    "kcash": 0.6545454545454545,
-    "opex_gap": 114.0,
-    "kcash_ok": true
+    "public_core": 0
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": false,
-      "fact": 0,
+      "fact": 0.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1250.0,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 330.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1492.3999999999999,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -4905,7 +6050,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.6849999999999999,
+      "fact": 0.685,
       "op": ">=",
       "threshold": 0.63
      }
@@ -4914,51 +6059,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": false,
-      "fact": 0,
+      "fact": 0.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": false,
       "fact": 1250.0,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 330.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1492.3999999999999,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -4970,7 +6115,7 @@
      {
       "id": "t_rep_floor",
       "ok": true,
-      "fact": 0.6849999999999999,
+      "fact": 0.685,
       "op": ">=",
       "threshold": 0.63
      }
@@ -4980,14 +6125,88 @@
     "BASE": false,
     "STRESS": false
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.6545454545454545,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": false,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1250.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (216.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии BASE: 50.0 млн руб. (3.8%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1250.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (216.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "INFRA",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.4626,
    "rank": null,
+   "s2": {
+    "cash": 216.0,
+    "kcash": 0.6545454545454545,
+    "opex_gap": 114.0,
+    "kcash_ok": true
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1492.4,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 1.0,
      "weight": 0.3,
@@ -5028,7 +6247,7 @@
      "direction": "max",
      "raw": 3.975,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.4444,
      "weight": 0.1,
      "contribution": 0.0444
@@ -5044,7 +6263,7 @@
      "contribution": 0.0
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": -70.0,
      "lo": 0.5,
@@ -5086,6 +6305,7 @@
      "cash": 67.0,
      "anchor_cash": 33.75,
      "commercial_cash": 33.25,
+     "opex_gap": 13.75,
      "t_rep": 0.68,
      "readiness": 4.3,
      "resilience": 3.5,
@@ -5101,6 +6321,7 @@
      "cash": 81.25,
      "anchor_cash": 55.0,
      "commercial_cash": 26.25,
+     "opex_gap": 2.75,
      "t_rep": 0.71,
      "readiness": 4.1,
      "resilience": 4.0,
@@ -5116,6 +6337,7 @@
      "cash": 110.5,
      "anchor_cash": 20.25,
      "commercial_cash": 90.25,
+     "opex_gap": -44.0,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -5131,6 +6353,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -5142,73 +6365,68 @@
     "opex": 310.0,
     "vpub": 1143.6,
     "cash": 335.0,
+    "anchor_cash": 164.0,
+    "commercial_cash": 171.0,
     "kcash": 1.0806451612903225,
+    "opex_gap": -25.0,
     "t_rep": 0.7225,
     "readiness": 4.4,
     "resilience": 4.025,
     "scale": 4.625,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 164.0,
-    "commercial_cash": 171.0
-   },
-   "s2": {
-    "cash": 164.0,
-    "kcash": 0.5290322580645161,
-    "opex_gap": 146.0,
-    "kcash_ok": false
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1178.1,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 310.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1143.6,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -5229,51 +6447,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1178.1,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 310.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1143.6,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -5295,14 +6513,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5290322580645161,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1178.1 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (164.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1178.1 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (164.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 1.9 млн руб. (0.2%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.3093,
    "rank": 127,
+   "s2": {
+    "cash": 164.0,
+    "kcash": 0.5290322580645161,
+    "opex_gap": 146.0,
+    "kcash_ok": false
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1143.6,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.3854,
      "weight": 0.3,
@@ -5343,7 +6635,7 @@
      "direction": "max",
      "raw": 4.025,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 0.5556,
      "weight": 0.1,
      "contribution": 0.0556
@@ -5359,7 +6651,7 @@
      "contribution": 0.025
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 1.9,
      "lo": 0.5,
@@ -5401,6 +6693,7 @@
      "cash": 96.25,
      "anchor_cash": 85.0,
      "commercial_cash": 11.25,
+     "opex_gap": -1.75,
      "t_rep": 0.62,
      "readiness": 4.0,
      "resilience": 4.2,
@@ -5416,6 +6709,7 @@
      "cash": 60.0,
      "anchor_cash": 30.0,
      "commercial_cash": 30.0,
+     "opex_gap": 18.75,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -5431,6 +6725,7 @@
      "cash": 102.5,
      "anchor_cash": 36.0,
      "commercial_cash": 66.5,
+     "opex_gap": -32.5,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -5446,6 +6741,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -5457,73 +6753,68 @@
     "opex": 322.0,
     "vpub": 1370.4,
     "cash": 335.0,
+    "anchor_cash": 206.0,
+    "commercial_cash": 129.0,
     "kcash": 1.0403726708074534,
+    "opex_gap": -13.0,
     "t_rep": 0.715,
-    "readiness": 4.449999999999999,
-    "resilience": 4.2250000000000005,
+    "readiness": 4.45,
+    "resilience": 4.225,
     "scale": 4.6,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 3,
-    "anchor_cash": 206.0,
-    "commercial_cash": 129.0
-   },
-   "s2": {
-    "cash": 206.0,
-    "kcash": 0.639751552795031,
-    "opex_gap": 116.0,
-    "kcash_ok": true
+    "public_core": 3
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 3,
+      "fact": 3.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1174.0,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 322.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1370.4,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -5544,51 +6835,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 3,
+      "fact": 3.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1174.0,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 322.0,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1370.4,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -5610,14 +6901,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.639751552795031,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1174.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (206.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1174.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (206.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 6.0 млн руб. (0.5%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.5555,
    "rank": 51,
+   "s2": {
+    "cash": 206.0,
+    "kcash": 0.639751552795031,
+    "opex_gap": 116.0,
+    "kcash_ok": true
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1370.4,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 1.0,
      "weight": 0.3,
@@ -5658,7 +7023,7 @@
      "direction": "max",
      "raw": 4.225,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 1.0,
      "weight": 0.1,
      "contribution": 0.1
@@ -5674,7 +7039,7 @@
      "contribution": 0.0125
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 6.0,
      "lo": 0.5,
@@ -5716,6 +7081,7 @@
      "cash": 96.25,
      "anchor_cash": 85.0,
      "commercial_cash": 11.25,
+     "opex_gap": -1.75,
      "t_rep": 0.62,
      "readiness": 4.0,
      "resilience": 4.2,
@@ -5731,6 +7097,7 @@
      "cash": 127.5,
      "anchor_cash": 13.5,
      "commercial_cash": 114.0,
+     "opex_gap": -56.25,
      "t_rep": 0.74,
      "readiness": 4.6,
      "resilience": 4.1,
@@ -5746,6 +7113,7 @@
      "cash": 102.5,
      "anchor_cash": 36.0,
      "commercial_cash": 66.5,
+     "opex_gap": -32.5,
      "t_rep": 0.77,
      "readiness": 4.8,
      "resilience": 4.4,
@@ -5761,6 +7129,7 @@
      "cash": 76.25,
      "anchor_cash": 55.0,
      "commercial_cash": 21.25,
+     "opex_gap": 2.5,
      "t_rep": 0.73,
      "readiness": 4.4,
      "resilience": 4.2,
@@ -5772,73 +7141,68 @@
     "opex": 314.5,
     "vpub": 1283.0,
     "cash": 402.5,
+    "anchor_cash": 189.5,
+    "commercial_cash": 213.0,
     "kcash": 1.2798092209856915,
+    "opex_gap": -88.0,
     "t_rep": 0.715,
-    "readiness": 4.449999999999999,
-    "resilience": 4.2250000000000005,
+    "readiness": 4.45,
+    "resilience": 4.225,
     "scale": 4.6,
     "archetypes": 4,
     "groups": 2,
-    "public_core": 2,
-    "anchor_cash": 189.5,
-    "commercial_cash": 213.0
-   },
-   "s2": {
-    "cash": 189.5,
-    "kcash": 0.6025437201907791,
-    "opex_gap": 125.0,
-    "kcash_ok": true
+    "public_core": 2
    },
    "checks": {
     "BASE": [
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1155.8,
       "op": "<=",
-      "threshold": 1300
+      "threshold": 1300.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 314.5,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1283.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -5859,51 +7223,51 @@
      {
       "id": "exact_lot_count",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": "=",
-      "threshold": 4
+      "threshold": 4.0
      },
      {
       "id": "territorial_archetypes",
       "ok": true,
-      "fact": 4,
+      "fact": 4.0,
       "op": ">=",
-      "threshold": 3
+      "threshold": 3.0
      },
      {
       "id": "capability_groups",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "public_core_lots",
       "ok": true,
-      "fact": 2,
+      "fact": 2.0,
       "op": ">=",
-      "threshold": 2
+      "threshold": 2.0
      },
      {
       "id": "c0_limit",
       "ok": true,
       "fact": 1155.8,
       "op": "<=",
-      "threshold": 1180
+      "threshold": 1180.0
      },
      {
       "id": "opex_limit",
       "ok": true,
       "fact": 314.5,
       "op": "<=",
-      "threshold": 360
+      "threshold": 360.0
      },
      {
       "id": "vpub_floor",
       "ok": true,
       "fact": 1283.0,
       "op": ">=",
-      "threshold": 1000
+      "threshold": 1000.0
      },
      {
       "id": "kcash_floor",
@@ -5925,14 +7289,88 @@
     "BASE": true,
     "STRESS": true
    },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.6025437201907791,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1155.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (189.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1155.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (189.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 24.2 млн руб. (2.1%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
    "score": 0.6454,
    "rank": 17,
+   "s2": {
+    "cash": 189.5,
+    "kcash": 0.6025437201907791,
+    "opex_gap": 125.0,
+    "kcash_ok": true
+   },
    "breakdown": [
     {
      "key": "vpub",
      "direction": "max",
      "raw": 1283.0,
-     "lo": 1001.4000000000001,
+     "lo": 1001.4,
      "hi": 1370.4,
      "z": 0.7631,
      "weight": 0.3,
@@ -5973,7 +7411,7 @@
      "direction": "max",
      "raw": 4.225,
      "lo": 3.775,
-     "hi": 4.2250000000000005,
+     "hi": 4.225,
      "z": 1.0,
      "weight": 0.1,
      "contribution": 0.1
@@ -5989,7 +7427,7 @@
      "contribution": 0.0125
     },
     {
-     "key": "stress_margin",
+     "key": "margin:STRESS:c0_limit",
      "direction": "max",
      "raw": 24.2,
      "lo": 0.5,

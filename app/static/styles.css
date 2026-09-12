@@ -63,6 +63,7 @@ button{font-family:inherit}
 .dd-btn:hover,.dd.open .dd-btn{border-color:var(--brand)}
 .dd-btn .k{font-size:12.5px;font-weight:500;color:var(--ink-2)}
 .dd-btn b{font-weight:700;letter-spacing:.03em}
+.dd-btn .lim{font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;padding-left:8px;border-left:1px solid var(--rule)}
 .dd-btn svg{width:14px;height:14px;color:var(--muted);transition:transform .15s}
 .dd.open .dd-btn svg{transform:rotate(180deg)}
 .dd-pop{display:none;position:absolute;top:48px;right:0;min-width:250px;background:var(--surface);border:1px solid var(--rule);border-radius:14px;box-shadow:var(--shadow);padding:6px;z-index:6}
@@ -97,6 +98,8 @@ h1{font-family:var(--f-display);font-size:30px;font-weight:700;letter-spacing:-.
 .tabs a.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:var(--brand)}
 .card{background:var(--surface);border:1px solid var(--rule);border-radius:18px;padding:22px 24px}
 .card h2{font-family:var(--f-display);font-size:17px;font-weight:700;letter-spacing:-.01em;margin:0 0 16px;display:flex;align-items:center;gap:12px}
+.card h2 .tog{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-family:var(--f-ui);font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.card h2 .tog input{accent-color:var(--brand)}
 .card h2 .u{font-family:var(--f-ui);font-size:13px;font-weight:500;color:var(--ink-2);margin-left:auto}
 .card h2 .help{margin-left:auto}.card h2 .u+.help,.card h2 .more+.help{margin-left:0}
 .card h2 .more{margin-left:auto}

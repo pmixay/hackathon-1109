@@ -1,0 +1,4 @@
+lot_id,territorial_archetype,service,capability_groups,c0_mrub,opex_mrub_per_year,anchor_cash_mrub_per_year,commercial_cash_mrub_per_year,vpub_mrub_per_year,t_rep,readiness_1_5,resilience_1_5,scale_1_5,federal
+FIRE,Siberian,Siberian forest fire monitoring,EO,320,85,75,35,560,0.68,4.3,3.5,4.5,false
+FLOOD,FarEast,Flood and landslide monitoring,EO,340,90,85,45,600,0.62,4.0,4.2,4.2,false
+AGRI,South,Agricultural analytics,EO;PNT/InSAR,260,75,30,120,230,0.74,4.6,4.1,4.8,false

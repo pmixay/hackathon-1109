@@ -5,10 +5,9 @@ access_modes.csv, case_config.json. Здесь они проверяются н�
 сохраняются в app/data/uploads/<метка времени>/ в раскладке организаторов
 (data/*.csv, config/case_config.json) и становятся активным набором.
 
-Точка интеграции роли A: `apply_dataset`. Сейчас она просто переключает
-активный корень, и расчётный слой пересчитывает всё из новых файлов. Если
-обработка живёт в другом пайплайне, заменить тело функции (например,
-запустить свой скрипт и пересобрать dashboard.json), сохранив сигнатуру.
+`apply_dataset` переключает активный корень; движок kosmo читает новый набор
+через ту же `load_case`, что и файлы организаторов (без проверки контрольных
+сумм — в meta.engine.verified будет false).
 """
 from __future__ import annotations
 
@@ -192,7 +191,8 @@ def reset() -> None:
 
 def describe(root: Path | None = None) -> dict:
     root = root or active_root()
-    out = {"root": str(root), "source": "организаторы" if root == ev.CASE_DIR else "загружено", "files": {}}
+    shown = root.relative_to(ev.REPO).as_posix() if root.is_relative_to(ev.REPO) else str(root)
+    out = {"root": shown or ".", "source": "организаторы" if root == ev.CASE_DIR else "загружено", "files": {}}
     if ACTIVE.exists() and root != ev.CASE_DIR:
         try:
             out["activated_at"] = json.loads(ACTIVE.read_text(encoding="utf-8")).get("activated_at")

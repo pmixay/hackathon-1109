@@ -1,7 +1,7 @@
 """Собрать dashboard.json для интерфейса и (по флагу) results/ для записки.
 
     python app/build.py                 # app/static/data/dashboard.json
-    python app/build.py --export        # + results/base.json, stress.json, alternatives.csv
+    python app/build.py --export        # + results/ движком kosmo (как python -m kosmo export)
     python app/build.py --selected "FIRE:A|AGRI:B|TRANS:B|ENV:A"
 """
 from __future__ import annotations
@@ -20,9 +20,10 @@ REPO = APP.parent
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--selected", help="id выбранной комбинации, по умолчанию из app/config/portfolio.json")
+    ap.add_argument("--selected", help="id выбранной комбинации, по умолчанию из config/portfolio.json")
     ap.add_argument("--out", default=str(APP / "static" / "data" / "dashboard.json"))
-    ap.add_argument("--export", action="store_true", help="записать results/ (base.json, stress.json, alternatives.csv)")
+    ap.add_argument("--export", action="store_true", help="записать results/ движком kosmo")
+    ap.add_argument("--enumeration", action="store_true", help="вместе с --export записать results/enumeration.csv")
     args = ap.parse_args()
 
     dash = payload.build_dashboard(args.selected)
@@ -34,9 +35,8 @@ def main():
     print(f"{out}: выбрана {dash['selected']}, балл {sel['score']}, ранг {sel['rank']} из {dash['meta']['totals']['stress_feasible']}; "
           f"предложений {len(dash['suggestions'])}, в сравнении {len(dash['comparison'])}")
     if args.export:
-        results = REPO / "results"
-        payload.export_results(dash, results)
-        print(f"{results}: base.json, stress.json, alternatives.csv")
+        written = payload.export_results(dash, REPO / "results", with_enumeration=args.enumeration)
+        print(f"{REPO / 'results'}: " + ", ".join(sorted(Path(p).name for p in written.values())))
 
 
 if __name__ == "__main__":

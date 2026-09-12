@@ -6,14 +6,18 @@ Notes for Claude Code sessions in this repository.
 
 - The real front end lives in `app/static/` (vanilla HTML/CSS/JS, no build
   step) and is driven only by `dashboard.json` (contract: `app/CONTRACT.md`).
-  The stdlib backend in `app/backend/` computes it; `python app/server.py`
-  serves both. Keep the calculation seams (`evaluate.core_backend`,
-  `model.make_scorer`, `model.stress_actions`, `ingest.apply_dataset`) intact:
-  other team members plug their code in there.
-- After any change to the app: `python -m unittest discover -s app/tests`,
-  `python app/build.py`, then `node app/screenshot.mjs` (set `FONT_DIR` when
-  Google Fonts is unreachable) and send the PNGs from `app/screenshots/` in
-  the chat. Commit `app/static/data/dashboard.json` together with the code.
+  `app/backend/` is a thin layer over the team's calculation engine
+  `src/kosmo`: every number comes from `kosmo.calculate_all_scenarios`,
+  scores from `kosmo.score_variants` with `config/weights.json`, exports from
+  `kosmo.export_bundle`. Never re-implement formulas in `app/`; if a screen
+  needs a new number, add it to the engine (`src/kosmo`) and expose it in
+  `payload.py`. Shared inputs: `config/portfolio.json`, `config/weights.json`,
+  `config/alternatives.json`, `config/custom_mode.json`.
+- After any change to the app or the engine: `python -m pytest -q` (engine
+  tests plus `app/tests`), `python app/build.py`, then `node app/screenshot.mjs`
+  (set `FONT_DIR` when Google Fonts is unreachable) and send the PNGs from
+  `app/screenshots/` in the chat. Commit `app/static/data/dashboard.json`
+  together with the code.
 - `docs/mockup/` is the approved design reference. Style changes go to
   `app/static/styles.css` first; mirror them into the mockup only when the
   reference itself is supposed to change.

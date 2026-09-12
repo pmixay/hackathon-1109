@@ -123,7 +123,7 @@ def test_alternatives_csv_columns_are_stable(case, v1, tmp_path):
         header = handle.readline().strip().split(",")
     assert header == [
         "variant", "scenario", "lots", "modes", "feasible", "failed_checks",
-        "c0", "opex", "vpub", "cash", "anchor_cash", "commercial_cash", "kcash", "opex_gap",
+        "c0", "opex", "vpub", "cash", "anchor_cash", "commercial_cash", "kcash", "anchor_kcash", "opex_gap",
         "t_rep", "readiness", "resilience", "scale", "territorial_archetypes", "capability_groups", "public_core_lots", "note",
     ]
 

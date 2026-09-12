@@ -41,12 +41,12 @@ PYTHONPATH=src .venv/bin/python -m kosmo calc --lots FIRE:A ENV:A AGRI:B TRANS:B
 
 ## Замечания участнику 4 (расчётный слой)
 
-1. **Два владельца `results/`.** Кнопка «Экспорт results/» в интерфейсе и
-   `python -m kosmo export` пишут одни и те же пути (`base.json`,
-   `stress.json`, `alternatives.csv`, `portfolio_detail.csv`,
-   `team_decision_config.json`) в разных форматах. Сейчас в репозитории
-   лежит версия движка. Перед сдачей решить, чья выгрузка остаётся, или
-   развести папки.
+1. **`results/` пишет только движок.** Кнопка «Экспорт results/» в
+   интерфейсе вызывает `kosmo.export_bundle`, как и `python -m kosmo export`;
+   произвольная комбинация из конструктора уходит в `results/variants/<id>/`
+   и цифры записки не затирает. Тест `test_export_writes_the_engine_bundle`
+   сравнивает выгрузку с `results/` без учёта переводов строк: `csv` пишет
+   CRLF, а checkout под Linux хранит LF.
 2. **Google Fonts.** Без доступа в интернет браузер один раз пишет в консоль
    `ERR_CONNECTION_RESET` на загрузке Montserrat и показывает системный
    шрифт; на работу интерфейса не влияет. Для снимков офлайн — `FONT_DIR`

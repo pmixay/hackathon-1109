@@ -1,15 +1,14 @@
-"""Сборка dashboard.json — единственного контракта между расчётом и интерфейсом.
-
-Схема описана в app/CONTRACT.md. Интерфейс (app/static/app.js) не считает
-ничего, кроме производных для отображения: разницы между комбинациями,
-проценты от порога, графики.
-"""
 from __future__ import annotations
 
+import csv
 import datetime as dt
+from dataclasses import replace
 import json
 from functools import lru_cache
 from pathlib import Path
+
+from kosmo import Variant, export_bundle, load_portfolio, load_selection_model, load_team_card, load_variants
+from kosmo.variants import slug
 
 from . import evaluate as ev
 from . import ingest
@@ -17,14 +16,8 @@ from . import model
 
 APP = Path(__file__).resolve().parents[1]
 CONFIG = APP / "config"
+TEAM_CONFIG = ev.REPO / "config"
 
-
-def _load(name):
-    with open(CONFIG / name, encoding="utf-8") as f:
-        return json.load(f)
-
-
-# Карточки сервисов (app/config/lots_ui.csv, формат участника 5 — записка): русские заголовки как в файле → поля контракта.
 UI_COLUMNS = {
     "Название для интерфейса": "name",
     "Короткое описание": "description",
@@ -38,13 +31,25 @@ UI_COLUMNS = {
     "Предполагаемый плательщик": "payer",
     "Ключевой риск": "risk",
 }
-ROOT = APP.parent  # общие конфиги команды: config/alternatives.json (участник 3)
+
+CONSTRAINT_KEYS = {
+    "selected_lots_exactly": "selected_lots_exactly",
+    "min_territorial_archetypes": "min_territorial_archetypes",
+    "min_capability_groups": "min_capability_groups",
+    "min_public_core_lots": "min_public_core_lots",
+    "opex_max": "opex_max_mrub_per_year",
+    "vpub_min": "vpub_min_mrub_per_year",
+    "kcash_min": "kcash_min",
+    "t_rep_min": "t_rep_min",
+}
+
+
+def _load(name):
+    with open(CONFIG / name, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def _lots_ui() -> dict:
-    """lot_id → карточка сервиса. Файл правит участник записки; лоты без строки получают card = null."""
-    import csv
-
     path = CONFIG / "lots_ui.csv"
     if not path.exists():
         return {}
@@ -60,13 +65,11 @@ def _lots_ui() -> dict:
 
 @lru_cache(maxsize=4)
 def _enumerated_for(root: str):
-    lots, modes, config = ev.load_case(Path(root))
-    records = model.enumerate_all(lots, modes, config)
-    return lots, modes, config, records
+    case = ev.load_case(Path(root))
+    return case, model.enumerate_all(case)
 
 
 def _enumerated():
-    """Перебор для активного набора данных (файлы организаторов или загруженные)."""
     return _enumerated_for(str(ingest.active_root()))
 
 
@@ -74,230 +77,239 @@ def reset_cache():
     _enumerated_for.cache_clear()
 
 
-def _alternatives(lots):
-    """Именованные варианты записки (config/alternatives.json): name, id в каноническом порядке лотов, note."""
-    path = ROOT / "config" / "alternatives.json"
+def team_portfolio() -> Variant:
+    return load_portfolio(TEAM_CONFIG / "portfolio.json")
+
+
+def _why_final(path: Path | None = None) -> dict:
+    """Тексты экрана «Почему FINAL» (app/config/why_final.json, формулировки участника 3); нет файла — пустой словарь."""
+    path = path or CONFIG / "why_final.json"
+    if not path.exists():
+        return {}
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    return {k: v for k, v in data.items() if not str(k).startswith("_")} if isinstance(data, dict) else {}
+
+
+def _alternatives(case, records: dict, path: Path | None = None) -> list:
+    """Именованные варианты записки (config/alternatives.json): name, id в порядке лотов кейса, note.
+    Неполные записи и варианты с лотами вне набора данных пропускаются; найденные считаются движком и добавляются в records."""
+    path = path or TEAM_CONFIG / "alternatives.json"
     if not path.exists():
         return []
     with open(path, encoding="utf-8") as f:
-        variants = json.load(f).get("variants", [])
-    order = {lid: i for i, lid in enumerate(lots)}
+        raw = json.load(f)
+    items = raw.get("variants") if isinstance(raw, dict) else raw
     out = []
-    for v in variants:
+    for v in items if isinstance(items, list) else []:
+        if not isinstance(v, dict):
+            continue
         name, parts = v.get("name"), v.get("selection") or []
         if not name or not parts or not all(isinstance(p, dict) and "lot_id" in p and "mode_id" in p for p in parts):
             continue  # неполная запись файла участника: пропускаем, не роняя сборку
-        sel = sorted(((p["lot_id"], p["mode_id"]) for p in parts), key=lambda x: order.get(x[0], 99))
-        out.append({"name": name, "id": model.combo_id(sel), "note": v.get("note", "")})
-    return out  # варианты с неизвестными лотами отбрасывает build_dashboard: их id нет в перечислении
+        try:
+            cid = model.canonical_id(case, [(p["lot_id"], p["mode_id"]) for p in parts])
+            if cid not in records:
+                records[cid] = model.record(case, model.parse_id(cid))
+        except ValueError:
+            continue  # лот или режим вне набора данных
+        out.append({"name": str(name), "id": cid, "note": str(v.get("note", ""))})
+    return out
 
 
-def _combo_payload(rec, score, rank, kcash_min):
+def selection_model():
+    return load_selection_model(TEAM_CONFIG / "weights.json")
+
+
+def _combo_payload(rec, score, rank, kcash_min: float):
     m = rec["metrics"]
-    anchor = sum(float(r.get("anchor_cash_mrub_per_year") or 0) for r in rec["detail"])
-    commercial = sum(float(r.get("commercial_cash_mrub_per_year") or 0) for r in rec["detail"])
-    opex = m["opex_mrub_per_year"]
     breakdown = getattr(score, "breakdown", None)
+    gate = next((g for g in rec.get("gates", []) if g.get("id") == "anchor_coverage"), None)
     return {
         "id": rec["id"],
         "selection": [{"lot": lot, "mode": mode} for lot, mode in rec["selection"]],
         "per_lot": [
             {
-                "lot": r["lot_id"],
-                "mode": r["mode_id"],
-                "public_core": bool(r["public_core"]),
-                "c0": r["c0_mrub"],
-                "opex": r["opex_mrub_per_year"],
-                "vpub": r["vpub_mrub_per_year"],
-                "cash": r["cash_mrub_per_year"],
-                "anchor_cash": r.get("anchor_cash_mrub_per_year"),
-                "commercial_cash": r.get("commercial_cash_mrub_per_year"),
-                "t_rep": r["t_rep"],
-                "readiness": r["readiness_1_5"],
-                "resilience": r["resilience_1_5"],
-                "scale": r["scale_1_5"],
+                "lot": r.lot_id,
+                "mode": r.mode_id,
+                "public_core": r.public_core,
+                "c0": r.c0,
+                "opex": r.opex,
+                "vpub": r.vpub,
+                "cash": r.cash,
+                "anchor_cash": r.anchor_cash,
+                "commercial_cash": r.commercial_cash,
+                "opex_gap": r.opex_gap,
+                "t_rep": r.t_rep,
+                "readiness": r.readiness,
+                "resilience": r.resilience,
+                "scale": r.scale,
             }
             for r in rec["detail"]
         ],
         "metrics": {
-            "c0": m["c0_mrub"],
-            "opex": m["opex_mrub_per_year"],
-            "vpub": m["vpub_mrub_per_year"],
-            "cash": m["cash_mrub_per_year"],
-            "kcash": m["kcash"],
-            "t_rep": m["t_rep"],
-            "readiness": m["readiness_1_5"],
-            "resilience": m["resilience_1_5"],
-            "scale": m["scale_1_5"],
-            "archetypes": m["territorial_archetypes"],
-            "groups": m["capability_groups"],
-            "public_core": m["public_core_lots"],
-            "anchor_cash": anchor,
-            "commercial_cash": commercial,
+            "c0": m.c0,
+            "opex": m.opex,
+            "vpub": m.vpub,
+            "cash": m.cash,
+            "anchor_cash": m.anchor_cash,
+            "commercial_cash": m.commercial_cash,
+            "kcash": m.kcash,
+            "opex_gap": m.opex_gap,
+            "t_rep": m.t_rep,
+            "readiness": m.readiness,
+            "resilience": m.resilience,
+            "scale": m.scale,
+            "archetypes": m.territorial_archetypes,
+            "groups": m.capability_groups,
+            "public_core": m.public_core_lots,
         },
-        # дополнительный сценарий команды S2 «commercial cash = 0»: не официальный STRESS, только якорные поступления
-        "s2": {"cash": anchor, "kcash": (anchor / opex) if opex else None, "opex_gap": opex - anchor, "kcash_ok": bool(opex and anchor / opex >= kcash_min - 1e-9)},
         "checks": rec["checks"],
         "ok": rec["ok"],
+        "gates": rec.get("gates", []),
+        "admitted": bool(rec.get("admitted", rec["ok"]["STRESS"])),
+        "notes": {scenario: [{"code": note.code, "message": note.message, "lots": list(note.lots)} for note in result.notes] for scenario, result in rec["results"].items()},
         "score": round(score(rec), 4),
         "rank": rank.get(rec["id"]),
+        # дополнительный сценарий команды S2 «commercial cash = 0»: не официальный STRESS, только якорные поступления
+        "s2": {"cash": m.anchor_cash, "kcash": (m.anchor_cash / m.opex) if m.opex else None, "opex_gap": m.opex - m.anchor_cash,
+               "kcash_ok": bool(gate["ok"]) if gate else bool(m.opex and m.anchor_cash / m.opex >= kcash_min - 1e-9)},
+        # разложение балла по критериям: raw, границы нормализации, z, вес, вклад; Σ contribution = score
         "breakdown": [dict(b, raw=round(b["raw"], 6), z=round(b["z"], 4), contribution=round(b["contribution"], 4)) for b in breakdown(rec)] if breakdown else None,
     }
 
 
-def build_dashboard(selected_id: str | None = None) -> dict:
-    lots, modes, config, records = _enumerated()
-    model_cfg = _load("model.json")
+def build_dashboard(selected_id: str | None = None, root: Path | None = None, gates_filter: bool | None = None) -> dict:
+    root = Path(root) if root is not None else ingest.active_root()
+    case, enumerated = _enumerated_for(str(root))
+    records = dict(enumerated)  # копия: произвольные комбинации (конструктор, альтернативы записки) не попадают в кэш перебора
+    ui_cfg = _load("model.json")
     ru = _load("lots_ru.json")
     ui = _lots_ui()
-    final_id = _load("portfolio.json")["selected"]
-    if final_id not in records:  # набор данных без лотов решения гейта: экраны построены вокруг FINAL, собирать нечего
-        raise ValueError(f"Портфель FINAL из app/config/portfolio.json отсутствует в наборе данных: {final_id}")
-    selected_id = selected_id or final_id
-    if selected_id not in records:
-        raise ValueError(f"Неизвестная комбинация: {selected_id}")
-    alternatives = [a for a in _alternatives(lots) if a["id"] in records]
-    team = _load("team.json") if (CONFIG / "team.json").exists() else {}
+    portfolio = team_portfolio()
+    default_id = model.canonical_id(case, portfolio.selection)
+    selected_id = model.canonical_id(case, model.parse_id(selected_id)) if selected_id else default_id
 
-    score = model.make_scorer(records, model_cfg["weights"], config)
-    feasible = sorted((r for r in records.values() if r["ok"]["STRESS"]), key=score, reverse=True)
-    rank = {r["id"]: i + 1 for i, r in enumerate(feasible)}
+    def ensure(cid: str, what: str):
+        if cid not in records:
+            try:
+                records[cid] = model.record(case, model.parse_id(cid))
+            except ValueError as error:
+                raise ValueError(f"{what}: {cid} ({error})") from None
 
-    allowed = model_cfg.get("allowed_modes")
-    suggestions, rejected = model.suggest(records, score, selected_id, n=int(model_cfg.get("suggestions", 6)), allowed_modes=allowed)
-    comparison = list(suggestions) + ([rejected] if rejected else [])
-    actions = model.stress_actions(records, rejected, selected_id, score, config, allowed_modes=allowed) if rejected else []
+    ensure(default_id, "Портфель FINAL из config/portfolio.json отсутствует в наборе данных")
+    ensure(selected_id, "Неизвестная комбинация")
+    alternatives = _alternatives(case, records)   # до балла: экран «Почему FINAL» показывает их балл и место
 
-    wanted = set(comparison) | {selected_id, final_id} | {a["id"] for a in actions} | {a["id"] for a in alternatives}
-    kcash_min = float(config["constraints_common"]["kcash_min"])
-    combos = {cid: _combo_payload(records[cid], score, rank, kcash_min) for cid in sorted(wanted)}  # стабильный порядок → маленькие диффы dashboard.json
+    sel_model = selection_model()
+    if gates_filter is not None:
+        sel_model = replace(sel_model, gates_filter=gates_filter)
+    feasible_scenario = ui_cfg.get("feasible_scenario", "STRESS")
+    model.admit(records, sel_model, feasible_scenario)
+    score, rank = model.make_scorer(records, sel_model, feasible_scenario)
+    admitted = [r for r in enumerated.values() if r["admitted"]]
+
+    allowed = ui_cfg.get("allowed_modes")
+    suggestions, rejected, gate_rejected = model.suggest(records, score, selected_id, n=int(ui_cfg.get("suggestions", 6)), allowed_modes=allowed, pinned=(default_id,))
+    rejected_ids = [cid for cid in (gate_rejected, rejected) if cid]
+    comparison = list(suggestions) + rejected_ids
+    actions = model.stress_actions(records, rejected, selected_id, score, case, allowed_modes=allowed) if rejected else []
+
+    wanted = set(comparison) | {selected_id, default_id} | {a["id"] for a in actions} | {a["id"] for a in alternatives}
+    combos = {cid: _combo_payload(records[cid], score, rank, float(case.constraints.kcash_min)) for cid in sorted(wanted)}
 
     return {
         "meta": {
-            "case_id": config.get("case_id"),
-            "case_version": config.get("case_version"),
+            "case_id": case.case_id,
+            "case_version": case.version,
+            "engine": {
+                "name": "kosmo",
+                "verified": case.verified,
+                "checksums": case.checksums,
+                "portfolio": portfolio.name,
+                "portfolio_id": default_id,
+                "weights_file": "config/weights.json",
+            },
             "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
-            "scenarios": {s: {"c0_max": v["c0_max_mrub"]} for s, v in config["scenarios"].items()},
-            "constraints": config["constraints_common"],
-            "weights": model_cfg["weights"],
-            "rationale": model_cfg.get("rationale", {}),
-            "thin_margin_pct": model_cfg.get("thin_margin_pct", 0.03),
+            "scenarios": {sid: {"c0_max": scenario.c0_max} for sid, scenario in case.scenarios.items()},
+            "constraints": {name: getattr(case.constraints, attr) for attr, name in CONSTRAINT_KEYS.items()},
+            "weights": model.ui_weights(sel_model),
+            "rationale": model.ui_rationale(sel_model),
+            "gates": [{"id": gate.code, "label": gate.label, "metric": gate.metric, "op": ev.OPERATORS[gate.operator], "threshold": gate.threshold, "unit": gate.unit, "rationale": gate.rationale} for gate in sel_model.gates],
+            "feasible_scenario": feasible_scenario,
+            "gates_filter": sel_model.gates_filter,
+            "thin_margin_pct": ui_cfg.get("thin_margin_pct", 0.03),
             "allowed_modes": allowed,
-            "dataset": {k: v for k, v in ingest.describe().items() if k in ("source", "root", "case_version", "activated_at")},
+            "dataset": {k: v for k, v in ingest.describe(root).items() if k in ("source", "root", "case_version", "activated_at")},
             "totals": {
-                "combinations": len(records),
-                "base_feasible": sum(1 for r in records.values() if r["ok"]["BASE"]),
-                "stress_feasible": len(feasible),
+                "combinations": len(enumerated),
+                "base_feasible": sum(1 for r in enumerated.values() if r["ok"]["BASE"]),
+                "stress_feasible": sum(1 for r in enumerated.values() if r["ok"]["STRESS"]),
+                "admitted": len(admitted),
+                "ranked": len(admitted),
             },
         },
         "lots": {
             lid: {
-                "name": ui.get(lid, {}).get("name") or ru["lots"].get(lid, {}).get("name", row["service"]),
-                "region": ru["lots"].get(lid, {}).get("region", row["territorial_archetype"]),
+                "name": ui.get(lid, {}).get("name") or ru["lots"].get(lid, {}).get("name", lot.service),
+                "region": ru["lots"].get(lid, {}).get("region", lot.territorial_archetype),
                 "card": {k: v for k, v in ui[lid].items() if k != "name"} if lid in ui else None,
-                "archetype": ru["archetypes"].get(row["territorial_archetype"], row["territorial_archetype"]),
-                "groups": sorted(set().union(*[ev.normalize_capability(t) for t in row["capability_groups"].split(";")])),
-                "federal": str(row["federal"]).lower() == "true",
+                "archetype": ru["archetypes"].get(lot.territorial_archetype, lot.territorial_archetype),
+                "groups": sorted(lot.capability_set),
+                "federal": lot.federal,
             }
-            for lid, row in lots.items()
+            for lid, lot in case.lots.items()
         },
         "modes": {
-            mid: {k: (float(v) if k != "mode_id" and k != "public_core" else v) for k, v in row.items() if k != "mode_id"}
-            | {"public_core": str(row["public_core"]).lower() == "true"}
-            for mid, row in modes.items()
+            mid: {
+                "k_c0": mode.k_c0,
+                "k_opex": mode.k_opex,
+                "k_vpub": mode.k_vpub,
+                "k_anchor": mode.k_anchor,
+                "k_commercial": mode.k_commercial,
+                "public_core": mode.public_core,
+                "custom": mode.custom,
+            }
+            for mid, mode in case.modes.items()
         },
         "selected": selected_id,
-        "final": final_id,                       # решение гейта (config/portfolio.json); selected может быть произвольным портфелем из конструктора
-        "alternatives": alternatives,            # именованные варианты записки для экрана «Почему FINAL»
-        "why_final": team.get("why_final") or {},  # формулировки участника 3 из app/config/team.json
+        "final": default_id,                       # решение гейта (config/portfolio.json); selected может быть произвольным портфелем из конструктора
+        "final_name": portfolio.name,
+        "alternatives": alternatives,              # именованные варианты записки для экрана «Почему FINAL»
+        "why_final": _why_final(),                 # формулировки участника 3 из app/config/why_final.json
         "suggestions": suggestions,
-        "rejected": [rejected] if rejected else [],
+        "rejected": rejected_ids,
         "comparison": comparison,
         "stress": {"failing": rejected, "actions": actions},
         "combinations": combos,
     }
 
 
-def export_results(dashboard: dict, out_dir: Path):
-    """results/base.json, results/stress.json, results/alternatives.csv — источник цифр для записки.
-
-    Плюс три файла в формате стартового notebook организаторов (README организаторов, §8.8):
-    portfolio_detail.csv, portfolio_metrics.json, team_decision_config.json — чтобы эксперт
-    сравнил нашу выгрузку с выгрузкой template один в один.
-    """
-    import csv
-
-    out_dir.mkdir(parents=True, exist_ok=True)
-    sel = dashboard["combinations"][dashboard["selected"]]
-    for scenario in ("BASE", "STRESS"):
-        with open(out_dir / f"{scenario.lower()}.json", "w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "generated_at": dashboard["meta"]["generated_at"],
-                    "case_version": dashboard["meta"]["case_version"],
-                    "scenario": scenario,
-                    "c0_max": dashboard["meta"]["scenarios"][scenario]["c0_max"],
-                    "selection": sel["selection"],
-                    "per_lot": sel["per_lot"],
-                    "metrics": sel["metrics"],
-                    "checks": sel["checks"][scenario],
-                    "all_ok": sel["ok"][scenario],
-                    "score": sel["score"],
-                    "weights": dashboard["meta"]["weights"],
-                },
-                f,
-                ensure_ascii=False,
-                indent=2,
-            )
-    with open(out_dir / "alternatives.csv", "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(["id", "lots", "modes", "c0", "opex", "vpub", "cash", "kcash", "t_rep", "public_core", "BASE", "STRESS", "score", "rank"])
-        for cid in dashboard["comparison"]:
-            c = dashboard["combinations"][cid]
-            m = c["metrics"]
-            w.writerow([
-                cid,
-                "+".join(s["lot"] for s in c["selection"]),
-                "".join(s["mode"] for s in c["selection"]),
-                round(m["c0"], 2), round(m["opex"], 2), round(m["vpub"], 2), round(m["cash"], 2),
-                round(m["kcash"], 4), round(m["t_rep"], 4), m["public_core"],
-                c["ok"]["BASE"], c["ok"]["STRESS"], c["score"], c["rank"],
-            ])
-    _export_template_format(dashboard, out_dir)
+def selected_variant(dashboard: dict) -> Variant:
+    case, _ = _enumerated()
+    portfolio = team_portfolio()
+    selected = dashboard["selected"]
+    if selected == model.canonical_id(case, portfolio.selection):
+        return portfolio
+    return Variant(name=selected, selection=tuple(model.parse_id(selected)), note="выбрано в интерфейсе")
 
 
-# Колонки detail из case_core.apply_mode — в том порядке, в каком их пишет notebook организаторов.
-TEMPLATE_DETAIL_COLUMNS = [
-    "lot_id", "mode_id", "c0_mrub", "opex_mrub_per_year", "vpub_mrub_per_year", "cash_mrub_per_year",
-    "t_rep", "readiness_1_5", "resilience_1_5", "scale_1_5", "territorial_archetype", "federal",
-    "capability_groups", "public_core",
-]
+def export_dir(dashboard: dict, out_dir: Path, variant: Variant) -> Path:
+    if variant.name == team_portfolio().name:
+        return Path(out_dir)
+    return Path(out_dir) / "variants" / slug(dashboard["selected"])
 
 
-def _export_template_format(dashboard: dict, out_dir: Path):
-    """Те же имена файлов и поля, что у последней ячейки cases/case02/Космос_как_инфраструктура.ipynb."""
-    import csv
-
-    _, _, _, records = _enumerated()
-    rec = records[dashboard["selected"]]
-    with open(out_dir / "portfolio_detail.csv", "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(TEMPLATE_DETAIL_COLUMNS)
-        for row in rec["detail"]:
-            w.writerow([row[k] for k in TEMPLATE_DETAIL_COLUMNS])
-    with open(out_dir / "portfolio_metrics.json", "w", encoding="utf-8") as f:
-        json.dump(rec["metrics"], f, ensure_ascii=False, indent=2)
-    team = _load("team.json") if (CONFIG / "team.json").exists() else {}
-    summary = {
-        "team": team.get("team_name", ""),
-        "decision_method": team.get("decision_method", ""),
-        "strategy_thesis": team.get("strategy_thesis", ""),
-        "selection": [list(pair) for pair in rec["selection"]],
-        "weights": dashboard["meta"]["weights"],
-        "management": {
-            key: (team.get("management") or {}).get(key, "")
-            for key in ("payer_opex", "operator_model", "supplier_switch_rule", "replicable_core", "local_adaptation", "stress_decision")
-        },
-    }
-    with open(out_dir / "team_decision_config.json", "w", encoding="utf-8") as f:
-        json.dump(summary, f, ensure_ascii=False, indent=2)
+def export_results(dashboard: dict, out_dir: Path, with_enumeration: bool = False) -> dict:
+    case, _ = _enumerated()
+    variant = selected_variant(dashboard)
+    written = export_bundle(
+        case,
+        variant,
+        load_variants(TEAM_CONFIG / "alternatives.json"),
+        selection_model(),
+        export_dir(dashboard, out_dir, variant),
+        with_enumeration=with_enumeration,
+        team=load_team_card(TEAM_CONFIG / "team.json"),
+    )
+    return {key: str(path) for key, path in written.items()}

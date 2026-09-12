@@ -5,10 +5,12 @@
 
 API
     GET  /api/dashboard?selected=<id>   пересобрать dashboard.json для выбранной комбинации
-    POST /api/export                    записать results/ для текущей выбранной комбинации ({"selected": id})
+         &gates=filter|off              проверки команды (S2) как фильтр ранжирования / только диагностика (по умолчанию — как в config/weights.json)
+    POST /api/export                    записать results/ движком kosmo для выбранной комбинации ({"selected": id})
     GET  /api/data                      активный набор данных (файлы, хэши, версия)
     POST /api/data                      {"files": {"lots.csv": "...", ...}, "apply": true} — проверить, сохранить, применить
     POST /api/data/reset                вернуть файлы организаторов
+Ошибки API всегда отдаются JSON: 400 — неверный запрос (ValueError), 404 — нет такого пути, 500 — остальное.
 Без сервера интерфейс тоже работает: `python app/build.py` и любой статический
 хостинг папки app/static (например, `python -m http.server -d app/static`).
 """
@@ -34,6 +36,11 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(STATIC), **kw)
 
+    def end_headers(self):
+        if not self.path.startswith("/api/"):
+            self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def _json(self, status, obj):
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -52,8 +59,7 @@ class Handler(SimpleHTTPRequestHandler):
         return body
 
     def _api(self, fn, url):
-        # Ошибки API всегда отдаём JSON: ValueError — 400 (неверный запрос), остальное — 500.
-        # Иначе соединение рвётся без ответа, и интерфейс молча уходит в статический режим.
+        # Ошибки API всегда отдаём JSON: иначе соединение рвётся без ответа, и интерфейс молча уходит в статический режим.
         try:
             return fn(url)
         except ValueError as e:
@@ -71,8 +77,10 @@ class Handler(SimpleHTTPRequestHandler):
 
     def _get_api(self, url):
         if url.path == "/api/dashboard":
-            selected = parse_qs(url.query).get("selected", [None])[0]
-            return self._json(HTTPStatus.OK, payload.build_dashboard(selected))
+            query = parse_qs(url.query)
+            selected = query.get("selected", [None])[0]
+            gates = {"filter": True, "off": False}.get(query.get("gates", [""])[0])
+            return self._json(HTTPStatus.OK, payload.build_dashboard(selected, gates_filter=gates))
         if url.path == "/api/data":
             return self._json(HTTPStatus.OK, ingest.describe())
         return self._json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint"})
@@ -83,8 +91,8 @@ class Handler(SimpleHTTPRequestHandler):
     def _post_api(self, url):
         if url.path == "/api/export":
             dash = payload.build_dashboard(self._body().get("selected"))
-            payload.export_results(dash, RESULTS)
-            return self._json(HTTPStatus.OK, {"written": ["results/base.json", "results/stress.json", "results/alternatives.csv", "results/portfolio_detail.csv", "results/portfolio_metrics.json", "results/team_decision_config.json"], "selected": dash["selected"]})
+            written = sorted(Path(p).relative_to(RESULTS.parent).as_posix() for p in payload.export_results(dash, RESULTS).values())
+            return self._json(HTTPStatus.OK, {"written": written, "dir": written[0].rsplit("/", 1)[0], "selected": dash["selected"]})
         if url.path == "/api/data":
             body = self._body()
             files = {k: v for k, v in (body.get("files") or {}).items() if k in ingest.FILES and isinstance(v, str)}
@@ -111,7 +119,7 @@ class Handler(SimpleHTTPRequestHandler):
         return self._json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint"})
 
     def log_message(self, fmt, *args):  # тише
-        if "/api/" in (args[0] if args else ""):
+        if "/api/" in str(args[0] if args else ""):
             super().log_message(fmt, *args)
 
 
@@ -120,7 +128,7 @@ def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     args = ap.parse_args()
-    payload.build_dashboard()  # прогреть перебор (~1 с)
+    payload.build_dashboard()
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"Космо-портфель: http://{args.host}:{args.port}  (Ctrl+C — стоп)")
     try:

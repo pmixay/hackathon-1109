@@ -61,7 +61,7 @@ def format_value(value: float) -> str:
     return f"{value:.4f}".rstrip("0").rstrip(".")
 
 
-def build_check(code: str, metric: str, operator: str, threshold: float, actual: float, scope: str) -> Check:
+def build_check(code: str, metric: str, operator: str, threshold: float, actual: float, scope: str, label: str | None = None, unit: str | None = None) -> Check:
     if operator == "==":
         passed = actual == threshold
         margin = -abs(actual - threshold)
@@ -75,15 +75,22 @@ def build_check(code: str, metric: str, operator: str, threshold: float, actual:
         raise ValueError(f"unsupported operator {operator!r}")
     return Check(
         code=code,
-        label=LABELS[code],
+        label=LABELS[code] if label is None else label,
         metric=metric,
         operator=operator,
         threshold=float(threshold),
         actual=float(actual),
-        unit=UNITS[code],
+        unit=UNITS[code] if unit is None else unit,
         scope=scope,
         passed=bool(passed),
         margin=float(margin),
+    )
+
+
+def run_team_checks(metrics, gates) -> tuple:
+    return tuple(
+        build_check(gate.code, gate.metric, gate.operator, gate.threshold, getattr(metrics, gate.metric), "team", gate.label, gate.unit)
+        for gate in gates
     )
 
 

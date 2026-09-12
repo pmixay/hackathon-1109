@@ -1,7 +1,10 @@
+from dataclasses import replace
+
 import pytest
 
 from kosmo import (
     WeightsError,
+    admitted,
     calculate_all_scenarios,
     load_selection_model,
     load_variants,
@@ -10,7 +13,7 @@ from kosmo import (
     score_variants,
     weight_sensitivity,
 )
-from kosmo.selection import criterion_value, normalize
+from kosmo.selection import criterion_value, normalize, ranking_of
 
 
 @pytest.fixture(scope="module")
@@ -70,10 +73,7 @@ def test_single_criterion_picks_extreme(evaluated):
 
 
 def test_weight_scaling_is_invariant(evaluated, model):
-    doubled = parse_selection_model({
-        "feasibility_scenario": model.feasibility_scenario,
-        "criteria": [{"key": c.key, "direction": c.direction, "weight": c.weight * 2} for c in model.criteria],
-    })
+    doubled = replace(model, criteria=tuple(replace(c, weight=c.weight * 2) for c in model.criteria))
     original = {item.name: item.score for item in score_variants(evaluated, model)}
     scaled = {item.name: item.score for item in score_variants(evaluated, doubled)}
     for name in original:
@@ -235,3 +235,56 @@ def test_with_weight_replaces_only_the_named_criterion(model):
 
 def test_rationales_survive_parsing(model):
     assert all(c.rationale for c in model.criteria)
+
+
+def test_gates_are_diagnostic_unless_the_model_filters(model, evaluated):
+    gate = model.gates[0]
+    assert (gate.code, gate.metric, gate.operator, gate.threshold) == ("anchor_coverage", "anchor_kcash", ">=", 0.6)
+    assert model.gates_filter is False
+    scored = {item.name: item for item in score_variants(evaluated, model)}
+    assert scored["FINAL"].gates[0].passed and scored["FINAL"].gates[0].actual == pytest.approx(0.6070287539936102)
+    assert not scored["V7"].gates[0].passed and scored["V7"].gates[0].actual == pytest.approx(0.5356, abs=5e-4)
+    assert scored["V7"].feasible and scored["V7"].admitted and scored["V7"].rank == 3
+    assert scored["V8"].rank == 1 and scored["FINAL"].rank == 2
+    assert sorted(name for name, item in scored.items() if not item.gates[0].passed) == ["V4", "V5", "V6", "V7", "V8"]
+    filtered = replace(model, gates_filter=True)
+    strict = {item.name: item for item in score_variants(evaluated, filtered)}
+    assert [name for name, item in strict.items() if item.admitted] == ["FINAL", "V1", "V2"]
+    assert strict["FINAL"].rank == 1 and strict["V7"].rank is None and strict["V7"].feasible
+    assert sorted(ranking_of(score_variants(evaluated, filtered))) == ["FINAL", "V1", "V2"]
+
+
+def test_gate_threshold_is_inclusive(model, evaluated):
+    filtered = replace(model, gates_filter=True)
+    exact = replace(filtered, gates=(replace(model.gates[0], threshold=evaluated["FINAL"]["STRESS"].metrics.anchor_kcash),))
+    scored = {item.name: item for item in score_variants(evaluated, exact)}
+    assert scored["FINAL"].admitted and scored["FINAL"].gates[0].margin == pytest.approx(0.0)
+    above = replace(filtered, gates=(replace(model.gates[0], threshold=0.61),))
+    assert not next(item for item in score_variants(evaluated, above) if item.name == "FINAL").admitted
+
+
+@pytest.mark.parametrize("raw, fragment", [
+    ({"criteria": [{"key": "vpub", "direction": "max", "weight": 1}], "gates": {}}, "gates: ожидается список"),
+    ({"criteria": [{"key": "vpub", "direction": "max", "weight": 1}], "gates": [{"code": "", "metric": "kcash", "operator": ">=", "threshold": 1}]}, "пустой code"),
+    ({"criteria": [{"key": "vpub", "direction": "max", "weight": 1}], "gates": [{"code": "a", "metric": "kcash", "operator": ">", "threshold": 1}]}, "operator"),
+    ({"criteria": [{"key": "vpub", "direction": "max", "weight": 1}], "gates": [{"code": "a", "metric": "kcash", "operator": ">=", "threshold": "x"}]}, "threshold"),
+    ({"criteria": [{"key": "vpub", "direction": "max", "weight": 1}], "gates": [{"code": "a", "metric": "kcash", "operator": ">=", "threshold": 1}, {"code": "a", "metric": "c0", "operator": "<=", "threshold": 1}]}, "повторяется"),
+    ({"criteria": [{"key": "vpub", "direction": "max", "weight": 1}], "gates_filter": "yes"}, "gates_filter"),
+])
+def test_invalid_gates(raw, fragment):
+    with pytest.raises(WeightsError) as error:
+        parse_selection_model(raw)
+    assert any(fragment in problem for problem in error.value.problems)
+
+
+def test_gate_defaults_and_unknown_metric(evaluated):
+    model = parse_selection_model({"criteria": [{"key": "vpub", "direction": "max", "weight": 1}], "gates": [{"code": "cheap", "metric": "c0", "operator": "<=", "threshold": 1150}], "gates_filter": True})
+    gate = model.gates[0]
+    assert (gate.label, gate.unit, gate.rationale) == ("cheap", "", "")
+    scored = {item.name: item for item in score_variants(evaluated, model)}
+    assert sorted(name for name, item in scored.items() if item.admitted) == ["FINAL", "V7", "V8"]
+    assert scored["FINAL"].gates[0].label == "cheap" and scored["FINAL"].gates[0].scope == "team"
+    assert admitted(evaluated["V1"], model) is False and admitted(evaluated["V1"], replace(model, gates_filter=False)) is True
+    broken = parse_selection_model({"criteria": [{"key": "vpub", "direction": "max", "weight": 1}], "gates": [{"code": "x", "metric": "nope", "operator": "<=", "threshold": 1}]})
+    with pytest.raises(AttributeError):
+        score_variants(evaluated, broken)

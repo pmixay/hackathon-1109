@@ -12,7 +12,9 @@
 | `config/weights.json` | критерии, направления, веса модели выбора | B |
 | `config/custom_mode.json` | режим D; если файла нет — D недоступен; `custom_mode.example.json` — шаблон | C/D |
 | `config/assumptions.json` | допущения команды: SLA по каждому сервису, источники данных, правила по облачности, истории, API, журналу доступа, контрольной выборке поставщика; проектное описание, движком не читается | участник 4 (роль D) |
-| `results/` | выгрузка для записки: `base.json`, `stress.json`, `alternatives.csv`, `scores.csv`, `sensitivity.csv`, `repairs_*.csv`, `enumeration.csv` | только `python -m kosmo export` |
+| `results/` | выгрузка для записки: `base.json`, `stress.json`, `alternatives.csv`, `scores.csv`, `sensitivity.csv`, `ranking_full.csv`, `sensitivity_full.csv`, `repairs_*.csv`, `enumeration.csv` | только `python -m kosmo export` |
+
+`scores.csv` и `sensitivity.csv` относятся к презентационному shortlist из `config/alternatives.json`. Математический ranking и sensitivity модели определяются по полному множеству 143 STRESS-допустимых комбинаций и находятся в `ranking_full.csv` и `sensitivity_full.csv`.
 | `variants/` | сохранённые варианты с настройками и результатами | `python -m kosmo variant save` |
 | `examples/` | зафиксированный пример входа/выхода для интерфейса | — |
 

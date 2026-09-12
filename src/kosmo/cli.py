@@ -244,11 +244,18 @@ def cmd_export(args, root: Path) -> int:
     model = load_selection_model(root / args.weights)
     print(f"баллы модели выбора: {write_scored(score_variants(evaluated, model), out / 'scores.csv')}")
     print(f"чувствительность: {write_sensitivity(weight_sensitivity(evaluated, model), parameter_sensitivity(case, portfolio.selection), out / 'sensitivity.csv')}")
+    portfolios = enumerate_portfolios(case)
+    full_evaluated = {
+        "|".join(f"{lot}:{mode}" for lot, mode in zip(item.lots, item.modes)): calculate_all_scenarios(case, tuple(zip(item.lots, item.modes)))
+        for item in portfolios
+        if item.feasible[model.feasibility_scenario]
+    }
+    print(f"полный ranking: {write_scored(score_variants(full_evaluated, model), out / 'ranking_full.csv')}")
+    print(f"полная чувствительность: {write_sensitivity(weight_sensitivity(full_evaluated, model), parameter_sensitivity(case, portfolio.selection, parameters=('vpub', 'cash', 'opex', 'c0')), out / 'sensitivity_full.csv')}")
     for scenario_id in case.scenarios:
         repairs = single_step_repairs(case, portfolio.selection, scenario_id)
         print(f"варианты с одним изменением ({scenario_id}): {write_repairs(repairs, list(case.scenarios), out / f'repairs_{scenario_id.lower()}.csv')}")
     if not args.skip_enumeration:
-        portfolios = enumerate_portfolios(case)
         print(f"перебор: {write_enumeration(portfolios, list(case.scenarios), out / 'enumeration.csv')}")
     return 0
 

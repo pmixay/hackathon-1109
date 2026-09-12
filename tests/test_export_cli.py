@@ -28,7 +28,7 @@ def test_scenario_results_files(case, v1, tmp_path):
 def test_alternatives_csv(case, root, tmp_path):
     variants = load_variants(root / "config" / "alternatives.json")
     rows = read_csv(write_alternatives(case, variants, tmp_path / "alternatives.csv"))
-    assert len(rows) == 14
+    assert len(rows) == 18
     v3_stress = next(row for row in rows if row["variant"] == "V3" and row["scenario"] == "STRESS")
     assert v3_stress["feasible"] == "False"
     assert v3_stress["failed_checks"] == "c0_limit"

@@ -34,6 +34,16 @@
       "name": "V6",
       "selection": [{"lot_id": "AGRI", "mode_id": "A"}, {"lot_id": "INFRA", "mode_id": "A"}, {"lot_id": "TRANS", "mode_id": "A"}, {"lot_id": "ENV", "mode_id": "A"}],
       "note": "самый дешёвый, без лотов ЧС"
+    },
+    {
+      "name": "V7",
+      "selection": [{"lot_id": "FIRE", "mode_id": "A"}, {"lot_id": "AGRI", "mode_id": "C"}, {"lot_id": "TRANS", "mode_id": "C"}, {"lot_id": "ENV", "mode_id": "A"}],
+      "note": "математический лидер MCDA среди всех 143 STRESS-допустимых комбинаций; режимы C снижают общественную ценность и якорную устойчивость AGRI/TRANS"
+    },
+    {
+      "name": "V8",
+      "selection": [{"lot_id": "FIRE", "mode_id": "A"}, {"lot_id": "AGRI", "mode_id": "C"}, {"lot_id": "TRANS", "mode_id": "B"}, {"lot_id": "ENV", "mode_id": "A"}],
+      "note": "второе место MCDA среди всех 143 STRESS-допустимых комбинаций; промежуточный компромисс между V7 и FINAL"
     }
   ]
 }

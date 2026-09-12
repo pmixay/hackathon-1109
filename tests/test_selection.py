@@ -41,10 +41,13 @@ def test_margin_criterion_reads_stress_check(evaluated):
 
 def test_scores_are_bounded_and_ranked(evaluated, model):
     scored = score_variants(evaluated, model)
-    assert [item.name for item in scored][:2] == ["FINAL", "V2"]
+    assert [item.name for item in scored][:3] == ["V8", "FINAL", "V7"]
     ranks = [item.rank for item in scored]
-    assert ranks == [1, 2, 3, 4, 5, 6, 7]
+    assert ranks == [1, 2, 3, 4, 5, 6, 7, 8, None]
     for item in scored:
+        if not item.feasible:
+            assert item.score is None and item.normalized == {}
+            continue
         assert 0.0 <= item.score <= 1.0
         for value in item.normalized.values():
             assert 0.0 <= value <= 1.0
@@ -61,7 +64,7 @@ def test_infeasible_variant_is_excluded_from_ranking(evaluated):
 
 def test_single_criterion_picks_extreme(evaluated):
     model = parse_selection_model({"criteria": [{"key": "c0", "direction": "min", "weight": 1.0}]})
-    assert score_variants(evaluated, model)[0].name == "FINAL"
+    assert score_variants(evaluated, model)[0].name == "V7"
     model = parse_selection_model({"criteria": [{"key": "vpub", "direction": "max", "weight": 1.0}]})
     assert score_variants(evaluated, model)[0].name == "V3"
 
@@ -118,16 +121,21 @@ def test_invalid_weights(raw, fragment):
 
 def test_repo_weights_sum_to_one_and_rank_all_alternatives(model, evaluated):
     assert model.total_weight == pytest.approx(1.0)
-    assert model.feasibility_scenario == "BASE"
+    assert model.feasibility_scenario == "STRESS"
     scored = score_variants(evaluated, model)
-    assert sorted(item.name for item in scored) == ["FINAL", "V1", "V2", "V3", "V4", "V5", "V6"]
-    assert scored[0].name == "FINAL"
-    assert all(item.feasible for item in scored)
-    assert scored[0].score > scored[1].score > scored[-1].score
+    assert sorted(item.name for item in scored) == ["FINAL", "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"]
+    assert scored[0].name == "V8"
+    assert [item.name for item in scored if item.rank in (1, 2, 3)] == ["V8", "FINAL", "V7"]
+    assert next(item for item in scored if item.name == "V3").feasible is False
+    feasible_scores = [item.score for item in scored if item.feasible]
+    assert feasible_scores == sorted(feasible_scores, reverse=True)
 
 
 def test_scores_and_values_are_consistent(model, evaluated):
     for item in score_variants(evaluated, model):
+        if not item.feasible:
+            assert item.score is None and item.normalized == {}
+            continue
         expected = sum(c.weight * item.normalized[c.key] for c in model.criteria) / model.total_weight
         assert item.score == pytest.approx(expected)
         assert item.values["vpub"] == evaluated[item.name]["BASE"].metrics.vpub
@@ -177,7 +185,7 @@ def test_weight_sensitivity_rows_are_consistent(evaluated, model):
         assert row.weight == pytest.approx(criterion.weight * row.factor)
         assert row.leader_changed is (row.leader != baseline)
         assert row.ranking[0] == row.leader
-        assert sorted(row.ranking) == sorted(name for name in evaluated if evaluated[name]["BASE"].feasible)
+        assert sorted(row.ranking) == sorted(name for name in evaluated if evaluated[name][model.feasibility_scenario].feasible)
 
 
 def test_single_criterion_is_immune_to_its_own_weight(evaluated):

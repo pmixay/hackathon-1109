@@ -13,11 +13,14 @@
   5. из чего складывается разница балла с лидером, по критериям;
   6. структура поступлений и стресс спроса S2: покрытие OPEX только якорными платежами;
   7. запас по c0 в STRESS: допустимое удорожание для выбранной и для каждого набора лотов;
-  8. многолетняя картина без дисконтирования (допущение команды: горизонт --years).
+  8. многолетняя картина без дисконтирования (допущение команды: горизонт --years);
+  9. сверка с движком src/kosmo: та же модель выбора по config/alternatives.json, с добавлением
+     двух лучших по перебору комбинаций из app (пропускается, если kosmo не импортируется).
 """
 from __future__ import annotations
 
 import argparse
+import json
 import random
 import sys
 from pathlib import Path
@@ -156,6 +159,34 @@ def main():
           f"против cash {M['cash_mrub_per_year'] * y:.0f}; сальдо {net:+.0f}; ценность {M['vpub_mrub_per_year'] * y:.0f} усл. млн руб. отдельно.")
     print(f"   годовой избыток cash над OPEX {surplus:+.1f}; простой срок возврата c0 "
           f"{(M['c0_mrub'] / surplus if surplus > 0 else float('inf')):.1f} лет (собственный показатель, не kcash).")
+
+    try:
+        sys.path.insert(0, str(REPO / "src"))
+        from kosmo import calculate_all_scenarios as k_calc, load_case as k_load_case
+        from kosmo.selection import load_selection_model, score_variants
+    except Exception as e:  # движка нет в этой копии репозитория
+        print(f"9. src/kosmo недоступен ({e.__class__.__name__}): сверка с движком пропущена.")
+        return
+    case = k_load_case(str(REPO))
+    kmodel = load_selection_model(REPO / "config" / "weights.json")
+    alt = json.loads((REPO / "config" / "alternatives.json").read_text(encoding="utf-8"))["variants"]
+    variants = {v["name"]: [(p["lot_id"], p["mode_id"]) for p in v["selection"]] for v in alt}
+    top2 = [r["id"] for r in feasible if r["id"] != selected][:2]
+    extra = {f"app#{i + 1}": model.parse_id(cid) for i, cid in enumerate(top2)}
+
+    def show(vs, label):
+        ev = {n: k_calc(case, s) for n, s in vs.items()}
+        print(f"   {label} (нормировка по допустимым в {kmodel.feasibility_scenario}):")
+        for s in score_variants(ev, kmodel):
+            m = ev[s.name]["BASE"].metrics
+            a = m.anchor_cash / m.opex
+            sc = f"{s.score:.3f}" if s.score is not None else "—"
+            print(f"     {s.name:7s} место {s.rank} балл {sc} якорь/OPEX {a:.3f} S2 {'PASS' if a >= kmin - 1e-9 else 'FAIL'} "
+                  f"STRESS {'PASS' if ev[s.name]['STRESS'].feasible else 'FAIL'}")
+
+    print("9. Сверка с src/kosmo (config/weights.json, config/alternatives.json):")
+    show(variants, "как в alternatives.json")
+    show({**variants, **extra}, "плюс две лучшие по перебору app: " + ", ".join(f"{k} = {model.combo_id(v)}" for k, v in extra.items()))
 
 
 if __name__ == "__main__":

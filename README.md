@@ -13,8 +13,15 @@
 
 - `app/` — расчётный инструмент: интерфейс (`static/`), расчётный слой на
   стандартной библиотеке (`backend/`), конфиги команды (`config/`), тесты.
+- `src/kosmo/` — независимый расчётный движок кейса 02 на Python 3.10+.
+- `config/` — итоговый портфель, альтернативы, веса и допущения команды.
+- `data/` — неизменённые данные организаторов; `results/` — единственный источник цифр для записки и слайдов.
+- `tests/` — 333 теста, включая сверку с каноническим ядром на всех 5670 комбинациях.
 - `cases/case02/` — материалы организаторов Кейса 02: README, канонический расчёт
-  `case_core.py`, данные и конфиг. Не редактируются.
+  `case_core.py`, данные, конфиг и стартовый Colab-ноутбук
+  `Космос_как_инфраструктура.ipynb` (с исполненным контрольным примером).
+  Не редактируются; копия сверена с https://github.com/SpaceEconomyPolicy/test
+  побайтно 12.09.
 - `cases/case01/` — материалы Кейса 01, сохранены как история выбора.
 - `docs/team/` — общий график (`README.md`), личные инструкции A–E, вопросы организаторам.
 - `docs/case02-team-plan.md` — план на пятерых: роли и критерии, кандидаты для гейта,
@@ -27,3 +34,27 @@
 - `tools/` — `case02_enumerate.py` (перебор всех портфелей Кейса 02),
   `case02_robustness.py` (устойчивость выбора: rank acceptability, интервалы
   весов, стресс спроса, запас по c0), `case01_baseline.py` (базовые числа Кейса 01).
+
+## Быстрый запуск расчётного движка
+
+Нужен Python 3.10 или новее. Внешних зависимостей у движка нет; `pandas` ставится только для теста сверки с каноническим кодом.
+
+```bash
+python -m venv .venv
+.venv/Scripts/pip install -r requirements.txt      # Linux/macOS: .venv/bin/pip
+set PYTHONPATH=src                                  # Linux/macOS: export PYTHONPATH=src
+python -m kosmo calc                                # итоговый портфель из config/portfolio.json, оба сценария
+python -m kosmo calc --lots FIRE:A ENV:A AGRI:B TRANS:B --scenario STRESS
+python -m kosmo compare --weights config/weights.json
+python -m kosmo export                              # перевыгрузить results/
+python -m pytest -q                                 # 333 теста, около 25 секунд
+```
+
+Подробности, формат входа и выхода, формулы и коды выхода: [docs/calc-engine.md](docs/calc-engine.md). Допущения по SLA, источникам данных, финансовому горизонту и эксплуатационной архитектуре: [config/assumptions.json](config/assumptions.json) (проектное описание, в движке не реализовано).
+
+## Материалы экономиста
+
+- [Финансирование и экономическая устойчивость](docs/note/03-finance.md)
+- [Устойчивость в стресс-сценарии](docs/note/06-stress.md)
+- [Одностраничное STRESS-резюме](docs/stress-summary.md)
+- [Приложение: денежные потоки 2027–2033](docs/note/finance-appendix.md)

@@ -1,0 +1,14 @@
+{
+  "_comment": "Карточка решения команды: идёт в results/team_decision_config.json в формате стартового notebook организаторов (README организаторов, §8.1 и §8.7). Портфель и веса подставляются из portfolio.json и model.json. Заполняют: team_name и strategy_thesis — E; payer_opex и stress_decision — C; operator_model и supplier_switch_rule — D; replicable_core и local_adaptation — E. Одно-два предложения на поле; тексты те же, что в записке.",
+  "team_name": "",
+  "decision_method": "Weighted MCDA",
+  "strategy_thesis": "",
+  "management": {
+    "payer_opex": "",
+    "operator_model": "",
+    "supplier_switch_rule": "",
+    "replicable_core": "",
+    "local_adaptation": "",
+    "stress_decision": ""
+  }
+}

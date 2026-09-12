@@ -1,0 +1,20 @@
+{
+  "portfolio": {
+    "name": "broken",
+    "selection": [
+      {
+        "lot_id": "FIRE",
+        "mode_id": "A"
+      },
+      {
+        "lot_id": "FIRE",
+        "mode_id": "B"
+      },
+      {
+        "lot_id": "TRANS",
+        "mode_id": "X"
+      }
+    ]
+  },
+  "scenario": "BASE"
+}

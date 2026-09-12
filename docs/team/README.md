@@ -60,6 +60,10 @@
 - Постановка, критерии и README организаторов: `cases/case02/README.organizers.md`
   (PDF постановки и критериев — в архиве организаторов)
 - Канонический код и данные: `cases/case02/case_core.py`, `cases/case02/data/`, `cases/case02/config/`
+- Стартовый notebook организаторов: `cases/case02/Космос_как_инфраструктура.ipynb`.
+  Его исполненный пример (FIRE:A, AGRI:C, TRANS:C, ENV:A) — контрольный пример Т1 в
+  `app/tests/`; его формат выгрузки (`portfolio_detail.csv`, `portfolio_metrics.json`,
+  `team_decision_config.json`) инструмент пишет в `results/` рядом с нашими файлами
 - Перебор всех портфелей: `tools/case02_enumerate.py`; результат
   `cases/case02/results_all_portfolios.csv` генерируется скриптом и в репозиторий не входит
 - Общий план и стартовые альтернативы: `docs/case02-team-plan.md`

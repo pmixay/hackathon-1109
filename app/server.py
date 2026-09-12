@@ -67,7 +67,7 @@ class Handler(SimpleHTTPRequestHandler):
             except ValueError as e:
                 return self._json(HTTPStatus.BAD_REQUEST, {"error": str(e)})
             payload.export_results(dash, RESULTS)
-            return self._json(HTTPStatus.OK, {"written": ["results/base.json", "results/stress.json", "results/alternatives.csv"], "selected": dash["selected"]})
+            return self._json(HTTPStatus.OK, {"written": ["results/base.json", "results/stress.json", "results/alternatives.csv", "results/portfolio_detail.csv", "results/portfolio_metrics.json", "results/team_decision_config.json"], "selected": dash["selected"]})
         if url.path == "/api/data":
             length = int(self.headers.get("Content-Length") or 0)
             body = json.loads(self.rfile.read(length) or b"{}")

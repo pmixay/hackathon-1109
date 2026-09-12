@@ -28,13 +28,13 @@ a{color:var(--brand);text-decoration:none}a:hover{color:#0b4a2e}
 /* sidebar: nav only */
 .side{background:#0b4a2e;color:#cfe3d5;display:flex;flex-direction:column;padding:12px 10px 10px}
 .side .brand{display:flex;align-items:center;gap:9px;padding:2px 4px 14px;color:#fff;font-family:var(--f-display);font-size:14px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
-.side .brand i{width:30px;height:30px;border-radius:7px;background:#eef4ee;display:grid;place-items:center;flex:none}
+.side .brand i{width:30px;height:30px;border-radius:9px;background:#eef4ee;display:grid;place-items:center;flex:none}
 .side .brand img{width:24px;height:24px;object-fit:contain}
 .nav{display:flex;flex-direction:column;gap:2px}
-.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;color:#cfe3d5;font-weight:500;font-size:13px;white-space:nowrap}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#cfe3d5;font-weight:500;font-size:13px;white-space:nowrap}
 .nav a.on{background:#1aa854;color:#fff}
 .nav svg{width:16px;height:16px;flex:none}
-.collapse{margin-top:auto;width:36px;height:36px;display:grid;place-items:center;border-radius:6px;color:#a9cbb4;cursor:pointer}
+.collapse{margin-top:auto;width:36px;height:36px;display:grid;place-items:center;border-radius:8px;color:#a9cbb4;cursor:pointer}
 .collapse svg{width:16px;height:16px}
 .shell.collapsed .side{padding:12px 8px 10px;align-items:center}
 .shell.collapsed .side .brand{padding:2px 0 14px}
@@ -44,8 +44,8 @@ a{color:var(--brand);text-decoration:none}a:hover{color:#0b4a2e}
 /* header */
 .hdr{height:56px;display:flex;align-items:center;justify-content:flex-end;gap:16px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--rule)}
 .hright{display:flex;align-items:center;gap:16px}
-.segc{display:flex;background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:3px}
-.segc span{padding:5px 12px;border-radius:6px;font-size:13px;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.segc{display:flex;background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:3px}
+.segc span{padding:5px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .segc span.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(21,33,26,.08)}
 .ver{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 /* page */
@@ -56,7 +56,7 @@ h1{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:-.
 .pill .dot{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--good)}
 .pill.bad .dot{background:var(--crit)}.pill.warn .dot{background:var(--warn)}
 .pill .dot svg{width:11px;height:11px}
-.card{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:20px 22px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:20px 22px}
 .card h2{font-family:var(--f-display);font-size:14.5px;font-weight:600;letter-spacing:-.01em;margin:0 0 14px;display:flex;align-items:center;gap:10px}
 .card h2 .u{font-family:var(--f-ui);font-size:12px;font-weight:400;color:var(--muted);margin-left:auto}
 .card h2 .help{margin-left:auto}.card h2 .u+.help{margin-left:0}
@@ -64,7 +64,7 @@ h1{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:-.
 .help{position:relative;display:inline-flex;flex:none}
 .help i{width:18px;height:18px;border-radius:50%;border:1px solid var(--rule);background:var(--surface);color:var(--muted);font-family:var(--f-ui);font-style:normal;font-weight:600;font-size:11px;line-height:16px;display:grid;place-items:center;cursor:pointer}
 .help.open i{background:var(--ink);border-color:var(--ink);color:#fff}
-.pop{display:none;position:absolute;top:26px;right:0;width:340px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;box-shadow:0 10px 28px rgba(21,33,26,.16);padding:12px 14px;font-family:var(--f-ui);font-size:12.5px;line-height:1.5;font-weight:400;color:var(--ink-2);letter-spacing:0;z-index:5;text-align:left;white-space:normal}
+.pop{display:none;position:absolute;top:26px;right:0;width:340px;background:var(--surface);border:1px solid var(--rule);border-radius:14px;box-shadow:0 10px 28px rgba(21,33,26,.16);padding:12px 14px;font-family:var(--f-ui);font-size:12.5px;line-height:1.5;font-weight:400;color:var(--ink-2);letter-spacing:0;z-index:5;text-align:left;white-space:normal}
 .pop b{color:var(--ink);font-weight:600}
 .help.open .pop{display:block}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
@@ -73,19 +73,19 @@ h1{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:-.
 .composer{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:12px;align-items:start}
 .fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
 .acts{display:flex;gap:8px;padding-top:23px}
-.sel{height:48px;display:flex;align-items:center;gap:10px;padding:0 12px 0 14px;background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+.sel{height:48px;display:flex;align-items:center;gap:10px;padding:0 12px 0 14px;background:var(--surface);border:1px solid var(--rule);border-radius:12px}
 .code{font-family:var(--f-code);letter-spacing:var(--code-tracking);font-weight:600;font-size:13px;color:var(--brand)}
 .sel .nm{color:var(--ink-2);font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mode{font-family:var(--f-code);letter-spacing:var(--code-tracking);font-size:12px;font-weight:600;color:var(--ink);background:var(--brand-soft);padding:3px 8px;border-radius:6px}
+.mode{font-family:var(--f-code);letter-spacing:var(--code-tracking);font-size:12px;font-weight:600;color:var(--ink);background:var(--brand-soft);padding:3px 8px;border-radius:8px}
 .sel svg{width:14px;height:14px;color:var(--muted);flex:none}
-.btn{height:48px;display:inline-flex;align-items:center;padding:0 16px;border-radius:10px;background:var(--brand);color:#fff;font-weight:600;font-size:14px;white-space:nowrap}
+.btn{height:48px;display:inline-flex;align-items:center;padding:0 16px;border-radius:12px;background:var(--brand);color:#fff;font-weight:600;font-size:14px;white-space:nowrap}
 .btn.ghost{background:var(--surface);border:1px solid var(--rule);color:var(--ink);font-weight:500}
 /* tiles */
 .tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .tiles.four{grid-template-columns:repeat(4,minmax(0,1fr))}
-.tile{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:16px 18px 14px;display:flex;flex-direction:column;gap:6px}
+.tile{background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:16px 18px 14px;display:flex;flex-direction:column;gap:6px}
 .tile .tl{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink);font-weight:600}
-.seg{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:8px;background:var(--rule-2)}
+.seg{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:8px;background:var(--rule-2)}
 .seg i{display:block;height:100%}.seg .req{background:#0b4a2e}.seg .sur{background:var(--accent)}
 .seglbl{display:flex;justify-content:space-between;gap:6px;font-size:11px;color:var(--ink-2);margin-top:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .seglbl .sw{width:8px;height:8px;border-radius:2px;margin-right:4px}
@@ -101,7 +101,7 @@ h1{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:-.
 /* constraint checks */
 .circ{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--good)}
 .circ svg{width:10px;height:10px}
-.jobs{border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.jobs{border:1px solid var(--rule);border-radius:12px;overflow:hidden}
 .jg{border-bottom:1px solid var(--rule)}.jg:last-child{border-bottom:0}
 .jh{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);font-weight:600;font-size:13px}
 .jh .cnt{margin-left:auto;font-family:var(--f-num);font-size:12px;color:var(--ink-2);font-weight:500;font-variant-numeric:tabular-nums}
@@ -109,13 +109,13 @@ h1{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:-.
 .jr{display:grid;grid-template-columns:18px 1fr 130px 130px;gap:10px;align-items:center;padding:8px 12px 8px 30px;border-top:1px solid var(--rule-2);font-size:13px}
 .jr .m{font-family:var(--f-num);font-size:12px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .jr .m b{color:var(--ink);font-weight:600}
-.mbar{height:5px;background:var(--rule-2);border-radius:3px;position:relative}
+.mbar{height:6px;background:var(--rule-2);border-radius:4px;position:relative}
 .mbar i{position:absolute;left:0;top:0;height:100%;border-radius:3px;background:var(--brand)}
 .mtxt{font-size:11px;color:var(--muted);text-align:right;margin-top:3px;font-variant-numeric:tabular-nums}
 /* lot list */
 .lotrow{display:grid;grid-template-columns:14px 52px 1fr auto auto;gap:12px;align-items:center;padding:10px 8px;border-bottom:1px solid var(--rule-2);font-size:13px}
 .lotrow:last-child{border-bottom:0}
-.lotrow.best{background:var(--brand-soft);border-radius:8px}
+.lotrow.best{background:var(--brand-soft);border-radius:10px}
 .lotrow .rg{font-size:12px;color:var(--muted)}
 .lotrow .c0{font-family:var(--f-num);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 .lotrow .chev{width:12px;height:12px;color:var(--muted)}
@@ -136,8 +136,8 @@ td.num{font-family:var(--f-num);font-weight:500}
 td .code{color:var(--ink)}
 td .sub{color:var(--muted);font-size:12px;margin-top:1px}
 tr.hl td{background:var(--brand-soft)}
-tr.hl td:first-child{border-radius:8px 0 0 8px}tr.hl td:last-child{border-radius:0 8px 8px 0}
-.st{display:inline-flex;align-items:center;font-family:var(--f-code);letter-spacing:var(--code-tracking);font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px}
+tr.hl td:first-child{border-radius:10px 0 0 10px}tr.hl td:last-child{border-radius:0 10px 10px 0}
+.st{display:inline-flex;align-items:center;font-family:var(--f-code);letter-spacing:var(--code-tracking);font-size:11px;font-weight:600;padding:3px 8px;border-radius:8px}
 .st.ok{background:var(--good-soft);color:#0c5a2a}.st.fail{background:var(--crit-soft);color:#8a2119}.st.thin{background:var(--warn-soft);color:#6b4700}
 .note{font-size:12px;color:var(--muted);margin-top:10px}
 /* charts */
@@ -163,7 +163,7 @@ svg .grid{stroke:var(--rule-2);stroke-width:1}svg .axis{stroke:var(--rule);strok
 /* matrix */
 .matrix td{text-align:center}
 .matrix td:first-child,.matrix th:first-child,.matrix td:last-child,.matrix th:last-child{text-align:left}
-.cell{display:inline-block;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:12px;font-weight:500;padding:4px 10px;border-radius:6px;min-width:92px}
+.cell{display:inline-block;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:12px;font-weight:500;padding:4px 10px;border-radius:8px;min-width:92px}
 .cell.ok{background:var(--good-soft);color:#0c5a2a}.cell.thin{background:var(--warn-soft);color:#6b4700}.cell.bad{background:var(--crit-soft);color:#8a2119}
 .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 /* weights */
@@ -183,7 +183,7 @@ svg .grid{stroke:var(--rule-2);stroke-width:1}svg .axis{stroke:var(--rule);strok
 .radio{display:inline-block;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--rule);background:var(--surface);vertical-align:-3px}
 .radio.on{border-color:var(--brand);background:radial-gradient(circle,var(--brand) 0 4px,var(--surface) 5px)}
 .lots{display:inline-flex;gap:4px}
-.lot{font-family:var(--f-code);letter-spacing:var(--code-tracking);font-size:11px;font-weight:600;color:var(--ink);background:var(--rule-2);padding:3px 6px;border-radius:5px;white-space:nowrap}
+.lot{font-family:var(--f-code);letter-spacing:var(--code-tracking);font-size:11px;font-weight:600;color:var(--ink);background:var(--rule-2);padding:3px 6px;border-radius:7px;white-space:nowrap}
 tr.hl .lot{background:#cfe8d8}
 .lot.swap{background:var(--warn-soft);color:#6b4700}
 td.why{color:var(--ink-2);font-size:12px}
@@ -196,7 +196,7 @@ tr.total td{border-top:2px solid var(--rule);border-bottom:0;font-weight:600;col
 td .name{font-weight:500}td .sub{color:var(--muted);font-size:11.5px;margin-top:2px}
 
 /* lot chips with mode letter */
-.lot b{margin-left:5px;padding:0 4px;border-radius:3px;background:rgba(15,111,64,.12);color:var(--brand);font-weight:700}
+.lot b{margin-left:5px;padding:0 4px;border-radius:4px;background:rgba(15,111,64,.12);color:var(--brand);font-weight:700}
 .lot b.chg{background:var(--warn-soft);color:#6b4700}
 /* two-line margin tile */
 .two{display:flex;flex-direction:column;gap:4px;margin-top:6px}

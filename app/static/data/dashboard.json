@@ -1,0 +1,3045 @@
+{
+ "meta": {
+  "case_id": "SEP-KOSMOS-INFRA-2026",
+  "case_version": "1.1",
+  "generated_at": "2026-09-12T08:10:04+00:00",
+  "scenarios": {
+   "BASE": {
+    "c0_max": 1300
+   },
+   "STRESS": {
+    "c0_max": 1180
+   }
+  },
+  "constraints": {
+   "selected_lots_exactly": 4,
+   "min_territorial_archetypes": 3,
+   "min_capability_groups": 2,
+   "min_public_core_lots": 2,
+   "opex_max_mrub_per_year": 360,
+   "vpub_min_mrub_per_year": 1000,
+   "kcash_min": 0.6,
+   "t_rep_min": 0.63
+  },
+  "weights": {
+   "vpub": 0.3,
+   "c0": 0.15,
+   "kcash": 0.15,
+   "readiness": 0.1,
+   "resilience": 0.1,
+   "scale": 0.1,
+   "stress_margin": 0.1
+  },
+  "rationale": {
+   "vpub": "главная цель заказчика по постановке",
+   "c0": "жёсткий лимит и стресс-риск",
+   "kcash": "устойчивость эксплуатации",
+   "readiness": "скорость запуска пилота",
+   "resilience": "сохранение сервиса при сбоях",
+   "scale": "перенос между регионами",
+   "stress_margin": "производный критерий команды: 1180 − c0"
+  },
+  "thin_margin_pct": 0.03,
+  "allowed_modes": [
+   "A",
+   "B",
+   "C"
+  ],
+  "dataset": {
+   "root": "/home/user/hackathon-1109/cases/case02",
+   "source": "организаторы",
+   "case_version": "1.1"
+  },
+  "totals": {
+   "combinations": 5670,
+   "base_feasible": 1031,
+   "stress_feasible": 143
+  }
+ },
+ "lots": {
+  "FIRE": {
+   "name": "Мониторинг лесных пожаров",
+   "region": "Сибирь",
+   "archetype": "Сибирский",
+   "groups": [
+    "EO"
+   ],
+   "federal": false
+  },
+  "FLOOD": {
+   "name": "Мониторинг паводков и оползней",
+   "region": "Дальний Восток",
+   "archetype": "Дальневосточный",
+   "groups": [
+    "EO"
+   ],
+   "federal": false
+  },
+  "AGRI": {
+   "name": "Агроаналитика",
+   "region": "Юг",
+   "archetype": "Южный",
+   "groups": [
+    "EO",
+    "PNT/InSAR"
+   ],
+   "federal": false
+  },
+  "INFRA": {
+   "name": "Мониторинг деформаций инфраструктуры",
+   "region": "Урал-Поволжье",
+   "archetype": "Урало-Поволжский",
+   "groups": [
+    "PNT/InSAR"
+   ],
+   "federal": false
+  },
+  "ARCTIC": {
+   "name": "Удалённая логистика",
+   "region": "Арктика",
+   "archetype": "Арктический",
+   "groups": [
+    "PNT/InSAR",
+    "SATCOM"
+   ],
+   "federal": false
+  },
+  "TRANS": {
+   "name": "Мониторинг транспорта",
+   "region": "Центр",
+   "archetype": "Центральный",
+   "groups": [
+    "EO",
+    "PNT/InSAR"
+   ],
+   "federal": false
+  },
+  "ENV": {
+   "name": "Экологический мониторинг",
+   "region": "Волга-Каспий",
+   "archetype": "Волго-Каспийский",
+   "groups": [
+    "EO"
+   ],
+   "federal": false
+  },
+  "SSA": {
+   "name": "Контроль космической обстановки",
+   "region": "федеральный",
+   "archetype": "Федеральный",
+   "groups": [
+    "SSA"
+   ],
+   "federal": true
+  }
+ },
+ "modes": {
+  "A": {
+   "k_c0": 1.05,
+   "k_opex": 1.05,
+   "k_vpub": 1.0,
+   "k_anchor": 1.0,
+   "k_commercial": 0.25,
+   "public_core": true
+  },
+  "B": {
+   "k_c0": 1.0,
+   "k_opex": 1.0,
+   "k_vpub": 0.82,
+   "k_anchor": 0.8,
+   "k_commercial": 0.7,
+   "public_core": false
+  },
+  "C": {
+   "k_c0": 0.98,
+   "k_opex": 0.95,
+   "k_vpub": 0.62,
+   "k_anchor": 0.45,
+   "k_commercial": 0.95,
+   "public_core": false
+  }
+ },
+ "selected": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+ "suggestions": [
+  "FIRE:A|AGRI:C|TRANS:C|ENV:A",
+  "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+  "FLOOD:A|AGRI:C|TRANS:B|ENV:A",
+  "AGRI:B|INFRA:B|TRANS:A|ENV:A",
+  "FIRE:A|AGRI:A|TRANS:A|ENV:A",
+  "FIRE:A|AGRI:C|INFRA:B|TRANS:A"
+ ],
+ "rejected": [
+  "FIRE:A|FLOOD:A|INFRA:B|ENV:A"
+ ],
+ "comparison": [
+  "FIRE:A|AGRI:C|TRANS:C|ENV:A",
+  "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+  "FLOOD:A|AGRI:C|TRANS:B|ENV:A",
+  "AGRI:B|INFRA:B|TRANS:A|ENV:A",
+  "FIRE:A|AGRI:A|TRANS:A|ENV:A",
+  "FIRE:A|AGRI:C|INFRA:B|TRANS:A",
+  "FIRE:A|FLOOD:A|INFRA:B|ENV:A"
+ ],
+ "stress": {
+  "failing": "FIRE:A|FLOOD:A|INFRA:B|ENV:A",
+  "actions": [
+   {
+    "label": "Оставить как есть",
+    "id": "FIRE:A|FLOOD:A|INFRA:B|ENV:A",
+    "margin": -117.0
+   },
+   {
+    "label": "FLOOD в режим B",
+    "id": "FIRE:A|FLOOD:B|INFRA:B|ENV:A",
+    "margin": -100.0
+   },
+   {
+    "label": "Все четыре лота в режим B",
+    "id": "FIRE:B|FLOOD:B|INFRA:B|ENV:B",
+    "margin": -70.0
+   },
+   {
+    "label": "TRANS вместо FLOOD · INFRA → C",
+    "id": "FIRE:A|INFRA:C|TRANS:C|ENV:A",
+    "margin": 1.2000000000000455
+   },
+   {
+    "label": "TRANS вместо FLOOD · INFRA, ENV → C",
+    "id": "FIRE:A|INFRA:C|TRANS:A|ENV:C",
+    "margin": 3.300000000000182
+   },
+   {
+    "label": "TRANS вместо FLOOD · FIRE → C · INFRA → A",
+    "id": "FIRE:C|INFRA:A|TRANS:C|ENV:A",
+    "margin": 1.900000000000091
+   },
+   {
+    "label": "AGRI вместо FLOOD · TRANS вместо INFRA (= выбранная)",
+    "id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+    "margin": 40.0
+   }
+  ]
+ },
+ "combinations": {
+  "AGRI:B|INFRA:B|TRANS:A|ENV:A": {
+   "id": "AGRI:B|INFRA:B|TRANS:A|ENV:A",
+   "selection": [
+    {
+     "lot": "AGRI",
+     "mode": "B"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "AGRI",
+     "mode": "B",
+     "public_core": false,
+     "c0": 260.0,
+     "opex": 75.0,
+     "vpub": 188.6,
+     "cash": 108.0,
+     "anchor_cash": 24.0,
+     "commercial_cash": 84.0,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B",
+     "public_core": false,
+     "c0": 310.0,
+     "opex": 80.0,
+     "vpub": 245.99999999999997,
+     "cash": 117.5,
+     "anchor_cash": 44.0,
+     "commercial_cash": 73.5,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A",
+     "public_core": true,
+     "c0": 262.5,
+     "opex": 73.5,
+     "vpub": 220.0,
+     "cash": 68.75,
+     "anchor_cash": 45.0,
+     "commercial_cash": 23.75,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1126.5,
+    "opex": 307.25,
+    "vpub": 1014.5999999999999,
+    "cash": 370.5,
+    "kcash": 1.2058584214808787,
+    "t_rep": 0.7374999999999999,
+    "readiness": 4.475,
+    "resilience": 4.175,
+    "scale": 4.699999999999999,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1126.5,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 307.25,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1014.5999999999999,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2058584214808787,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7374999999999999,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1126.5,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 307.25,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1014.5999999999999,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2058584214808787,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7374999999999999,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "score": 0.5848,
+   "rank": 36
+  },
+  "FIRE:A|FLOOD:B|INFRA:B|ENV:A": {
+   "id": "FIRE:A|FLOOD:B|INFRA:B|ENV:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "FLOOD",
+     "mode": "B"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "FLOOD",
+     "mode": "B",
+     "public_core": false,
+     "c0": 340.0,
+     "opex": 90.0,
+     "vpub": 491.99999999999994,
+     "cash": 99.5,
+     "anchor_cash": 68.0,
+     "commercial_cash": 31.499999999999996,
+     "t_rep": 0.62,
+     "readiness": 4.0,
+     "resilience": 4.2,
+     "scale": 4.2
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B",
+     "public_core": false,
+     "c0": 310.0,
+     "opex": 80.0,
+     "vpub": 245.99999999999997,
+     "cash": 117.5,
+     "anchor_cash": 44.0,
+     "commercial_cash": 73.5,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1280.0,
+    "opex": 338.0,
+    "vpub": 1658.0,
+    "cash": 377.0,
+    "kcash": 1.1153846153846154,
+    "t_rep": 0.6849999999999999,
+    "readiness": 4.2,
+    "resilience": 3.9749999999999996,
+    "scale": 4.5,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1280.0,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 338.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1658.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.1153846153846154,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.6849999999999999,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": false,
+      "fact": 1280.0,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 338.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1658.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.1153846153846154,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.6849999999999999,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": false
+   },
+   "score": 0.4254,
+   "rank": null
+  },
+  "FLOOD:A|AGRI:C|TRANS:B|ENV:A": {
+   "id": "FLOOD:A|AGRI:C|TRANS:B|ENV:A",
+   "selection": [
+    {
+     "lot": "FLOOD",
+     "mode": "A"
+    },
+    {
+     "lot": "AGRI",
+     "mode": "C"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FLOOD",
+     "mode": "A",
+     "public_core": true,
+     "c0": 357.0,
+     "opex": 94.5,
+     "vpub": 600.0,
+     "cash": 96.25,
+     "anchor_cash": 85.0,
+     "commercial_cash": 11.25,
+     "t_rep": 0.62,
+     "readiness": 4.0,
+     "resilience": 4.2,
+     "scale": 4.2
+    },
+    {
+     "lot": "AGRI",
+     "mode": "C",
+     "public_core": false,
+     "c0": 254.79999999999998,
+     "opex": 71.25,
+     "vpub": 142.6,
+     "cash": 127.5,
+     "anchor_cash": 13.5,
+     "commercial_cash": 114.0,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B",
+     "public_core": false,
+     "c0": 250.0,
+     "opex": 70.0,
+     "vpub": 180.39999999999998,
+     "cash": 102.5,
+     "anchor_cash": 36.0,
+     "commercial_cash": 66.5,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1155.8,
+    "opex": 314.5,
+    "vpub": 1283.0,
+    "cash": 402.5,
+    "kcash": 1.2798092209856915,
+    "t_rep": 0.715,
+    "readiness": 4.449999999999999,
+    "resilience": 4.2250000000000005,
+    "scale": 4.6,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1155.8,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 314.5,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1283.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2798092209856915,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.715,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1155.8,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 314.5,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1283.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2798092209856915,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.715,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "score": 0.6454,
+   "rank": 17
+  },
+  "FIRE:C|INFRA:A|TRANS:C|ENV:A": {
+   "id": "FIRE:C|INFRA:A|TRANS:C|ENV:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "C"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "A"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "C"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "C",
+     "public_core": false,
+     "c0": 313.6,
+     "opex": 80.75,
+     "vpub": 347.2,
+     "cash": 67.0,
+     "anchor_cash": 33.75,
+     "commercial_cash": 33.25,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "INFRA",
+     "mode": "A",
+     "public_core": true,
+     "c0": 325.5,
+     "opex": 84.0,
+     "vpub": 300.0,
+     "cash": 81.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 26.25,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "TRANS",
+     "mode": "C",
+     "public_core": false,
+     "c0": 245.0,
+     "opex": 66.5,
+     "vpub": 136.4,
+     "cash": 110.5,
+     "anchor_cash": 20.25,
+     "commercial_cash": 90.25,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1178.1,
+    "opex": 310.0,
+    "vpub": 1143.6,
+    "cash": 335.0,
+    "kcash": 1.0806451612903225,
+    "t_rep": 0.7225,
+    "readiness": 4.4,
+    "resilience": 4.025,
+    "scale": 4.625,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1178.1,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 310.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1143.6,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.0806451612903225,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7225,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1178.1,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 310.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1143.6,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.0806451612903225,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7225,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "score": 0.3093,
+   "rank": 127
+  },
+  "FIRE:A|INFRA:C|TRANS:C|ENV:A": {
+   "id": "FIRE:A|INFRA:C|TRANS:C|ENV:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "C"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "C"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "INFRA",
+     "mode": "C",
+     "public_core": false,
+     "c0": 303.8,
+     "opex": 76.0,
+     "vpub": 186.0,
+     "cash": 124.5,
+     "anchor_cash": 24.75,
+     "commercial_cash": 99.75,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "TRANS",
+     "mode": "C",
+     "public_core": false,
+     "c0": 245.0,
+     "opex": 66.5,
+     "vpub": 136.4,
+     "cash": 110.5,
+     "anchor_cash": 20.25,
+     "commercial_cash": 90.25,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1178.8,
+    "opex": 310.5,
+    "vpub": 1242.4,
+    "cash": 395.0,
+    "kcash": 1.2721417069243157,
+    "t_rep": 0.7225,
+    "readiness": 4.4,
+    "resilience": 4.025,
+    "scale": 4.625,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1178.8,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 310.5,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1242.4,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2721417069243157,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7225,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1178.8,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 310.5,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1242.4,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2721417069243157,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7225,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "score": 0.4503,
+   "rank": 86
+  },
+  "FIRE:A|AGRI:C|INFRA:B|TRANS:A": {
+   "id": "FIRE:A|AGRI:C|INFRA:B|TRANS:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "AGRI",
+     "mode": "C"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "AGRI",
+     "mode": "C",
+     "public_core": false,
+     "c0": 254.79999999999998,
+     "opex": 71.25,
+     "vpub": 142.6,
+     "cash": 127.5,
+     "anchor_cash": 13.5,
+     "commercial_cash": 114.0,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B",
+     "public_core": false,
+     "c0": 310.0,
+     "opex": 80.0,
+     "vpub": 245.99999999999997,
+     "cash": 117.5,
+     "anchor_cash": 44.0,
+     "commercial_cash": 73.5,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A",
+     "public_core": true,
+     "c0": 262.5,
+     "opex": 73.5,
+     "vpub": 220.0,
+     "cash": 68.75,
+     "anchor_cash": 45.0,
+     "commercial_cash": 23.75,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1163.3,
+    "opex": 314.0,
+    "vpub": 1168.6,
+    "cash": 397.5,
+    "kcash": 1.265923566878981,
+    "t_rep": 0.725,
+    "readiness": 4.449999999999999,
+    "resilience": 4.0,
+    "scale": 4.65,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1163.3,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 314.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1168.6,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.265923566878981,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.725,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1163.3,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 314.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1168.6,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.265923566878981,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.725,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "score": 0.4893,
+   "rank": 70
+  },
+  "FIRE:A|INFRA:C|TRANS:A|ENV:C": {
+   "id": "FIRE:A|INFRA:C|TRANS:A|ENV:C",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "C"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A"
+    },
+    {
+     "lot": "ENV",
+     "mode": "C"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "INFRA",
+     "mode": "C",
+     "public_core": false,
+     "c0": 303.8,
+     "opex": 76.0,
+     "vpub": 186.0,
+     "cash": 124.5,
+     "anchor_cash": 24.75,
+     "commercial_cash": 99.75,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A",
+     "public_core": true,
+     "c0": 262.5,
+     "opex": 73.5,
+     "vpub": 220.0,
+     "cash": 68.75,
+     "anchor_cash": 45.0,
+     "commercial_cash": 23.75,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "C",
+     "public_core": false,
+     "c0": 274.4,
+     "opex": 71.25,
+     "vpub": 223.2,
+     "cash": 105.5,
+     "anchor_cash": 24.75,
+     "commercial_cash": 80.75,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1176.6999999999998,
+    "opex": 310.0,
+    "vpub": 1189.2,
+    "cash": 382.5,
+    "kcash": 1.2338709677419355,
+    "t_rep": 0.7225,
+    "readiness": 4.4,
+    "resilience": 4.025,
+    "scale": 4.625,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1176.6999999999998,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 310.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1189.2,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2338709677419355,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7225,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1176.6999999999998,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 310.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1189.2,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2338709677419355,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7225,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "score": 0.4036,
+   "rank": 102
+  },
+  "FIRE:A|FLOOD:A|INFRA:B|ENV:A": {
+   "id": "FIRE:A|FLOOD:A|INFRA:B|ENV:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "FLOOD",
+     "mode": "A"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "FLOOD",
+     "mode": "A",
+     "public_core": true,
+     "c0": 357.0,
+     "opex": 94.5,
+     "vpub": 600.0,
+     "cash": 96.25,
+     "anchor_cash": 85.0,
+     "commercial_cash": 11.25,
+     "t_rep": 0.62,
+     "readiness": 4.0,
+     "resilience": 4.2,
+     "scale": 4.2
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B",
+     "public_core": false,
+     "c0": 310.0,
+     "opex": 80.0,
+     "vpub": 245.99999999999997,
+     "cash": 117.5,
+     "anchor_cash": 44.0,
+     "commercial_cash": 73.5,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1297.0,
+    "opex": 342.5,
+    "vpub": 1766.0,
+    "cash": 373.75,
+    "kcash": 1.0912408759124088,
+    "t_rep": 0.6849999999999999,
+    "readiness": 4.2,
+    "resilience": 3.9749999999999996,
+    "scale": 4.5,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 3
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 3,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1297.0,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 342.5,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1766.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.0912408759124088,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.6849999999999999,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 3,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": false,
+      "fact": 1297.0,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 342.5,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1766.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.0912408759124088,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.6849999999999999,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": false
+   },
+   "score": 0.4173,
+   "rank": null
+  },
+  "FIRE:B|FLOOD:B|INFRA:B|ENV:B": {
+   "id": "FIRE:B|FLOOD:B|INFRA:B|ENV:B",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "B"
+    },
+    {
+     "lot": "FLOOD",
+     "mode": "B"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B"
+    },
+    {
+     "lot": "ENV",
+     "mode": "B"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "B",
+     "public_core": false,
+     "c0": 320.0,
+     "opex": 85.0,
+     "vpub": 459.2,
+     "cash": 84.5,
+     "anchor_cash": 60.0,
+     "commercial_cash": 24.5,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "FLOOD",
+     "mode": "B",
+     "public_core": false,
+     "c0": 340.0,
+     "opex": 90.0,
+     "vpub": 491.99999999999994,
+     "cash": 99.5,
+     "anchor_cash": 68.0,
+     "commercial_cash": 31.499999999999996,
+     "t_rep": 0.62,
+     "readiness": 4.0,
+     "resilience": 4.2,
+     "scale": 4.2
+    },
+    {
+     "lot": "INFRA",
+     "mode": "B",
+     "public_core": false,
+     "c0": 310.0,
+     "opex": 80.0,
+     "vpub": 245.99999999999997,
+     "cash": 117.5,
+     "anchor_cash": 44.0,
+     "commercial_cash": 73.5,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "ENV",
+     "mode": "B",
+     "public_core": false,
+     "c0": 280.0,
+     "opex": 75.0,
+     "vpub": 295.2,
+     "cash": 103.5,
+     "anchor_cash": 44.0,
+     "commercial_cash": 59.49999999999999,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1250.0,
+    "opex": 330.0,
+    "vpub": 1492.3999999999999,
+    "cash": 405.0,
+    "kcash": 1.2272727272727273,
+    "t_rep": 0.6849999999999999,
+    "readiness": 4.2,
+    "resilience": 3.9749999999999996,
+    "scale": 4.5,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 0
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": false,
+      "fact": 0,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1250.0,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 330.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1492.3999999999999,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2272727272727273,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.6849999999999999,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": false,
+      "fact": 0,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": false,
+      "fact": 1250.0,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 330.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1492.3999999999999,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2272727272727273,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.6849999999999999,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": false,
+    "STRESS": false
+   },
+   "score": 0.4626,
+   "rank": null
+  },
+  "FIRE:A|AGRI:B|TRANS:B|ENV:A": {
+   "id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "AGRI",
+     "mode": "B"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "AGRI",
+     "mode": "B",
+     "public_core": false,
+     "c0": 260.0,
+     "opex": 75.0,
+     "vpub": 188.6,
+     "cash": 108.0,
+     "anchor_cash": 24.0,
+     "commercial_cash": 84.0,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B",
+     "public_core": false,
+     "c0": 250.0,
+     "opex": 70.0,
+     "vpub": 180.39999999999998,
+     "cash": 102.5,
+     "anchor_cash": 36.0,
+     "commercial_cash": 66.5,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1140.0,
+    "opex": 313.0,
+    "vpub": 1289.0,
+    "cash": 370.5,
+    "kcash": 1.18370607028754,
+    "t_rep": 0.73,
+    "readiness": 4.525,
+    "resilience": 4.05,
+    "scale": 4.675,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1140.0,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 313.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1289.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.18370607028754,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.73,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1140.0,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 313.0,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1289.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.18370607028754,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.73,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "score": 0.7249,
+   "rank": 3
+  },
+  "FIRE:A|AGRI:C|TRANS:C|ENV:A": {
+   "id": "FIRE:A|AGRI:C|TRANS:C|ENV:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "AGRI",
+     "mode": "C"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "C"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "AGRI",
+     "mode": "C",
+     "public_core": false,
+     "c0": 254.79999999999998,
+     "opex": 71.25,
+     "vpub": 142.6,
+     "cash": 127.5,
+     "anchor_cash": 13.5,
+     "commercial_cash": 114.0,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "TRANS",
+     "mode": "C",
+     "public_core": false,
+     "c0": 245.0,
+     "opex": 66.5,
+     "vpub": 136.4,
+     "cash": 110.5,
+     "anchor_cash": 20.25,
+     "commercial_cash": 90.25,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1129.8,
+    "opex": 305.75,
+    "vpub": 1199.0,
+    "cash": 398.0,
+    "kcash": 1.3017170891251022,
+    "t_rep": 0.73,
+    "readiness": 4.525,
+    "resilience": 4.05,
+    "scale": 4.675,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1129.8,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 305.75,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1199.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.3017170891251022,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.73,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1129.8,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 305.75,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1199.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.3017170891251022,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.73,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "score": 0.7366,
+   "rank": 1
+  },
+  "FIRE:A|AGRI:A|TRANS:A|ENV:A": {
+   "id": "FIRE:A|AGRI:A|TRANS:A|ENV:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "AGRI",
+     "mode": "A"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "AGRI",
+     "mode": "A",
+     "public_core": true,
+     "c0": 273.0,
+     "opex": 78.75,
+     "vpub": 230.0,
+     "cash": 60.0,
+     "anchor_cash": 30.0,
+     "commercial_cash": 30.0,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A",
+     "public_core": true,
+     "c0": 262.5,
+     "opex": 73.5,
+     "vpub": 220.0,
+     "cash": 68.75,
+     "anchor_cash": 45.0,
+     "commercial_cash": 23.75,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1165.5,
+    "opex": 320.25,
+    "vpub": 1370.0,
+    "cash": 288.75,
+    "kcash": 0.9016393442622951,
+    "t_rep": 0.73,
+    "readiness": 4.525,
+    "resilience": 4.05,
+    "scale": 4.675,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 4
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1165.5,
+      "op": "<=",
+      "threshold": 1300
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 320.25,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1370.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 0.9016393442622951,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.73,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4,
+      "op": "=",
+      "threshold": 4
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 3
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 4,
+      "op": ">=",
+      "threshold": 2
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1165.5,
+      "op": "<=",
+      "threshold": 1180
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 320.25,
+      "op": "<=",
+      "threshold": 360
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1370.0,
+      "op": ">=",
+      "threshold": 1000
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 0.9016393442622951,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.73,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "score": 0.583,
+   "rank": 37
+  }
+ }
+}

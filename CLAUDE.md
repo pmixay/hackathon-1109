@@ -2,6 +2,22 @@
 
 Notes for Claude Code sessions in this repository.
 
+## App workflow (`app/`)
+
+- The real front end lives in `app/static/` (vanilla HTML/CSS/JS, no build
+  step) and is driven only by `dashboard.json` (contract: `app/CONTRACT.md`).
+  The stdlib backend in `app/backend/` computes it; `python app/server.py`
+  serves both. Keep the calculation seams (`evaluate.core_backend`,
+  `model.make_scorer`, `model.stress_actions`, `ingest.apply_dataset`) intact:
+  other team members plug their code in there.
+- After any change to the app: `python -m unittest discover -s app/tests`,
+  `python app/build.py`, then `node app/screenshot.mjs` (set `FONT_DIR` when
+  Google Fonts is unreachable) and send the PNGs from `app/screenshots/` in
+  the chat. Commit `app/static/data/dashboard.json` together with the code.
+- `docs/mockup/` is the approved design reference. Style changes go to
+  `app/static/styles.css` first; mirror them into the mockup only when the
+  reference itself is supposed to change.
+
 ## Mockup workflow (`docs/mockup/`)
 
 - The dashboard mockup is one file, `docs/mockup/kosmo-portfolio.html` (all

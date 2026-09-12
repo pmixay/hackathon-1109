@@ -64,6 +64,7 @@
   `cases/case02/results_all_portfolios.csv` генерируется скриптом и в репозиторий не входит
 - Общий план и стартовые альтернативы: `docs/case02-team-plan.md`
 - Вопросы организаторам с примерами формулировок: `docs/team/questions.md`
-- Макет инструмента для A и E (пять экранов, варианты шрифтов, рендеры): `docs/mockup/`
+- Инструмент: `app/` (`python app/server.py`); интеграция по ролям — `app/README.md`, контракт данных — `app/CONTRACT.md`
+- Утверждённый макет интерфейса: `docs/mockup/`
 - Стартовый репозиторий организаторов: https://github.com/SpaceEconomyPolicy/test.git
 - Место сдачи: GitVerse, https://gitverse.ru

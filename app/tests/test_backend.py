@@ -12,6 +12,21 @@ from backend import evaluate as ev, model, payload  # noqa: E402
 
 SELECTED = "FIRE:A|AGRI:B|TRANS:B|ENV:A"
 
+# Вывод исполненных ячеек стартового notebook организаторов (округление до 3 знаков — как в display(...round(3))).
+NOTEBOOK_SELECTION = [("FIRE", "A"), ("AGRI", "C"), ("TRANS", "C"), ("ENV", "A")]
+NOTEBOOK_DETAIL = {  # lot: (c0, opex, vpub, cash, t_rep)
+    "FIRE": (336.0, 89.25, 560.0, 83.75, 0.68),
+    "AGRI": (254.8, 71.25, 142.6, 127.5, 0.74),
+    "TRANS": (245.0, 66.5, 136.4, 110.5, 0.77),
+    "ENV": (294.0, 78.75, 360.0, 76.25, 0.73),
+}
+NOTEBOOK_METRICS = {
+    "selected_lots": 4, "c0_mrub": 1129.8, "opex_mrub_per_year": 305.75, "vpub_mrub_per_year": 1199.0,
+    "cash_mrub_per_year": 398.0, "kcash": 1.302, "t_rep": 0.73, "readiness_1_5": 4.525, "resilience_1_5": 4.05,
+    "scale_1_5": 4.675, "territorial_archetypes": 4, "capability_groups": 2, "capability_set": ["EO", "PNT/InSAR"],
+    "public_core_lots": 2,
+}
+
 
 class Evaluate(unittest.TestCase):
     @classmethod
@@ -50,6 +65,25 @@ class Evaluate(unittest.TestCase):
         _, m = ev.evaluate_portfolio(model.parse_id(SELECTED), self.lots, self.modes, self.config)
         self.assertEqual([r["constraint"] for r in ev.check_constraints(m, self.config)], ev.CHECK_ORDER)
 
+    def test_notebook_control_example(self):
+        """Контрольный пример Т1: исполненный запуск стартового notebook организаторов
+        (cases/case02/Космос_как_инфраструктура.ipynb, ячейка «Канонический расчет BASE/STRESS»)
+        для FIRE:A, AGRI:C, TRANS:C, ENV:A. Цифры взяты из вывода ячейки как есть."""
+        detail, m = ev.evaluate_portfolio(NOTEBOOK_SELECTION, self.lots, self.modes, self.config)
+        for row, (c0, opex, vpub, cash, t_rep) in zip(detail, NOTEBOOK_DETAIL.values()):
+            self.assertAlmostEqual(row["c0_mrub"], c0, places=3, msg=row["lot_id"])
+            self.assertAlmostEqual(row["opex_mrub_per_year"], opex, places=3, msg=row["lot_id"])
+            self.assertAlmostEqual(row["vpub_mrub_per_year"], vpub, places=3, msg=row["lot_id"])
+            self.assertAlmostEqual(row["cash_mrub_per_year"], cash, places=3, msg=row["lot_id"])
+            self.assertAlmostEqual(row["t_rep"], t_rep, places=3, msg=row["lot_id"])
+        for key, expected in NOTEBOOK_METRICS.items():
+            if isinstance(expected, float):
+                self.assertAlmostEqual(m[key], expected, places=3, msg=key)
+            else:
+                self.assertEqual(m[key], expected, key)
+        for scenario in ("BASE", "STRESS"):
+            self.assertTrue(all(r["ok"] for r in ev.check_constraints(m, self.config, scenario)), scenario)
+
 
 class Model(unittest.TestCase):
     def test_enumeration_totals(self):
@@ -87,6 +121,36 @@ class Model(unittest.TestCase):
     def test_unknown_selection(self):
         with self.assertRaises(ValueError):
             payload.build_dashboard("FIRE:A|FIRE:A|FIRE:A|FIRE:A")
+
+    def test_export_matches_template_format(self):
+        """results/ содержит наши base/stress/alternatives и три файла в формате notebook организаторов."""
+        import csv
+        import json
+        import tempfile
+
+        d = payload.build_dashboard(SELECTED)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            payload.export_results(d, out)
+            names = {p.name for p in out.iterdir()}
+            self.assertEqual(names, {"base.json", "stress.json", "alternatives.csv",
+                                     "portfolio_detail.csv", "portfolio_metrics.json", "team_decision_config.json"})
+            with open(out / "portfolio_detail.csv", encoding="utf-8", newline="") as f:
+                rows = list(csv.DictReader(f))
+            self.assertEqual(list(rows[0]), payload.TEMPLATE_DETAIL_COLUMNS)
+            self.assertEqual([(r["lot_id"], r["mode_id"]) for r in rows], model.parse_id(SELECTED))
+            self.assertEqual(rows[0]["territorial_archetype"], "Siberian")
+            with open(out / "portfolio_metrics.json", encoding="utf-8") as f:
+                metrics = json.load(f)
+            self.assertEqual(set(metrics), set(NOTEBOOK_METRICS))
+            self.assertAlmostEqual(metrics["c0_mrub"], d["combinations"][SELECTED]["metrics"]["c0"])
+            with open(out / "team_decision_config.json", encoding="utf-8") as f:
+                card = json.load(f)
+            self.assertEqual(set(card), {"team", "decision_method", "strategy_thesis", "selection", "weights", "management"})
+            self.assertEqual([tuple(p) for p in card["selection"]], model.parse_id(SELECTED))
+            self.assertEqual(card["weights"], d["meta"]["weights"])
+            self.assertEqual(set(card["management"]), {"payer_opex", "operator_model", "supplier_switch_rule",
+                                                       "replicable_core", "local_adaptation", "stress_decision"})
 
 
 if __name__ == "__main__":

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Космо-портфель</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell" id="shell">
+  <aside class="side">
+    <div class="side-top">
+      <div class="brand"><i><img src="logo.png" alt=""></i><span>Космо-портфель</span></div>
+      <nav class="nav" id="nav"></nav>
+    </div>
+    <div class="collapse" id="collapse" title="Свернуть панель"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L5 8l4 4M13 4L9 8l4 4"></path></svg></div>
+  </aside>
+  <div class="body">
+    <header class="hdr">
+      <div class="hleft"><span class="btn ghost sm" id="export" title="Записать results/base.json, stress.json, alternatives.csv">Экспорт results/</span><span class="toast" id="toast"></span></div>
+      <div class="hright"><div class="segc" id="scenario"></div><span class="ver" id="ver"></span></div>
+    </header>
+    <main class="main" id="main"><div class="empty">Загрузка…</div></main>
+  </div>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

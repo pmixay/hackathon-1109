@@ -5,12 +5,25 @@
 
 ## Инструмент
 
+Публичный адрес развёрнутого интерфейса: **https://cosmo.arbuz.lol/**. Локально:
 `python app/server.py` → http://127.0.0.1:8765 — интерфейс расчётного
 инструмента (без зависимостей). Все числа интерфейс получает из расчётного
 движка `src/kosmo`; свои формулы в `app/` не хранятся. Описание и контракт
 данных — в `app/README.md` и `app/CONTRACT.md`. Сценарий показа на 60–90
 секунд — `docs/live-demo.md`; протокол чистого запуска с нуля —
 `docs/clean-run.md`; снимки всех экранов — `app/screenshots/`.
+
+### Базовый комплект для проверки
+
+1. Развёрнутый сайт: <https://cosmo.arbuz.lol/> — экраны «Портфель»
+   (лоты, конструктор, ограничения, комбинации), «Сравнение», «Стресс»,
+   «Почему FINAL» (решение, балл, S2), «Данные».
+2. Сценарий показа на 60–90 секунд: [docs/live-demo.md](docs/live-demo.md);
+   протокол чистого запуска с нуля: [docs/clean-run.md](docs/clean-run.md).
+3. Снимки всех экранов: `app/screenshots/` (включая тёмную тему).
+4. Локальный запуск и тесты — блок «Быстрый запуск» ниже; тестовый комплект
+   `python -m pytest -q` (383 теста), данные организаторов — `data/`,
+   числа — `results/`.
 
 ## Структура
 
@@ -48,16 +61,21 @@
 
 ```bash
 python -m venv .venv
-.venv/Scripts/pip install -r requirements.txt      # Linux/macOS: .venv/bin/pip
-set PYTHONPATH=src                                  # Linux/macOS: export PYTHONPATH=src
-python -m kosmo calc                                # итоговый портфель из config/portfolio.json, оба сценария
+.venv\Scripts\pip install -r requirements.txt      # Windows/PowerShell: путь с обратными слэшами
+.venv\Scripts\activate                             # PowerShell: . .venv\Scripts\Activate.ps1 (Linux/macOS: source .venv/bin/activate)
+$env:PYTHONPATH = "src"                            # Windows/PowerShell; cmd: set PYTHONPATH=src; Linux/macOS: export PYTHONPATH=src
+python -m kosmo calc                               # итоговый портфель из config/portfolio.json, оба сценария
 python -m kosmo calc --lots FIRE:A ENV:A AGRI:B TRANS:B --scenario STRESS
 python -m kosmo compare --weights config/weights.json
-python -m kosmo export                              # перевыгрузить results/
-python -m pytest -q                                 # 383 теста (346 движок + 37 app/tests), около 65 секунд
-python app/build.py                                 # собрать app/static/data/dashboard.json из движка
-python app/server.py                                # интерфейс на http://127.0.0.1:8765
+python -m kosmo export                             # перевыгрузить results/
+python -m pytest -q                                # 383 теста (346 движок + 37 app/tests), около 65 секунд
+python app/build.py                                # собрать app/static/data/dashboard.json из движка
+python app/server.py                               # интерфейс на http://127.0.0.1:8765
 ```
+
+Без активации venv (PowerShell): `.venv\Scripts\python.exe -m pytest -q`.
+Альтернатива для bash/Linux/macOS: `.venv/bin/pip`, `source .venv/bin/activate`,
+`export PYTHONPATH=src`.
 
 Подробности, формат входа и выхода, формулы и коды выхода: [docs/calc-engine.md](docs/calc-engine.md). Допущения по SLA, источникам данных, финансовому горизонту и эксплуатационной архитектуре: [config/assumptions.json](config/assumptions.json) (проектное описание, в движке не реализовано).
 

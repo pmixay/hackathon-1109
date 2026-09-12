@@ -255,14 +255,14 @@ ${tiles}
         const eff = [`c0 ×${M.k_c0}`, `OPEX ×${M.k_opex}`, `ценность ×${M.k_vpub}`].join(', ');
         return `<div class="bld-row${dup ? ' dup' : ''}"><span class="bld-n">${i + 1}</span>
 <label class="bld-sel"><select class="bld-lot" data-i="${i}">${lotOpts(r.lot)}</select>${ICON.chev}</label>
-<div class="segc bld-mode" data-i="${i}" role="group" aria-label="Режим доступа">${Object.keys(d.modes).map((mm) => `<span data-m="${mm}" class="${mm === r.mode ? 'on' : ''}">${mm}</span>`).join('')}</div>
+<div class="segc bld-mode" data-i="${i}" role="group" aria-label="Режим доступа">${Object.keys(d.modes).map((mm) => `<span tabindex="0" role="button" data-m="${mm}" class="${mm === r.mode ? 'on' : ''}">${mm}</span>`).join('')}</div>
 <div class="bld-info"><span class="bld-where">${esc(L.region)}, ${L.groups.join(', ')}${L.federal ? ', федеральный' : ''}</span><span class="bld-eff">режим ${r.mode}: ${eff}${M.public_core ? ', public core' : ''}</span></div></div>`;
       }).join('');
       const same = st.id === state.selected;
       const helpB = `Эксперт собирает любой портфель без правки JSON: четыре разных лота из <b>lots.csv</b> и режим доступа A/B/C каждого (коэффициенты из <b>access_modes.csv</b>; A и режимы с public core отмечены). Порядок строк не важен — комбинация приводится к порядку лотов кейса. Счёт делает сервер (<b>app/backend</b>, формулы case_core); интерфейс только показывает результат. Сценарий BASE/STRESS выбирается в шапке и меняет лимит c0. Кнопка «Вернуть FINAL» возвращает решение гейта.`;
       const form = `<div class="card"><h2>Собрать портфель${help(helpB)}</h2><div class="bld">${rows}</div>
 ${st.error ? `<div class="bld-err">${esc(st.error)}</div>` : ''}
-<div class="acts2"><span class="btn${st.error || same ? ' off' : ''}" id="bld-calc">Рассчитать</span><span class="btn ghost${isFinal() && same ? ' off' : ''}" data-final="1">Вернуть FINAL</span>${st.error ? '' : `<span class="bld-state${same ? ' ok' : ''}">${same ? 'Показанные экраны соответствуют этому составу' : 'Состав не рассчитан'}</span>`}</div></div>`;
+<div class="acts2"><span class="btn${st.error || same ? ' off' : ''}" tabindex="0" role="button" id="bld-calc">Рассчитать</span><span class="btn ghost${isFinal() && same ? ' off' : ''}" tabindex="0" role="button" data-final="1">Вернуть FINAL</span>${st.error ? '' : `<span class="bld-state${same ? ' ok' : ''}">${same ? 'Показанные экраны соответствуют этому составу' : 'Состав не рассчитан'}</span>`}</div></div>`;
       const res = (scn) => {
         const cs = checksOf(s, scn), bad = cs.filter((r) => !r.ok), lim = cs.find((r) => r.id === 'c0_limit');
         return `<div class="res${bad.length ? ' bad' : ''}"><div class="res-h"><span class="res-s">${scn}</span>${stChip(!bad.length, bad.length ? 'FAIL' : 'PASS')}<span class="res-n">${cs.length - bad.length} из ${cs.length}</span></div>
@@ -277,9 +277,9 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       const row = (r) => {
         const mg = marginOf(r), comp = COMPOSITION.includes(r.id);
         const rel = !comp && r.threshold ? mg / r.threshold : null;   // доля от порога — только для числовых порогов
-        const cls = !r.ok ? 'fail' : comp ? (mg === 0 ? 'edge' : 'ok') : rel < thin ? 'thin' : 'ok';
+        const cls = !r.ok ? 'fail' : r.op === '=' ? 'ok' : comp ? (mg === 0 ? 'edge' : 'ok') : rel < thin ? 'thin' : 'ok';
         const status = cls === 'fail' ? stChip(false, 'FAIL') : cls === 'thin' ? '<span class="st thin">PASS, тонкий запас</span>' : cls === 'edge' ? '<span class="st thin">PASS, граница</span>' : stChip(true, 'PASS');
-        return `<tr class="${r.ok ? '' : 'bad'}"><td><div class="name">${CHECK[r.id]}${UNIT[r.id] ? `<span class="unit">${UNIT[r.id]}</span>` : ''}</div>${r.ok ? '' : `<div class="sub fail">${esc(failText(r))}</div>`}</td><td class="num req">${OP[r.op]} ${fmt(r.threshold, THR_DEC[r.id] ?? 0)}</td><td class="num"><b>${fmt(r.fact, DEC[r.id])}</b></td><td class="num ${cls === 'fail' ? 'neg' : cls === 'thin' || cls === 'edge' ? 'warn' : ''}">${r.op === '=' ? (r.ok ? '—' : signed(mg, 0)) : signed(mg, DEC[r.id])}${rel !== null && r.ok ? `<span class="rel">${pct(Math.abs(rel))}</span>` : ''}</td><td>${status}</td></tr>`;
+        return `<tr class="${r.ok ? '' : 'bad'}"><td><div class="name">${CHECK[r.id]}${UNIT[r.id] ? `<span class="unit">${UNIT[r.id]}</span>` : ''}</div>${r.ok ? '' : `<div class="sub fail">${esc(failText(r))}</div>`}</td><td class="num req">${OP[r.op]} ${fmt(r.threshold, THR_DEC[r.id] ?? 0)}</td><td class="num"><b>${fmt(r.fact, DEC[r.id])}</b></td><td class="num ${cls === 'fail' ? 'neg' : cls === 'thin' || cls === 'edge' ? 'warn' : ''}">${r.op === '=' ? (r.ok ? 'ровно — по правилу кейса' : signed(mg, 0)) : signed(mg, DEC[r.id])}${rel !== null && r.ok ? `<span class="rel">${pct(Math.abs(rel))}</span>` : ''}</td><td>${status}</td></tr>`;
       };
       const group = (title, ids) => {
         const rs = checks.filter((r) => ids.includes(r.id)), okN = rs.filter((r) => r.ok).length;
@@ -312,7 +312,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       const rows = [...d.suggestions, ...d.rejected.filter((id) => !d.suggestions.includes(id))].map((id) => {
         const c = combo(id), isSel = id === state.selected, dim = !(c.admitted ?? c.ok.STRESS), nm = isFinalId(id) ? finBadge() : '';
         const why = isSel ? 'показана' : describeChange(s, c) + (!c.ok.STRESS ? ', не проходит STRESS' : dim ? ', не проходит S2' : '');
-        return `<tr class="pick${isSel ? ' hl' : ''}${dim ? ' dim' : ''}" data-id="${esc(id)}"><td><span class="radio${isSel ? ' on' : ''}"></span></td><td>${chips(c, s)}${nm ? ' ' + nm : ''}</td><td class="why">${esc(why)}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL, ' + stressWhy(c))}</td>${gateCells(c)}<td class="num">${isSel ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`;
+        return `<tr class="pick${isSel ? ' hl' : ''}${dim ? ' dim' : ''}" tabindex="0" role="button" aria-pressed="${isSel}" data-id="${esc(id)}"><td><span class="radio${isSel ? ' on' : ''}"></span></td><td>${chips(c, s)}${nm ? ' ' + nm : ''}</td><td class="why">${esc(why)}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL, ' + stressWhy(c))}</td>${gateCells(c)}<td class="num">${isSel ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`;
       }).join('');
       const gatesToggle = (d.meta.gates || []).length ? `<label class="tog"><input type="checkbox" id="gates-filter"${d.meta.gates_filter ? ' checked' : ''}> S2 как фильтр</label>` : '';
       return `<div class="card"><h2>Предложенные комбинации ${portfolioTag()}${gatesToggle}${help(helpSug)}</h2>
@@ -404,9 +404,9 @@ function renderWhy() {
 <div class="why-hero"><div class="why-txt"><div class="why-st">${esc(why.status || 'Выбранный командой вариант после управленческого отбора.')}</div>${why.headline ? `<p>${esc(why.headline)}</p>` : ''}${why.pareto ? `<p class="why-pareto">${esc(why.pareto)}</p>` : ''}</div>
 <div class="why-stats"><div class="ws"><span>Состав</span>${chips(f)}</div><div class="ws"><span>Место по баллу</span><b>${f.rank ?? '—'}<small>из ${t.ranked}</small></b></div><div class="ws"><span>Запас STRESS по c0</span><b>${signed(mS)}<small>млн руб.</small></b></div><div class="ws"><span>Операционный баланс</span><b>${signed(-f.metrics.opex_gap)}<small>млн руб./год</small></b></div></div></div></div>`;
       const alt = (d.alternatives || []).map((a) => combo(a.id) && { ...a, c: combo(a.id) }).filter(Boolean).sort((a, b) => (a.id === d.final ? -1 : b.id === d.final ? 1 : (b.c.rank ?? 1e9) === (a.c.rank ?? 1e9) ? 0 : (a.c.rank ?? 1e9) - (b.c.rank ?? 1e9)));
-      const rows = alt.map(({ name, id, note, c }) => `<tr class="${id === d.final ? 'hl' : ''}"><td><div class="alt-h">${chips(c, f)}${id === d.final ? finBadge() : ''}</div><div class="sub">${esc(note)}</div></td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex, 2)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 3)}</td><td class="num ${c.ok.STRESS ? '' : 'neg'}">${signed(val(c, 'margin'))}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')} ${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL')}</td><td class="num">${c.rank ? `<b>${c.score.toFixed(3)}</b><span class="rk">${c.rank}-е</span>` : '<span class="muted">без места</span>'}</td></tr>`).join('');
+      const rows = alt.map(({ name, id, note, c }) => `<tr class="${id === d.final ? 'hl' : ''}"><td><div class="alt-h"><span class="alt-code">${esc(name)}</span>${chips(c, f)}${id === d.final ? finBadge() : ''}</div><div class="sub">${esc(note)}</div></td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex, 2)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 3)}</td><td class="num ${c.ok.STRESS ? '' : 'neg'}">${signed(val(c, 'margin'))}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')} ${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL')}</td><td class="num">${c.rank ? `<b>${c.score.toFixed(3)}</b><span class="rk">${c.rank}-е</span>` : '<span class="muted">без места</span>'}</td></tr>`).join('');
       const table = `<div class="card"><h2>Ближайшие альтернативы${help(`Сопоставимые варианты записки из <b>config/alternatives.json</b>, подписанные составом и режимами, все посчитаны по одним правилам. Жёлтый лот — отличие от FINAL по составу, жёлтая буква — по режиму. Место — среди ${t.ranked} STRESS-допустимых комбинаций; вариант, не проходящий STRESS, места не получает. Варианты выше FINAL по баллу показаны, а не скрыты.`)}</h2>
-<div class="tw wide"><table class="alts"><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">K_cash</th><th class="num">Запас STRESS</th><th>BASE, STRESS</th><th class="num">Балл, место</th></tr>${rows}</table></div></div>`;
+<div class="tw wide"><table class="alts"><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">K_cash</th><th class="num">Запас STRESS</th><th>BASE, STRESS</th><th class="num">Балл, место</th></tr>${rows}</table></div></div>${why.base_only ? `<div class="card"><h2>Почему BASE-only вариант отведён до расширения${help('Отвергнутый по бюджету вариант с максимальной общественной ценностью показан серым на вкладке «Комбинации» и в сравнении. Объяснение — формулировка записки (участник 3).')}</h2><p>${esc(why.base_only)}</p></div>` : ''}`;
       let wl = '';
       if (cmp) {
         const win = [], lose = [], even = [];
@@ -415,7 +415,7 @@ function renderWhy() {
           const item = `<li><span>${label}</span><em><b>${fmt(a, dec)}</b> против ${fmt(b, dec)}</em><i>${signed(dlt, dec)}${unit ? ' ' + unit : ''}</i></li>`;
           if (Math.abs(dlt) < 1e-9) even.push(item); else if (dlt * dir > 0) win.push(item); else lose.push(item);
         }
-        wl = `<div class="card"><h2>Что выигрываем и что теряем <span class="cmp-pick">${alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}">${esc(cmpLabel(a))}</span>`).join('')}</span>${help('FINAL против выбранной альтернативы: каждый показатель попадает в «выигрываем» или «теряем» по направлению критерия (ценность, cash, K_cash, запас и public core — больше лучше; c0 и OPEX — меньше лучше). Разницы считаются из показателей обеих комбинаций. Текст «цена решения» — формулировка записки.')}</h2>
+        wl = `<div class="card"><h2>Что выигрываем и что теряем <span class="cmp-pick">${alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}" tabindex="0" role="button"><b>${esc(a.name)}</b> ${esc(cmpLabel(a))}</span>`).join('')}</span>${help('FINAL против выбранной альтернативы: каждый показатель попадает в «выигрываем» или «теряем» по направлению критерия (ценность, cash, K_cash, запас и public core — больше лучше; c0 и OPEX — меньше лучше). Разницы считаются из показателей обеих комбинаций. Текст «цена решения» — формулировка записки.')}</h2>
 <div class="wl"><div class="wl-col win"><div class="wl-h">${ICON.tick} FINAL выигрывает у варианта «${esc(cmpLabel(cmpA))}»</div><ul>${win.join('') || '<li class="none">ничего</li>'}</ul></div><div class="wl-col lose"><div class="wl-h">FINAL теряет против варианта «${esc(cmpLabel(cmpA))}»</div><ul>${lose.join('') || '<li class="none">ничего</li>'}</ul>${even.length ? `<div class="wl-even">Одинаково: ${even.length} показ.</div>` : ''}</div></div>
 <div class="cmp-note">${chips(cmp, f)} — ${esc(cmpA.note)}</div>
 ${why.price ? `<div class="callout">${esc(why.price)}</div>` : ''}</div>`;
@@ -432,7 +432,7 @@ ${why.price ? `<div class="callout">${esc(why.price)}</div>` : ''}</div>`;
         return `<tr><td><div class="name">${CRIT[b.key] || b.key}</div><div class="sub">${b.direction === 'max' ? 'больше — лучше' : 'меньше — лучше'}, min ${fmt(b.lo, CRIT_DEC[b.key])}, max ${fmt(b.hi, CRIT_DEC[b.key])}</div></td><td class="num">${b.weight.toFixed(2)}</td><td class="num">${fmt(b.raw, CRIT_DEC[b.key])}</td><td class="num">${b.z.toFixed(2)}</td><td>${bar(b)}</td>${c ? `<td class="num">${fmt(c.raw, CRIT_DEC[b.key])}</td><td class="num">${c.z.toFixed(2)}</td><td>${bar(c)}</td>` : ''}</tr>`;
       }).join('');
       const total = `<tr class="total"><td>Балл</td><td class="num">${bf.reduce((a, b) => a + b.weight, 0).toFixed(2)}</td><td></td><td></td><td class="num"><b>${f.score.toFixed(3)}</b>${f.rank ? `<span class="rk">${f.rank}-е</span>` : ''}</td>${cmp ? `<td></td><td></td><td class="num"><b>${cmp.score.toFixed(3)}</b>${cmp.rank ? `<span class="rk">${cmp.rank}-е</span>` : ''}</td>` : ''}</tr>`;
-      return notFinal + `<div class="card"><h2>Из чего сложился балл <span class="cmp-pick">${alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}">${esc(cmpLabel(a))}</span>`).join('')}</span>${help(`Балл = Σ вес × z. Для каждого критерия z — min–max нормализация по ${t.ranked} STRESS-допустимым комбинациям: 0 — худшее значение среди них, 1 — лучшее (для c0 шкала перевёрнута). Вклад = вес × z; сумма вкладов и есть балл. Веса из <b>config/weights.json</b> (участник 3), утверждены до просмотра результата. Комбинация вне STRESS получает z по той же шкале, но места не получает.`)}</h2>
+      return notFinal + `<div class="card"><h2>Из чего сложился балл <span class="cmp-pick">${alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}" tabindex="0" role="button"><b>${esc(a.name)}</b> ${esc(cmpLabel(a))}</span>`).join('')}</span>${help(`Балл = Σ вес × z. Для каждого критерия z — min–max нормализация по ${t.ranked} STRESS-допустимым комбинациям: 0 — худшее значение среди них, 1 — лучшее (для c0 шкала перевёрнута). Вклад = вес × z; сумма вкладов и есть балл. Веса из <b>config/weights.json</b> (участник 3), утверждены до просмотра результата. Комбинация вне STRESS получает z по той же шкале, но места не получает.`)}</h2>
 <div class="tw wide"><table class="brk"><tr><th>Критерий</th><th class="num">Вес</th><th class="num">FINAL: значение</th><th class="num">z</th><th>Вклад</th>${cmp ? `<th class="num">${esc(cmpLabel(cmpA))}: значение</th><th class="num">z</th><th>Вклад</th>` : ''}</tr>${rows}${total}</table></div></div>`;
     },
     s2() {
@@ -498,6 +498,8 @@ function c0Chart(items) {
 function renderCompare() {
   const d = state.data, s = sel();
   const items = d.comparison.map(combo);
+  const altName = {};
+  (d.alternatives || []).forEach((a) => { altName[a.id] = a.name; });
   const okS = items.filter((c) => c.ok.STRESS).length;
   const w = d.meta.weights;
   const pill = `<div class="pill${okS === items.length ? '' : ' warn'}"><span class="dot">${ICON.check}</span>${okS} из ${items.length} проходят STRESS</div>`;
@@ -510,7 +512,7 @@ function renderCompare() {
     },
     table() {
       const helpTable = `${items.length} комбинаций, посчитанных по одним правилам: предложенные относительно показанного портфеля и отвергнутая с максимумом ценности. Балл — взвешенная сумма нормированных (min–max по ${d.meta.totals.ranked} комбинациям, допустимым в STRESS${d.meta.gates_filter ? ' и прошедшим S2' : ''}) критериев с весами: ценность ${w.vpub}, c0 ${w.c0}, cash / OPEX ${w.kcash}, готовность ${w.readiness}, устойчивость ${w.resilience}, тираж ${w.scale}, запас по STRESS ${w.stress_margin}. Подсвечен показанный портфель; S2 — диагностическая проверка команды, на балл не влияет. c0, OPEX и cash — млн руб., ценность — усл. млн руб./год. Именованные варианты записки — на экране «Почему FINAL».${gateHelp(d)}`;
-      const rows = items.map((c) => `<tr class="${c.id === s.id ? 'hl' : ''}"><td>${chips(c)}${isFinalId(c.id) ? ' ' + finBadge() : ''}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td class="num">${fmt(c.metrics.t_rep, 3)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL, ' + stressWhy(c))}</td>${gateCells(c)}<td class="num">${c.id === s.id ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`).join('');
+      const rows = items.map((c) => `<tr class="${c.id === s.id ? 'hl' : ''}"><td>${altName[c.id] ? `<span class="alt-code">${esc(altName[c.id])}</span>` : ''}${chips(c)}${isFinalId(c.id) ? ' ' + finBadge() : ''}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td class="num">${fmt(c.metrics.t_rep, 3)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL, ' + stressWhy(c))}</td>${gateCells(c)}<td class="num">${c.id === s.id ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}${c.rank ? `<span class="rk">${c.rank}-е</span>` : ''}</td></tr>`).join('');
       return `<div class="card"><h2>Комбинации в сравнении${help(helpTable)}</h2>
 <div class="tw wide"><table><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">Cash / OPEX</th><th class="num">t_rep</th><th>BASE</th><th>STRESS</th>${gateHead(d)}<th class="num">Балл, место</th></tr>${rows}</table></div></div>`;
     },
@@ -668,6 +670,20 @@ document.addEventListener('change', (e) => {
   if (lotSel) { state.builder[+lotSel.dataset.i].lot = lotSel.value; render(); }
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenus(); });
+// Клавиатурная доступность: Enter/Space работают как клик для строк выбора, чипов сравнения, режимов в конструкторе и кнопок
+document.addEventListener('keydown', async (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const t = e.target;
+  if (!t || !t.closest) return;
+  const row = t.closest('tr.pick');
+  if (row) { e.preventDefault(); if (row.dataset.id !== state.selected) await select(row.dataset.id); return; }
+  const cmp = t.closest('[data-cmp]');
+  if (cmp) { e.preventDefault(); state.comparator = cmp.dataset.cmp; render(); return; }
+  const mode = t.closest('.bld-mode span');
+  if (mode) { e.preventDefault(); state.builder[+mode.parentElement.dataset.i].mode = mode.dataset.m; render(); return; }
+  const btn = t.closest('span.btn, span.chip[data-cmp]');
+  if (btn) { e.preventDefault(); btn.click(); return; }
+});
 window.addEventListener('hashchange', () => { const before = hashOf(); if (parseHash() && hashOf() !== before) render(); });
 
 (async () => {

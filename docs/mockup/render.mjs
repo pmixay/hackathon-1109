@@ -7,7 +7,7 @@ const [,, htmlPath, outDir, ...rest] = process.argv;
 const fullName = rest[0] === '--fullpage' ? rest[1] : null;
 fs.mkdirSync(outDir, { recursive: true });
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1520, height: 1000 }, deviceScaleFactor: 2 });
+const page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, deviceScaleFactor: 2 });
 // Optional offline font cache: FONT_DIR holds local-fonts.css (Google Fonts CSS rewritten to ./*.woff2) plus the files.
 const fontDir = process.env.FONT_DIR;
 if (fontDir) {

@@ -12,6 +12,8 @@ GOLDEN = {
     "V4": dict(c0=1176.0, opex=330.75, vpub=1150.0, cash=295.0, t_rep=0.72, public_core_lots=4, base=True, stress=True),
     "V5": dict(c0=1171.5, opex=318.25, vpub=1229.0, cash=375.5, t_rep=0.725, public_core_lots=2, base=True, stress=True),
     "V6": dict(c0=1155.0, opex=315.0, vpub=1110.0, cash=286.25, t_rep=0.7375, public_core_lots=4, base=True, stress=True),
+    "V7": dict(c0=1129.8, opex=305.75, vpub=1199.0, cash=398.0, t_rep=0.73, public_core_lots=2, base=True, stress=True),
+    "V8": dict(c0=1134.8, opex=309.25, vpub=1243.0, cash=390.0, t_rep=0.73, public_core_lots=2, base=True, stress=True),
 }
 
 

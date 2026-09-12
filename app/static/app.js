@@ -78,6 +78,7 @@ const state = {
   collapsed: localStorage.getItem('kp.collapsed') === '1',
   theme: document.documentElement.dataset.theme || 'light',
   dataset: null,
+  gatesFilter: localStorage.getItem('kp.gates') === '1',
 };
 const curTab = (page = state.page) => state.tab[page] || TABS[page][0][0];
 function parseHash() {
@@ -90,7 +91,10 @@ function parseHash() {
 const hashOf = () => `${state.page}/${curTab()}`;
 
 async function loadDashboard(selected) {
-  const q = selected ? `?selected=${encodeURIComponent(selected)}` : '';
+  const params = [];
+  if (selected) params.push(`selected=${encodeURIComponent(selected)}`);
+  params.push(`gates=${state.gatesFilter ? 'filter' : 'off'}`);
+  const q = `?${params.join('&')}`;
   try {
     const r = await fetch(`/api/dashboard${q}`, { cache: 'no-store' });
     if (!r.ok) throw new Error(await r.text());
@@ -133,7 +137,7 @@ const gateName = (g) => (g.label || g.id).replace(/^S2:\s*/, '');
 const gateChip = (c) => gatesOf(c).map((g) => stChip(g.ok, `${g.ok ? 'PASS' : 'FAIL'} · ${fmt(g.fact, 2)}`)).join(' ');
 const gateHead = (d) => (d.meta.gates || []).map((g) => `<th>S2 ${OP[g.op]} ${fmt(g.threshold, 2)}</th>`).join('');
 const gateCells = (c) => gatesOf(c).map((g) => `<td>${stChip(g.ok, `${g.ok ? 'PASS' : 'FAIL'} · ${fmt(g.fact, 2)}`)}</td>`).join('');
-const gateHelp = (d) => (d.meta.gates || []).map((g) => ` Проверка команды S2 (не канон кейса): ${esc(g.label)} — ${g.metric} ${OP[g.op]} ${fmt(g.threshold, 2)}. ${esc(g.rationale)} Комбинации, не прошедшие S2, в ранжировании не участвуют и показаны серым.`).join('');
+const gateHelp = (d) => (d.meta.gates || []).map((g) => ` Проверка команды S2 (не канон кейса, диагностика): ${esc(g.label)} — ${g.metric} ${OP[g.op]} ${fmt(g.threshold, 2)}. ${esc(g.rationale)}${d.meta.gates_filter ? ' Сейчас включён режим «S2 как фильтр»: комбинации, не прошедшие S2, в ранжировании не участвуют и показаны серым.' : ' На ранг и балл S2 не влияет; переключатель «S2 как фильтр» на вкладке «Комбинации» показывает, как изменился бы список.'}`).join('');
 const stChip = (ok, label) => `<span class="st ${ok ? 'ok' : 'fail'}">${label}</span>`;
 
 // ---------- шапка, навигация, вкладки ----------
@@ -169,7 +173,7 @@ function renderPortfolio() {
 
   const body = {
     overview() {
-      const helpHero = `Выбранный портфель — решение гейта из <b>config/portfolio.json</b>: четыре лота, у каждого режим доступа (буква в чипе; public core — режим с общественным ядром). В карточке лота — название из карточки сервиса, регион и архетип, стартовые затраты c0 лота с учётом режима. Место — среди ${t.ranked} комбинаций, допустимых в STRESS${d.meta.gates?.length ? ' и прошедших проверку команды S2' : ''}, по баллу модели выбора (0–1; веса: ${weightsTxt}). Другую комбинацию можно выбрать на вкладке «Комбинации».`;
+      const helpHero = `Выбранный портфель — решение гейта из <b>config/portfolio.json</b>: четыре лота, у каждого режим доступа (буква в чипе; public core — режим с общественным ядром). В карточке лота — название из карточки сервиса, регион и архетип, стартовые затраты c0 лота с учётом режима. Место — среди ${t.ranked} комбинаций, допустимых в STRESS${d.meta.gates_filter ? ' и прошедших проверку команды S2' : ''}, по баллу модели выбора (0–1; веса: ${weightsTxt}); модель — советник, выбор портфеля управленческий. Другую комбинацию можно выбрать на вкладке «Комбинации».`;
       const lotCards = s.per_lot.map((r) => {
         const L = d.lots[r.lot];
         return `<div class="hl-lot"><div class="hl-h"><span class="hl-code">${r.lot}</span><span class="mode">${r.mode}${r.public_core ? ' · public core' : ''}</span></div><div class="hl-name">${esc(L.name)}</div><div class="hl-sub">${esc(L.region)} · ${esc(L.archetype)} архетип</div><div class="hl-c0">${fmt(r.c0)}<small>c0, млн руб.</small></div></div>`;
@@ -199,13 +203,14 @@ ${tiles}
 <div class="card"><h2>Ограничения ${tag(sc)}${more('checks', 'Факт и пороги')}${help(helpChecks)}</h2><div class="sum">${grp('Состав портфеля', COMPOSITION)}${grp('Финансовые и качественные пороги', THRESHOLDS)}${grpGates()}</div></div>`;
     },
     combos() {
-      const helpSug = `Инструмент перебирает все ${fmt(t.combinations, 0)} комбинаций «4 лота × режимы» через канонический <b>case_core.py</b>, оставляет ${t.stress_feasible} допустимых в STRESS${d.meta.gates?.length ? `, из них ${t.ranked} проходят проверку команды S2,` : ''} и ранжирует их моделью выбора команды: min–max нормализация по допущенным вариантам, веса — ${weightsTxt}. Портфель не собирается вручную по лотам: выбирается одна из предложенных комбинаций (клик по строке), отличия показаны относительно выбранной: жёлтый лот — замена, жёлтая буква — другой режим. Выбранная комбинация — ${s.rank ?? '—'}-я из ${t.ranked} по баллу. Серые строки не предлагаются: лучшая по баллу комбинация, не прошедшая S2, и максимум ценности среди проходящих BASE, но не STRESS.${gateHelp(d)}`;
+      const helpSug = `Инструмент перебирает все ${fmt(t.combinations, 0)} комбинаций «4 лота × режимы» через канонический <b>case_core.py</b>, оставляет ${t.stress_feasible} допустимых в STRESS${d.meta.gates_filter ? `, из них ${t.ranked} проходят проверку команды S2,` : ''} и ранжирует их моделью выбора команды: min–max нормализация по ${t.ranked} допустимым вариантам, веса — ${weightsTxt}. Портфель не собирается вручную по лотам: выбирается одна из предложенных комбинаций (клик по строке), отличия показаны относительно выбранной: жёлтый лот — замена, жёлтая буква — другой режим. Выбранная комбинация — ${s.rank ?? '—'}-я из ${t.ranked} по баллу. Модель выбора — советник: окончательный выбор портфеля управленческий. Серая строка — максимум ценности среди проходящих BASE, но не STRESS${d.meta.gates_filter ? ', и лучшая по баллу комбинация, не прошедшая S2' : ''}.${gateHelp(d)}`;
       const rows = [...d.suggestions, ...d.rejected.filter((id) => !d.suggestions.includes(id))].map((id) => {
         const c = combo(id), isSel = id === state.selected, dim = !c.admitted;
         const why = isSel ? 'выбрана' : describeChange(s, c) + (!c.ok.STRESS ? ' · не проходит STRESS' : dim ? ' · не проходит S2' : '');
         return `<tr class="pick${isSel ? ' hl' : ''}${dim ? ' dim' : ''}" data-id="${esc(id)}"><td><span class="radio${isSel ? ' on' : ''}"></span></td><td>${chips(c, s)}</td><td class="why">${esc(why)}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL · ' + (checksOf(c, 'STRESS').find((r) => !r.ok)?.id === 'c0_limit' ? 'c0' : 'см. стресс'))}</td>${gateCells(c)}<td class="num">${isSel ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}</td></tr>`;
       }).join('');
-      return `<div class="card"><h2>Предложенные комбинации${help(helpSug)}</h2>
+      const gatesToggle = (d.meta.gates || []).length ? `<label class="tog"><input type="checkbox" id="gates-filter"${d.meta.gates_filter ? ' checked' : ''}> S2 как фильтр</label>` : '';
+      return `<div class="card"><h2>Предложенные комбинации${help(helpSug)}${gatesToggle}</h2>
 <table><tr><th></th><th>Состав и режимы</th><th>Отличие от выбранной</th><th class="num">c0</th><th class="num">Ценность</th><th class="num">Cash / OPEX</th><th>BASE</th><th>STRESS</th>${gateHead(d)}<th class="num">Балл</th></tr>${rows}</table></div>`;
     },
     checks() {
@@ -310,7 +315,7 @@ function renderCompare() {
 </div>`;
     },
     table() {
-      const helpTable = `${items.length} комбинаций, посчитанных по одним правилам. Балл — взвешенная сумма нормированных (min–max по ${d.meta.totals.ranked} комбинациям, допустимым в STRESS${d.meta.gates?.length ? ' и прошедшим S2' : ''}) критериев с весами: ценность ${w.vpub}, c0 ${w.c0}, cash / OPEX ${w.kcash}, готовность ${w.readiness}, устойчивость ${w.resilience}, тираж ${w.scale}, запас по STRESS ${w.stress_margin}. Подсвечена выбранная комбинация; строка с FAIL по STRESS — отвергнутая альтернатива с максимумом ценности; строка с FAIL по S2 — лучшая по баллу без проверки команды. c0, OPEX и cash — млн руб., ценность — усл. млн руб./год.${gateHelp(d)}`;
+      const helpTable = `${items.length} комбинаций, посчитанных по одним правилам. Балл — взвешенная сумма нормированных (min–max по ${d.meta.totals.ranked} комбинациям, допустимым в STRESS${d.meta.gates_filter ? ' и прошедшим S2' : ''}) критериев с весами: ценность ${w.vpub}, c0 ${w.c0}, cash / OPEX ${w.kcash}, готовность ${w.readiness}, устойчивость ${w.resilience}, тираж ${w.scale}, запас по STRESS ${w.stress_margin}. Подсвечена выбранная комбинация; строка с FAIL по STRESS — отвергнутая альтернатива с максимумом ценности; S2 — диагностическая проверка команды, на балл не влияет. c0, OPEX и cash — млн руб., ценность — усл. млн руб./год.${gateHelp(d)}`;
       const rows = items.map((c) => `<tr class="${c.id === s.id ? 'hl' : ''}"><td>${chips(c)}</td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 2)}</td><td class="num">${fmt(c.metrics.t_rep, 3)}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')}</td><td>${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL · c0')}</td>${gateCells(c)}<td class="num">${c.id === s.id ? '<b>' + c.score.toFixed(2) + '</b>' : c.score.toFixed(2)}</td></tr>`).join('');
       return `<div class="card"><h2>Комбинации в сравнении${help(helpTable)}</h2>
 <table><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">Cash / OPEX</th><th class="num">t_rep</th><th>BASE</th><th>STRESS</th>${gateHead(d)}<th class="num">Балл</th></tr>${rows}</table></div>`;
@@ -413,6 +418,8 @@ document.addEventListener('click', async (e) => {
   const th = e.target.closest('#theme button');
   if (th) { state.theme = th.dataset.theme; localStorage.setItem('kp.theme', state.theme); document.documentElement.dataset.theme = state.theme; renderChrome(); return; }
   if (e.target.closest('#collapse')) { state.collapsed = !state.collapsed; localStorage.setItem('kp.collapsed', state.collapsed ? '1' : '0'); $('#shell').classList.toggle('collapsed', state.collapsed); return; }
+  const gt = e.target.closest('#gates-filter');
+  if (gt) { state.gatesFilter = gt.checked; localStorage.setItem('kp.gates', gt.checked ? '1' : '0'); if (state.api) state.data = await loadDashboard(state.selected); render(); return; }
   const row = e.target.closest('tr.pick');
   if (row) { await select(row.dataset.id); return; }
   const hb = e.target.closest('.help i');

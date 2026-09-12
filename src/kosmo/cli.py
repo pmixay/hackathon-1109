@@ -154,7 +154,8 @@ def cmd_compare(args, root: Path) -> int:
         print()
         print(f"Модель выбора: {model.method}, допустимость по сценарию {model.feasibility_scenario}")
         for gate in model.gates:
-            print(f"Проверка команды {gate.code}: {gate.label} — {gate.metric} {gate.operator} {gate.threshold}")
+            role = "фильтр ранжирования" if model.gates_filter else "диагностика, на ранг не влияет"
+            print(f"Проверка команды {gate.code}: {gate.label} — {gate.metric} {gate.operator} {gate.threshold} ({role})")
         gate_columns = [gate.code for gate in model.gates]
         print(table(
             [{"вариант": item.name, "ранг": item.rank if item.rank is not None else "-", "балл": item.score if item.score is not None else "-",
@@ -237,6 +238,8 @@ def cmd_export(args, root: Path) -> int:
         "alternatives": "альтернативы",
         "scores": "баллы модели выбора",
         "sensitivity": "чувствительность",
+        "ranking_full": "полный ranking по допустимым комбинациям",
+        "sensitivity_full": "полная чувствительность",
         "enumeration": "перебор",
         "portfolio_detail": "формат notebook организаторов, лоты",
         "portfolio_metrics": "формат notebook организаторов, показатели",

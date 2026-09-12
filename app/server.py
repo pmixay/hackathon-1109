@@ -5,6 +5,7 @@
 
 API
     GET  /api/dashboard?selected=<id>   пересобрать dashboard.json для выбранной комбинации
+         &gates=filter|off              проверки команды (S2) как фильтр ранжирования / только диагностика (по умолчанию — как в config/weights.json)
     POST /api/export                    записать results/ движком kosmo для выбранной комбинации ({"selected": id})
     GET  /api/data                      активный набор данных (файлы, хэши, версия)
     POST /api/data                      {"files": {"lots.csv": "...", ...}, "apply": true} — проверить, сохранить, применить
@@ -46,9 +47,11 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path)
         if url.path == "/api/dashboard":
-            selected = parse_qs(url.query).get("selected", [None])[0]
+            query = parse_qs(url.query)
+            selected = query.get("selected", [None])[0]
+            gates = {"filter": True, "off": False}.get(query.get("gates", [""])[0])
             try:
-                return self._json(HTTPStatus.OK, payload.build_dashboard(selected))
+                return self._json(HTTPStatus.OK, payload.build_dashboard(selected, gates_filter=gates))
             except ValueError as e:
                 return self._json(HTTPStatus.BAD_REQUEST, {"error": str(e)})
         if url.path == "/api/data":

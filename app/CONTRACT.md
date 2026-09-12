@@ -33,13 +33,14 @@
     "weights": { "vpub": 0.30, "c0": 0.15, "kcash": 0.15, "readiness": 0.10, "resilience": 0.10, "scale": 0.10, "stress_margin": 0.10 },
     "rationale": { "vpub": "главная цель заказчика", "...": "..." },   // из config/weights.json; margin:STRESS:c0_limit показан как stress_margin
     "gates": [ { "id": "anchor_coverage", "label": "S2: покрытие OPEX якорными платежами", "metric": "anchor_kcash",
-                 "op": ">=", "threshold": 0.6, "unit": "доля", "rationale": "..." } ],   // проверки команды из config/weights.json → gates
-    "feasible_scenario": "STRESS",    // среди каких комбинаций нормируется балл и считается ранг (плюс проверки команды)
+                 "op": ">=", "threshold": 0.6, "unit": "доля", "rationale": "..." } ],   // проверки команды из config/weights.json → gates (диагностика S2)
+    "gates_filter": false,            // false: gates только показываются; true: не прошедшие gates исключены из ранжирования (?gates=filter)
+    "feasible_scenario": "STRESS",    // среди каких комбинаций нормируется балл и считается ранг
     "thin_margin_pct": 0.03,          // порог «тонкого запаса» для стресс-матрицы
     "allowed_modes": ["A", "B", "C"], // режимы, участвующие в предложениях
     "dataset": { "source": "организаторы", "root": ".", "case_version": "1.1" },
-    "totals": { "combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "admitted": 18, "ranked": 18 }
-                                      // admitted — допустимы в feasible_scenario и прошли все gates; ranked = admitted
+    "totals": { "combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "admitted": 143, "ranked": 143 }
+                                      // admitted — допустимы в feasible_scenario (при gates_filter — и прошли все gates); ranked = admitted
   },
 
   "lots": {                           // справочник для подписей и карточек сервисов
@@ -59,8 +60,8 @@
 
   "selected": "FIRE:A|AGRI:B|TRANS:B|ENV:A",   // выбранный портфель (решение гейта)
   "suggestions": ["<id>", "..."],              // предложенные комбинации по убыванию балла; выбранная и портфель команды — всегда среди них
-  "rejected": ["<id>", "<id>"],                // показываются серыми и не предлагаются: лучшая по баллу, не прошедшая gates (если есть),
-                                               // и максимум ценности среди проходящих BASE, но не STRESS (= stress.failing)
+  "rejected": ["<id>"],                        // показываются серыми и не предлагаются: максимум ценности среди проходящих BASE, но не STRESS
+                                               // (= stress.failing); при gates_filter перед ней — лучшая по баллу комбинация, не прошедшая gates
   "comparison": ["<id>", "..."],               // строки экрана «Сравнение» и стресс-матрицы
   "stress": {
     "failing": "<id>",                         // комбинация для блока «Что можно сделать»
@@ -83,12 +84,12 @@
       "ok": { "BASE": true, "STRESS": true },
       "gates": [ { "id": "anchor_coverage", "ok": true, "fact": 0.607, "op": ">=", "threshold": 0.6,
                    "label": "S2: покрытие OPEX якорными платежами", "metric": "anchor_kcash" } ],   // проверки команды (kosmo.run_team_checks), не канон
-      "admitted": true,                        // ok[feasible_scenario] и все gates пройдены; только такие комбинации получают rank
+      "admitted": true,                        // ok[feasible_scenario] (и все gates, если gates_filter); только такие комбинации получают rank
       "notes": {                               // управленческие заметки движка (что кейс не задаёт, что решать команде)
         "BASE": [ { "code": "c0_funding", "message": "...", "lots": ["FIRE", "AGRI", "TRANS", "ENV"] } ], "STRESS": [ "..." ]
       },
-      "score": 0.6289,                         // балл kosmo.score_variants по всем admitted, 0–1 (для остальных — экстраполяция в тех же границах)
-      "rank": 1                                // место среди admitted; null для остальных
+      "score": 0.7249,                         // балл kosmo.score_variants по всем admitted, 0–1 (для остальных — экстраполяция в тех же границах)
+      "rank": 3                                // место среди admitted; null для остальных
     }
   }
 }

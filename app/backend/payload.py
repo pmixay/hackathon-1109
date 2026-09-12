@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import datetime as dt
+from dataclasses import replace
 import json
 from functools import lru_cache
 from pathlib import Path
@@ -132,7 +133,7 @@ def _combo_payload(rec, score, rank):
     }
 
 
-def build_dashboard(selected_id: str | None = None, root: Path | None = None) -> dict:
+def build_dashboard(selected_id: str | None = None, root: Path | None = None, gates_filter: bool | None = None) -> dict:
     root = Path(root) if root is not None else ingest.active_root()
     case, enumerated = _enumerated_for(str(root))
     records = enumerated
@@ -149,6 +150,8 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None) ->
             raise ValueError(f"Неизвестная комбинация: {selected_id} ({error})") from None
 
     sel_model = selection_model()
+    if gates_filter is not None:
+        sel_model = replace(sel_model, gates_filter=gates_filter)
     feasible_scenario = ui_cfg.get("feasible_scenario", "STRESS")
     model.admit(records, sel_model, feasible_scenario)
     score, rank = model.make_scorer(records, sel_model, feasible_scenario)
@@ -182,6 +185,7 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None) ->
             "rationale": model.ui_rationale(sel_model),
             "gates": [{"id": gate.code, "label": gate.label, "metric": gate.metric, "op": ev.OPERATORS[gate.operator], "threshold": gate.threshold, "unit": gate.unit, "rationale": gate.rationale} for gate in sel_model.gates],
             "feasible_scenario": feasible_scenario,
+            "gates_filter": sel_model.gates_filter,
             "thin_margin_pct": ui_cfg.get("thin_margin_pct", 0.03),
             "allowed_modes": allowed,
             "dataset": {k: v for k, v in ingest.describe(root).items() if k in ("source", "root", "case_version", "activated_at")},

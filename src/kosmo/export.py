@@ -269,6 +269,7 @@ def team_decision_config(variant: Variant, model: SelectionModel, team: dict) ->
         "selection": [[lot_id, mode_id] for lot_id, mode_id in variant.selection],
         "weights": display_weights(model),
         "gates": [asdict(gate) for gate in model.gates],
+        "gates_filter": model.gates_filter,
         "management": {key: management.get(key, "") for key in MANAGEMENT_FIELDS},
     }
 
@@ -296,9 +297,21 @@ def export_bundle(case: Case, portfolio: Variant, variants: list, model: Selecti
     evaluated = {variant.name: calculate_all_scenarios(case, variant.selection) for variant in variants}
     written["scores"] = write_scored(score_variants(evaluated, model), out / "scores.csv")
     written["sensitivity"] = write_sensitivity(weight_sensitivity(evaluated, model), parameter_sensitivity(case, portfolio.selection), out / "sensitivity.csv")
+    portfolios = enumerate_portfolios(case)
+    full = {
+        "|".join(f"{lot}:{mode}" for lot, mode in zip(item.lots, item.modes)): calculate_all_scenarios(case, tuple(zip(item.lots, item.modes)))
+        for item in portfolios
+        if item.feasible[model.feasibility_scenario]
+    }
+    written["ranking_full"] = write_scored(score_variants(full, model), out / "ranking_full.csv")
+    written["sensitivity_full"] = write_sensitivity(
+        weight_sensitivity(full, model),
+        parameter_sensitivity(case, portfolio.selection, parameters=("vpub", "cash", "opex", "c0")),
+        out / "sensitivity_full.csv",
+    )
     for scenario_id in scenario_ids:
         repairs = single_step_repairs(case, portfolio.selection, scenario_id)
         written[f"repairs_{scenario_id}"] = write_repairs(repairs, scenario_ids, out / f"repairs_{scenario_id.lower()}.csv")
     if with_enumeration:
-        written["enumeration"] = write_enumeration(enumerate_portfolios(case), scenario_ids, out / "enumeration.csv")
+        written["enumeration"] = write_enumeration(portfolios, scenario_ids, out / "enumeration.csv")
     return written

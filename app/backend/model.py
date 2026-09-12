@@ -43,7 +43,7 @@ def admit(records: dict, model: SelectionModel, feasible_scenario: str = "STRESS
     for rec in records.values():
         gates = run_team_checks(rec["metrics"], model.gates)
         rec["gates"] = ev.gate_details(gates)
-        rec["admitted"] = bool(rec["ok"][feasible_scenario] and all(check.passed for check in gates))
+        rec["admitted"] = bool(rec["ok"][feasible_scenario] and (not model.gates_filter or all(check.passed for check in gates)))
     return records
 
 

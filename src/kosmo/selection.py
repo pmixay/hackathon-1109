@@ -44,6 +44,7 @@ class SelectionModel:
     feasibility_scenario: str
     criteria: tuple
     gates: tuple = ()
+    gates_filter: bool = False
 
     @property
     def total_weight(self) -> float:
@@ -117,6 +118,10 @@ def parse_selection_model(raw) -> SelectionModel:
     elif sum(c.weight for c in criteria) <= 0:
         problems.append("сумма весов должна быть больше нуля")
     gates = parse_gates(raw.get("gates", []), problems)
+    gates_filter = raw.get("gates_filter", False)
+    if not isinstance(gates_filter, bool):
+        problems.append(f"gates_filter: ожидается true или false, получено {gates_filter!r}")
+        gates_filter = False
     if problems:
         raise WeightsError(problems)
     return SelectionModel(
@@ -124,6 +129,7 @@ def parse_selection_model(raw) -> SelectionModel:
         feasibility_scenario=str(raw.get("feasibility_scenario") or "BASE"),
         criteria=tuple(criteria),
         gates=gates,
+        gates_filter=gates_filter,
     )
 
 
@@ -201,7 +207,9 @@ def team_checks(results: dict, model: SelectionModel) -> tuple:
 
 
 def admitted(results: dict, model: SelectionModel) -> bool:
-    return results[model.feasibility_scenario].feasible and all(check.passed for check in team_checks(results, model))
+    if not results[model.feasibility_scenario].feasible:
+        return False
+    return not model.gates_filter or all(check.passed for check in team_checks(results, model))
 
 
 def score_variants(evaluated: dict, model: SelectionModel) -> list:

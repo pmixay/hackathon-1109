@@ -3,6 +3,37 @@
   "applies_to_portfolio": "FINAL",
   "reviewed_at": "2026-09-12",
   "default_assumption_owner": "участник 4 (черновик); утверждает D (доступ, SLA, договоры)",
+  "financial_horizon": {
+    "status": "допущение команды участника 3; не входит в канонический расчёт и не является NPV",
+    "period": "2027–2033",
+    "years": 7,
+    "discounting": "не применяется; все суммы показаны в постоянных ценах модели",
+    "startup_c0_mrub": 1140.0,
+    "startup_funding_hypothesis": "отдельное бюджетное финансирование создания портфеля с возможным федеральным и межрегиональным софинансированием; источник и контрактный механизм утверждает участник D",
+    "annual_opex_mrub": 313.0,
+    "annual_anchor_cash_mrub": 190.0,
+    "annual_commercial_cash_mrub": 180.5,
+    "annual_total_cash_mrub": 370.5,
+    "annual_operating_balance_mrub": 57.5,
+    "annual_opex_subsidy_required_mrub": 0.0,
+    "commercial_cash_share_for_full_opex": 0.6814404432132964,
+    "portfolio_pooling": "единый оператор использует совокупный cash портфеля для покрытия совокупного OPEX; без такого объединения FIRE и ENV требуют 5,5 и 2,5 млн руб. ежегодного покрытия соответственно",
+    "seven_year_opex_mrub": 2191.0,
+    "seven_year_cash_mrub": 2593.5,
+    "seven_year_operating_balance_mrub": 402.5,
+    "seven_year_total_cost_including_c0_mrub": 3331.0,
+    "seven_year_balance_after_c0_mrub": -737.5,
+    "interpretation": "для запуска требуется отдельное финансирование всех 1140 млн руб. c0; если будущий семилетний операционный запас направлять на компенсацию c0, остаточный разрыв программы составит 737,5 млн руб. и не является бухгалтерским убытком оператора без утверждённой договорной схемы",
+    "commercial_zero_sensitivity": {
+      "status": "дополнительный риск-сценарий команды, не официальный STRESS кейса",
+      "cash_mrub": 190.0,
+      "kcash": 0.6070287539936102,
+      "opex_gap_mrub": 123.0,
+      "margin_above_kcash_floor_mrub": 2.2,
+      "interpretation": "при полном отсутствии коммерческих поступлений формальный порог kcash 0,6 сохраняется за счёт anchor_cash всего с запасом 2,2 млн руб., но для эксплуатации потребуется ежегодное покрытие 123 млн руб."
+    },
+    "assumption_owner": "участник 3 (экономист); источник c0 и распределение рисков утверждает D"
+  },
   "service_sla": {
     "FIRE": {
       "service": "Мониторинг лесных пожаров, Сибирь, режим A",

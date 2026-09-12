@@ -44,4 +44,11 @@ python -m kosmo export                              # перевыгрузить
 python -m pytest -q                                 # 333 теста, около 25 секунд
 ```
 
-Подробности, формат входа и выхода, формулы и коды выхода: [docs/calc-engine.md](docs/calc-engine.md). Допущения по SLA, источникам данных и эксплуатационной архитектуре: [config/assumptions.json](config/assumptions.json) (проектное описание, в движке не реализовано).
+Подробности, формат входа и выхода, формулы и коды выхода: [docs/calc-engine.md](docs/calc-engine.md). Допущения по SLA, источникам данных, финансовому горизонту и эксплуатационной архитектуре: [config/assumptions.json](config/assumptions.json) (проектное описание, в движке не реализовано).
+
+## Материалы экономиста
+
+- [Финансирование и экономическая устойчивость](docs/note/03-finance.md)
+- [Устойчивость в стресс-сценарии](docs/note/06-stress.md)
+- [Одностраничное STRESS-резюме](docs/stress-summary.md)
+- [Приложение: денежные потоки 2027–2033](docs/note/finance-appendix.md)

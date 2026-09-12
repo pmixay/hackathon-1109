@@ -39,13 +39,19 @@
                 "access_base": "Карта событий, время наблюдения, уверенность, статус проверки",
                 "access_extra": "История, интеграции и аналитика по отдельному заказу",
                 "kpi": "Время от сигнала до проверки",
-                "on_failure": "Время последнего обновления, номер инцидента, ручной канал" } }
+                "on_failure": "Время последнего обновления, номер инцидента, ручной канал",
+                "problem": "Большая территория и риск позднего обнаружения пожаров",
+                "payer": "МЧС — предположительно, по консультации трекера 12.09",   // всегда с пометкой «предположительно»
+                "risk": "Задержка или ложный сигнал; зависимость от одного источника" } }
   },
   "modes": {                          // коэффициенты access_modes.csv
     "A": { "k_c0": 1.05, "k_opex": 1.05, "k_vpub": 1.0, "k_anchor": 1.0, "k_commercial": 0.25, "public_core": true }
   },
 
-  "selected": "FIRE:A|AGRI:B|TRANS:B|ENV:A",   // выбранный портфель (решение гейта)
+  "selected": "FIRE:A|AGRI:B|TRANS:B|ENV:A",   // показанный портфель: FINAL или произвольный из конструктора (GET /api/dashboard?selected=<id>)
+  "final": "FIRE:A|AGRI:B|TRANS:B|ENV:A",      // решение гейта из app/config/portfolio.json; всегда есть в combinations
+  "alternatives": [ { "name": "V2", "id": "FLOOD:A|AGRI:A|TRANS:B|ENV:A", "note": "..." } ],   // config/alternatives.json (участник 3), id в порядке лотов; все есть в combinations
+  "why_final": { "status": "...", "headline": "...", "pareto": "...", "price": "...", "robustness": "...", "comparator": "V2" },  // app/config/team.json, тексты записки
   "suggestions": ["<id>", "..."],              // предложенные комбинации по порядку показа; выбранная — среди них
   "rejected": ["<id>"],                        // показываются серыми: проходят BASE, не проходят STRESS
   "comparison": ["<id>", "..."],               // строки экрана «Сравнение» и стресс-матрицы
@@ -61,7 +67,10 @@
       "per_lot": [ { "lot": "FIRE", "mode": "A", "public_core": true, "c0": 336.0, "opex": 89.25, "vpub": 560.0, "cash": 83.75,
                      "anchor_cash": 75.0, "commercial_cash": 8.75, "t_rep": 0.68, "readiness": 4.3, "resilience": 3.5, "scale": 4.5 } ],
       "metrics": { "c0": 1140.0, "opex": 313.0, "vpub": 1289.0, "cash": 370.5, "kcash": 1.1837, "t_rep": 0.73,
-                   "readiness": 4.525, "resilience": 4.05, "scale": 4.675, "archetypes": 4, "groups": 2, "public_core": 2 },
+                   "readiness": 4.525, "resilience": 4.05, "scale": 4.675, "archetypes": 4, "groups": 2, "public_core": 2,
+                   "anchor_cash": 190.0, "commercial_cash": 180.5 },
+      "s2": { "cash": 190.0, "kcash": 0.607, "opex_gap": 123.0, "kcash_ok": true },   // дополнительный сценарий команды «commercial cash = 0»; не официальный STRESS
+      "breakdown": [ { "key": "vpub", "direction": "max", "raw": 1289.0, "lo": 1053.0, "hi": 1370.4, "z": 0.7794, "weight": 0.3, "contribution": 0.2338 }, "..." ],  // разложение балла; Σ contribution = score
       "checks": {                              // девять проверок check_constraints, порядок как в case_core
         "BASE":   [ { "id": "c0_limit", "ok": true, "fact": 1140.0, "op": "<=", "threshold": 1300 }, "..." ],
         "STRESS": [ "..." ]
@@ -87,6 +96,11 @@
 - Стресс-матрица (запас, доля, тонкий/нарушение) — из `checks.STRESS` и `thin_margin_pct`.
 - Графики сравнения — из `metrics` комбинаций в `comparison`.
 - Карточка «Замена» — разница `stress.failing` → `selected`.
+- Конструктор — id собирается из четырёх лотов и режимов в порядке `lots`
+  и запрашивается `GET /api/dashboard?selected=<id>`; без сервера доступны
+  только комбинации из собранного файла.
+- Экран «Почему FINAL» — `alternatives`, `why_final`, `breakdown` и `s2`
+  комбинаций; Δ относительно FINAL считаются из `metrics`.
 - Блок «Сервисы портфеля» — `lots[*].card` для лотов выбранной комбинации;
   строки доступа показываются, только если `card.mode` совпадает с режимом
   лота в комбинации.

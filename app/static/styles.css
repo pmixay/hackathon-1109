@@ -264,3 +264,96 @@ tr.hl .lot{background:var(--hl-chip)}
 .fmt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;font-size:13.5px}.fmt b{display:block;margin-bottom:10px;font-size:14.5px}
 
 @media (max-width:1280px){.tiles,.hero{grid-template-columns:repeat(3,minmax(0,1fr))}.row2,.row2.w,.jobs2,.sum{grid-template-columns:1fr}.svc{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---- метки вариантов, места, подсказки-предположения ---- */
+.tag.warn{background:var(--warn-soft);color:var(--warn-ink)}
+.vn{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;letter-spacing:.04em;padding:3px 7px;border-radius:7px;background:var(--rule-2);color:var(--ink-2);margin-left:6px;vertical-align:1px}
+tr.hl .vn{background:var(--hl-chip);color:var(--ink)}
+.rk{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.hyp{display:inline-block;font-size:11px;font-weight:600;padding:2px 6px;border-radius:6px;background:var(--warn-soft);color:var(--warn-ink);margin-left:4px;vertical-align:1px}
+.muted{color:var(--muted)}
+.callout{margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--brand-soft);color:var(--ink);font-size:14px;font-weight:500;line-height:1.5}
+.callout.warn{background:var(--warn-soft)}
+.callout .more{margin-left:8px}
+/* сегментированный переключатель и чипы */
+.segc{display:inline-flex;background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:3px}
+.segc span{padding:7px 14px;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink-2);cursor:pointer;user-select:none;letter-spacing:.04em}
+.segc span.on{background:var(--brand);color:var(--on-brand)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:6px 12px;white-space:nowrap;border-radius:8px;background:var(--surface);color:var(--ink-2);border:1px solid var(--rule);cursor:pointer;user-select:none}
+.chip:hover{border-color:var(--brand);color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.cmp-pick{display:inline-flex;gap:6px;margin-left:6px;flex-wrap:wrap}
+
+/* ---- конструктор портфеля ---- */
+.bld{display:flex;flex-direction:column;gap:10px}
+.bld-row{display:grid;grid-template-columns:32px 380px auto 1fr;gap:14px;align-items:center;padding:10px 14px;border:1px solid var(--rule);border-radius:14px;background:var(--surface)}
+.bld-row.dup{border-color:var(--crit);background:var(--crit-soft)}
+.bld-n{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand);font-weight:700;font-size:14px}
+.bld-sel{position:relative;display:block}
+.bld-sel select{width:100%;height:46px;padding:0 40px 0 14px;border-radius:12px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);font-family:inherit;font-size:14.5px;font-weight:600;appearance:none;-webkit-appearance:none;cursor:pointer}
+.bld-sel select:hover,.bld-sel select:focus{border-color:var(--brand);outline:none}
+.bld-sel svg{position:absolute;right:14px;top:16px;width:14px;height:14px;color:var(--muted);pointer-events:none}
+.bld-info{font-size:13px;color:var(--ink-2)}
+.bld-info b{color:var(--brand)}
+.bld-err{margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--crit-soft);color:var(--crit-ink);font-size:14px;font-weight:600}
+.bld-hint{margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--warn-soft);color:var(--warn-ink);font-size:14px;font-weight:600}
+.res2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.res{border:1px solid var(--rule);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;background:var(--good-soft)}
+.res.bad{background:var(--crit-soft)}
+.res-h{display:flex;align-items:center;gap:12px}
+.res-s{font-size:20px;font-weight:700;letter-spacing:.03em}
+.res-n{margin-left:auto;font-family:var(--f-num);font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.res-c0{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.res-ok{font-size:14px;color:var(--good-ink);font-weight:500}
+.res-f{margin:0;padding-left:18px;font-size:14px;font-weight:600;color:var(--crit-ink);line-height:1.5}
+
+/* ---- таблица девяти ограничений, BASE/STRESS рядом ---- */
+.chk2{grid-template-columns:1.45fr 1fr;align-items:start}
+table.chk tr.grp td{padding:14px 10px 10px;font-weight:700;font-size:14px;background:var(--bg);border-bottom:1px solid var(--rule)}
+table.chk tr.grp td .circ{display:inline-grid;vertical-align:-5px;margin-right:10px}
+table.chk tr.grp td .cnt{margin-left:10px;font-size:13px;color:var(--ink-2);font-weight:600}
+table.chk td .unit{margin-left:8px;font-size:12px;font-weight:500;color:var(--ink-2)}
+table.chk td.req{color:var(--ink-2);font-weight:500}
+table.chk td.neg{color:var(--crit);font-weight:700}table.chk td.warn{color:var(--warn-ink);font-weight:700}
+table.chk td .rel{margin-left:8px;font-size:12px;font-weight:500;color:var(--ink-2)}
+table.chk tr.bad td{background:var(--crit-soft)}
+td .sub.fail{color:var(--crit);font-weight:600;font-size:13px;margin-top:4px}
+table.bs td{font-size:14.5px}table.bs tr.big td{font-size:15px}table.bs tr.big b{font-family:var(--f-num);font-size:24px;font-weight:700;letter-spacing:-.02em}
+table.bs b.neg{color:var(--crit)}
+
+/* ---- экран «Почему FINAL» ---- */
+.why-hero{display:grid;grid-template-columns:1.5fr 1fr;gap:22px;align-items:start}
+.why-st{font-size:16px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.why-txt p{margin:0 0 10px;font-size:14.5px;line-height:1.55}
+.why-pareto{color:var(--ink-2);font-weight:500}
+.why-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ws{border:1px solid var(--rule);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.ws span{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.ws b{font-family:var(--f-num);font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.ws b small{font-size:12px;font-weight:500;color:var(--ink-2);margin-left:6px;letter-spacing:0}
+.ws .lots{margin-top:4px}
+table.alts td .sub{max-width:520px}
+.alt-h{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.wl{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.wl-col{border-radius:16px;padding:16px 18px;border:1px solid var(--rule)}
+.wl-col.win{background:var(--good-soft)}.wl-col.lose{background:var(--crit-soft)}
+.wl-h{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;margin-bottom:10px}
+.wl-h svg{width:16px;height:16px}
+.wl ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.wl li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;font-size:14px;font-variant-numeric:tabular-nums}
+.wl li em{font-style:normal;white-space:nowrap}
+.wl li span{font-weight:600}.wl li b{font-family:var(--f-num);font-weight:700}
+.wl li i{font-style:normal;font-weight:700;padding:3px 8px;border-radius:7px;background:var(--surface);font-size:13px}
+.wl li.none{color:var(--ink-2)}
+.wl-even{margin-top:10px;font-size:13px;color:var(--ink-2)}
+.cmp-note{margin-top:14px;font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.why-rob{margin:0;font-size:14.5px;line-height:1.55}
+.mini{position:relative;height:22px;min-width:160px;background:var(--rule-2);border-radius:6px;overflow:hidden}
+.mini i{position:absolute;left:0;top:0;height:100%;background:var(--brand);border-radius:6px}
+.mini span{position:absolute;right:8px;top:0;line-height:22px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+table.brk td .sub{font-size:12px}
+.tiles.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tile.thin{border-color:var(--warn);background:var(--warn-soft)}.tile.bad{border-color:var(--crit);background:var(--crit-soft)}
+.tile .tc{font-size:12.5px;font-weight:500;color:var(--ink-2);margin-top:2px}
+.sv-p{font-size:13px;color:var(--ink-2)}.sv-p b{color:var(--ink);font-weight:600}
+@media (max-width:1280px){.why-hero,.wl,.res2,.chk2{grid-template-columns:1fr}.bld-row{grid-template-columns:32px 1fr auto;grid-auto-rows:auto}.bld-info{grid-column:2/-1}}

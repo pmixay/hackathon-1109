@@ -155,3 +155,85 @@ class Model(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Payload2(unittest.TestCase):
+    """Поля контракта для конструктора, экрана «Почему FINAL» и сценария S2."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.d = payload.build_dashboard()
+
+    def test_final_and_alternatives_present(self):
+        d = self.d
+        self.assertEqual(d["final"], SELECTED)
+        self.assertIn(d["final"], d["combinations"])
+        names = [a["name"] for a in d["alternatives"]]
+        self.assertIn("FINAL", names)
+        self.assertIn("V2", names)
+        for a in d["alternatives"]:
+            self.assertIn(a["id"], d["combinations"], a["name"])
+        final = next(a for a in d["alternatives"] if a["name"] == "FINAL")
+        self.assertEqual(final["id"], SELECTED)  # config/alternatives.json и app/config/portfolio.json согласованы
+
+    def test_score_breakdown_sums_to_score(self):
+        for c in self.d["combinations"].values():
+            self.assertAlmostEqual(sum(b["contribution"] for b in c["breakdown"]), c["score"], places=3, msg=c["id"])
+            self.assertAlmostEqual(sum(b["weight"] for b in c["breakdown"]), 1.0)
+            for b in c["breakdown"]:
+                self.assertTrue(0 <= b["z"] <= 1)
+
+    def test_s2_commercial_zero(self):
+        f = self.d["combinations"][SELECTED]
+        self.assertAlmostEqual(f["metrics"]["anchor_cash"], 190.0)
+        self.assertAlmostEqual(f["metrics"]["commercial_cash"], 180.5)
+        self.assertAlmostEqual(f["s2"]["cash"], 190.0)
+        self.assertAlmostEqual(f["s2"]["kcash"], 190.0 / 313.0)
+        self.assertAlmostEqual(f["s2"]["opex_gap"], 123.0)
+        self.assertTrue(f["s2"]["kcash_ok"])
+
+    def test_arbitrary_portfolio_keeps_final(self):
+        d = payload.build_dashboard("FIRE:A|FLOOD:A|TRANS:A|ENV:A")
+        self.assertEqual(d["selected"], "FIRE:A|FLOOD:A|TRANS:A|ENV:A")
+        self.assertEqual(d["final"], SELECTED)
+        self.assertIn(SELECTED, d["combinations"])
+        c = d["combinations"][d["selected"]]
+        self.assertTrue(c["ok"]["BASE"]); self.assertFalse(c["ok"]["STRESS"])
+        bad = [r for r in c["checks"]["STRESS"] if not r["ok"]]
+        self.assertEqual([r["id"] for r in bad], ["c0_limit"])
+        self.assertAlmostEqual(bad[0]["fact"] - bad[0]["threshold"], 69.5)
+
+    def test_service_cards_have_payer_and_risk(self):
+        for lid in ("FIRE", "ENV", "AGRI", "TRANS"):
+            card = self.d["lots"][lid]["card"]
+            self.assertTrue(card["payer"] and card["risk"] and card["problem"], lid)
+
+
+class CrossCheckKosmo(unittest.TestCase):
+    """UI и CLI дают одинаковые цифры: расчётный слой интерфейса против движка src/kosmo (участник 4)."""
+
+    @classmethod
+    def setUpClass(cls):
+        root = Path(__file__).resolve().parents[2]
+        sys.path.insert(0, str(root / "src"))
+        try:
+            import kosmo  # noqa: F401
+        except Exception as e:  # pragma: no cover
+            raise unittest.SkipTest(f"src/kosmo недоступен: {e}")
+        cls.kosmo = kosmo
+        cls.case = kosmo.load_case(str(root))
+        cls.d = payload.build_dashboard()
+
+    def test_metrics_and_checks_match_engine(self):
+        for cid, c in self.d["combinations"].items():
+            sel = [(s["lot"], s["mode"]) for s in c["selection"]]
+            for scenario in ("BASE", "STRESS"):
+                r = self.kosmo.calculate(self.case, sel, scenario).to_dict()
+                for ours, theirs in (("c0", "c0"), ("opex", "opex"), ("vpub", "vpub"), ("cash", "cash"), ("kcash", "kcash"), ("t_rep", "t_rep"), ("anchor_cash", "anchor_cash"), ("commercial_cash", "commercial_cash")):
+                    self.assertAlmostEqual(c["metrics"][ours], r["metrics"][theirs], places=6, msg=f"{cid} {scenario} {ours}")
+                theirs = {k["code"]: k for k in r["checks"]}
+                for row in c["checks"][scenario]:
+                    self.assertEqual(row["ok"], theirs[row["id"]]["passed"], f"{cid} {scenario} {row['id']}")
+                    self.assertAlmostEqual(row["fact"], theirs[row["id"]]["actual"], places=6)
+                    self.assertAlmostEqual(row["threshold"], theirs[row["id"]]["threshold"], places=6)
+                self.assertEqual(c["ok"][scenario], r["feasible"], f"{cid} {scenario}")

@@ -60,16 +60,23 @@ def make_scorer(records, weights, config, feasible_scenario="STRESS"):
         vals = [fn(r["metrics"]) for r in feasible]
         lo[key], hi[key] = min(vals), max(vals)
 
-    def score(rec):
-        s = 0.0
+    def breakdown(rec):
+        """Разложение балла по критериям: raw, нормированное z (0–1), вес, вклад w × z."""
+        rows = []
         for key, (fn, direction) in criteria.items():
             w = float(weights.get(key, 0))
+            raw = fn(rec["metrics"])
             span = hi[key] - lo[key]
-            x = (fn(rec["metrics"]) - lo[key]) / span if span else 1.0
+            x = (raw - lo[key]) / span if span else 1.0
             x = max(0.0, min(1.0, x))
-            s += w * (x if direction > 0 else 1 - x)
-        return s
+            z = x if direction > 0 else 1 - x
+            rows.append({"key": key, "direction": "max" if direction > 0 else "min", "raw": raw, "lo": lo[key], "hi": hi[key], "z": z, "weight": w, "contribution": w * z})
+        return rows
 
+    def score(rec):
+        return sum(r["contribution"] for r in breakdown(rec))
+
+    score.breakdown = breakdown
     return score
 
 

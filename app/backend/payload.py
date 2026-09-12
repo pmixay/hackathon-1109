@@ -34,7 +34,11 @@ UI_COLUMNS = {
     "Дополнительный доступ": "access_extra",
     "Главный KPI": "kpi",
     "Что показать при сбое": "on_failure",
+    "Проблема": "problem",
+    "Предполагаемый плательщик": "payer",
+    "Ключевой риск": "risk",
 }
+ROOT = APP.parent  # общие конфиги команды: config/alternatives.json (участник 3)
 
 
 def _lots_ui() -> dict:
@@ -70,8 +74,27 @@ def reset_cache():
     _enumerated_for.cache_clear()
 
 
-def _combo_payload(rec, score, rank):
+def _alternatives(lots):
+    """Именованные варианты записки (config/alternatives.json): name, id в каноническом порядке лотов, note."""
+    path = ROOT / "config" / "alternatives.json"
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8") as f:
+        variants = json.load(f).get("variants", [])
+    order = {lid: i for i, lid in enumerate(lots)}
+    out = []
+    for v in variants:
+        sel = sorted(((p["lot_id"], p["mode_id"]) for p in v["selection"]), key=lambda x: order.get(x[0], 99))
+        out.append({"name": v["name"], "id": model.combo_id(sel), "note": v.get("note", "")})
+    return out
+
+
+def _combo_payload(rec, score, rank, kcash_min):
     m = rec["metrics"]
+    anchor = sum(float(r.get("anchor_cash_mrub_per_year") or 0) for r in rec["detail"])
+    commercial = sum(float(r.get("commercial_cash_mrub_per_year") or 0) for r in rec["detail"])
+    opex = m["opex_mrub_per_year"]
+    breakdown = getattr(score, "breakdown", None)
     return {
         "id": rec["id"],
         "selection": [{"lot": lot, "mode": mode} for lot, mode in rec["selection"]],
@@ -106,11 +129,16 @@ def _combo_payload(rec, score, rank):
             "archetypes": m["territorial_archetypes"],
             "groups": m["capability_groups"],
             "public_core": m["public_core_lots"],
+            "anchor_cash": anchor,
+            "commercial_cash": commercial,
         },
+        # дополнительный сценарий команды S2 «commercial cash = 0»: не официальный STRESS, только якорные поступления
+        "s2": {"cash": anchor, "kcash": (anchor / opex) if opex else None, "opex_gap": opex - anchor, "kcash_ok": bool(opex and anchor / opex >= kcash_min - 1e-9)},
         "checks": rec["checks"],
         "ok": rec["ok"],
         "score": round(score(rec), 4),
         "rank": rank.get(rec["id"]),
+        "breakdown": [dict(b, raw=round(b["raw"], 6), z=round(b["z"], 4), contribution=round(b["contribution"], 4)) for b in breakdown(rec)] if breakdown else None,
     }
 
 
@@ -119,9 +147,12 @@ def build_dashboard(selected_id: str | None = None) -> dict:
     model_cfg = _load("model.json")
     ru = _load("lots_ru.json")
     ui = _lots_ui()
-    selected_id = selected_id or _load("portfolio.json")["selected"]
+    final_id = _load("portfolio.json")["selected"]
+    selected_id = selected_id or final_id
     if selected_id not in records:
         raise ValueError(f"Неизвестная комбинация: {selected_id}")
+    alternatives = [a for a in _alternatives(lots) if a["id"] in records]
+    team = _load("team.json") if (CONFIG / "team.json").exists() else {}
 
     score = model.make_scorer(records, model_cfg["weights"], config)
     feasible = sorted((r for r in records.values() if r["ok"]["STRESS"]), key=score, reverse=True)
@@ -132,8 +163,9 @@ def build_dashboard(selected_id: str | None = None) -> dict:
     comparison = list(suggestions) + ([rejected] if rejected else [])
     actions = model.stress_actions(records, rejected, selected_id, score, config, allowed_modes=allowed) if rejected else []
 
-    wanted = set(comparison) | {selected_id} | {a["id"] for a in actions}
-    combos = {cid: _combo_payload(records[cid], score, rank) for cid in sorted(wanted)}  # стабильный порядок → маленькие диффы dashboard.json
+    wanted = set(comparison) | {selected_id, final_id} | {a["id"] for a in actions} | {a["id"] for a in alternatives}
+    kcash_min = float(config["constraints_common"]["kcash_min"])
+    combos = {cid: _combo_payload(records[cid], score, rank, kcash_min) for cid in sorted(wanted)}  # стабильный порядок → маленькие диффы dashboard.json
 
     return {
         "meta": {
@@ -170,6 +202,9 @@ def build_dashboard(selected_id: str | None = None) -> dict:
             for mid, row in modes.items()
         },
         "selected": selected_id,
+        "final": final_id,                       # решение гейта (config/portfolio.json); selected может быть произвольным портфелем из конструктора
+        "alternatives": alternatives,            # именованные варианты записки для экрана «Почему FINAL»
+        "why_final": team.get("why_final") or {},  # формулировки участника 3 из app/config/team.json
         "suggestions": suggestions,
         "rejected": [rejected] if rejected else [],
         "comparison": comparison,

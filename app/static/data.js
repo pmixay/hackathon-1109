@@ -15,7 +15,7 @@ const upload = { files: {}, report: {}, parsed: {}, busy: false };
 function parseCsv(text) {
   const rows = [];
   let row = [], field = '', q = false;
-  const s = text.replace(/\r\n?/g, '\n');
+  const s = text.replace(/^\ufeff/, '').replace(/\r\n?/g, '\n');   // BOM из Excel — не часть первого столбца
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (q) {
@@ -31,6 +31,9 @@ function parseCsv(text) {
   return { header, rows: recs };
 }
 const isNum = (v) => v !== '' && v !== undefined && !Number.isNaN(Number(v));
+// lot_id и mode_id входят в id комбинации «LOT:MODE|…» и в разметку: только латиница, цифры, _ и - (зеркало backend/ingest.py)
+const ID_RE = /^[A-Za-z0-9_-]+$/;
+const badIds = (ids, what) => { const bad = [...new Set(ids.filter((v) => !ID_RE.test(String(v ?? ''))))]; return bad.length ? [`недопустимые ${what}: ${bad.map((b) => `'${b}'`).join(', ')} — только латиница, цифры, _ и -`] : []; };
 const isBool = (v) => ['true', 'false'].includes(String(v).toLowerCase());
 
 function validateLots(text) {
@@ -43,6 +46,7 @@ function validateLots(text) {
   const ids = rows.map((r) => r.lot_id);
   const dup = [...new Set(ids.filter((v, i) => ids.indexOf(v) !== i))];
   if (dup.length) errors.push('повторяющиеся lot_id: ' + dup.join(', '));
+  errors.push(...badIds(ids, 'lot_id'));
   for (const r of rows) {
     for (const c of LOT_NUMERIC) if (header.includes(c) && !isNum(r[c])) errors.push(`${r.lot_id || '?'}: ${c} не число (${r[c]})`);
     if (header.includes('federal') && !isBool(r.federal)) errors.push(`${r.lot_id || '?'}: federal должен быть true/false`);
@@ -57,6 +61,7 @@ function validateModes(text) {
   if (!rows.length) errors.push('нет строк с режимами');
   for (const r of rows) {
     for (const c of MODE_COLUMNS.slice(1, 6)) if (header.includes(c) && !isNum(r[c])) errors.push(`режим ${r.mode_id || '?'}: ${c} не число`);
+    errors.push(...badIds([r.mode_id], 'mode_id'));
     if (header.includes('public_core') && !isBool(r.public_core)) errors.push(`режим ${r.mode_id || '?'}: public_core должен быть true/false`);
   }
   if (rows.length && !rows.some((r) => String(r.public_core).toLowerCase() === 'true')) warnings.push('ни один режим не даёт public core');
@@ -66,6 +71,7 @@ function validateConfig(text) {
   const errors = [], warnings = [];
   let cfg;
   try { cfg = JSON.parse(text); } catch (e) { return { ok: false, errors: ['не JSON: ' + e.message], warnings, summary: {} }; }
+  if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) return { ok: false, errors: ['корень файла должен быть объектом'], warnings, summary: {} };
   const common = cfg.constraints_common;
   if (!common || typeof common !== 'object') errors.push('нет объекта constraints_common');
   else for (const k of CONFIG_COMMON) { if (!(k in common)) errors.push('constraints_common: нет ' + k); else if (!isNum(common[k])) errors.push(`constraints_common.${k} не число`); }
@@ -148,7 +154,8 @@ export async function mountData(ctx) {
   const takeFile = async (name, file) => {
     const text = await file.text();
     upload.files[name] = text;
-    upload.report[name] = VALIDATE[name](text);
+    // проверка не должна молча падать: файл остаётся в слоте с текстом ошибки
+    try { upload.report[name] = VALIDATE[name](text); } catch (e) { upload.report[name] = { ok: false, errors: ['проверка не удалась: ' + e.message], warnings: [], summary: {} }; }
     ctx.render();
   };
   main.querySelectorAll('input[type=file]').forEach((inp) => inp.addEventListener('change', () => { if (inp.files[0]) takeFile(inp.dataset.file, inp.files[0]); }));

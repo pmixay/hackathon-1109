@@ -65,17 +65,18 @@ const fmt = (v, d = 1) => {
   const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   return (v < 0 ? '−' : '') + grouped + (frac ? '.' + frac : '');
 };
-const signed = (v, d = 1) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v), d);
+// знак после округления: −0.003 при одном знаке — это «0.0», а не «−0.0»
+const signed = (v, d = 1) => { const r = Math.abs(v) < 0.5 * 10 ** -d ? 0 : v; return (r > 0 ? '+' : r < 0 ? '−' : '') + fmt(Math.abs(r), d); };
 const pct = (x) => Math.round(x * 100) + ' %';
 const modesOf = (c) => c.selection.map((s) => s.mode).join('');
 const lotsOf = (c) => c.selection.map((s) => s.lot).join(', ');
-const help = (text) => `<span class="help"><i tabindex="0" role="button" aria-label="Подсказка">?</i><div class="pop">${text}</div></span>`;
+const help = (text) => `<span class="help"><i tabindex="0" role="button" aria-label="Подсказка" aria-expanded="false">?</i><div class="pop">${text}</div></span>`;
 const tag = (t, cls = '') => `<span class="tag${cls ? ' ' + cls : ''}">${esc(t)}</span>`;
 // Итоговый портфель помечается заливным бейджем: чип того же вида, что у лотов,
 // читался как пятый лот. Комбинации называются составом и режимами, а не версиями.
 const finBadge = () => `<span class="fin">${ICON.tick}FINAL</span>`;
 const isFinalId = (id) => id === state.data?.final;
-const more = (tab, label, page = null) => `<a class="more" data-tab="${tab}"${page ? ` data-page="${page}"` : ''}>${label} ${ICON.arrow}</a>`;
+const more = (tab, label, page = null) => `<a class="more" role="link" tabindex="0" data-tab="${tab}"${page ? ` data-page="${page}"` : ''}>${label} ${ICON.arrow}</a>`;
 
 // localStorage может быть недоступен (приватный режим, запрет cookies) — интерфейс работает и без памяти между сессиями
 const store = {
@@ -104,9 +105,11 @@ function parseHash() {
   const [p, t] = location.hash.replace('#', '').split('/');
   if (!PAGES.some(([k]) => k === p)) return false;
   state.page = p;
-  if (t && TABS[p].some(([k]) => k === t)) state.tab[p] = t;
+  state.tab[p] = t && TABS[p].some(([k]) => k === t) ? t : TABS[p][0][0];   // неизвестная вкладка → первая
   return true;
 }
+// адрес в строке браузера всегда равен показанному экрану (без события hashchange)
+const fixHash = () => { if (location.hash && location.hash.replace('#', '') !== hashOf()) history.replaceState(null, '', '#' + hashOf()); };
 const hashOf = () => `${state.page}/${curTab()}`;
 
 async function loadStatic() {
@@ -148,11 +151,11 @@ function describeChange(base, other) {
   const byMode = {};
   for (const l of Object.keys(o)) if (l in b && b[l] !== o[l]) (byMode[o[l]] ||= []).push(l);
   for (const [m, ls] of Object.entries(byMode)) parts.push(`${ls.join(', ')} → ${m}`);
-  return parts.join(', ') || 'без изменений';
+  return parts.join(' · ') || 'без изменений';   // тот же разделитель, что у describe_change движка (подписи действий в стрессе)
 }
 const chips = (c, base = null) => {
   const ms = base ? marks(base, c) : c.selection.map((s) => ({ ...s }));
-  return `<span class="lots">${ms.map((m) => `<span class="lot${m.swap ? ' swap' : ''}">${m.lot}<b${m.chg ? ' class="chg"' : ''}>${m.mode}</b></span>`).join('')}</span>`;
+  return `<span class="lots">${ms.map((m) => `<span class="lot${m.swap ? ' swap' : ''}">${esc(m.lot)}<b${m.chg ? ' class="chg"' : ''}>${esc(m.mode)}</b></span>`).join('')}</span>`;
 };
 const checksOf = (c, scenario) => c.checks[scenario];
 const stChip = (ok, label) => `<span class="st ${ok ? 'ok' : 'fail'}">${label}</span>`;
@@ -164,6 +167,8 @@ const gateCells = (c) => gatesOf(c).map((g) => `<td>${stChip(g.ok, `${g.ok ? 'PA
 const gateHelp = (d) => (d.meta.gates || []).map((g) => ` Проверка команды S2 (не канон кейса, диагностика): ${esc(g.label)} — ${g.metric} ${OP[g.op]} ${fmt(g.threshold, 2)}. ${esc(g.rationale)}${d.meta.gates_filter ? ' Сейчас включён режим «S2 как фильтр»: комбинации, не прошедшие S2, в ранжировании не участвуют и показаны серым.' : ' На ранг и балл S2 не влияет; переключатель «S2 как фильтр» на вкладке «Комбинации» показывает, как изменился бы список.'}`).join('');
 const gateFailText = (g) => `${gateName(g)}: ${fmt(g.fact, 3)} ${g.op === '<=' ? '>' : '<'} ${fmt(g.threshold, 2)}`;
 // Альтернатива подписывается отличием от итогового портфеля, а не именем версии.
+// отличие от другой комбинации, безопасное для вставки в разметку
+const lotsHtml = (c) => esc(lotsOf(c)), modesHtml = (c) => esc(modesOf(c));
 const cmpLabel = (a) => {
   const c = combo(a.id), fin = combo(state.data.final);
   return c && fin ? describeChange(fin, c) : a.name;
@@ -182,7 +187,7 @@ function failText(r) {
 const statusPill = (c, scenario) => {
   const checks = checksOf(c, scenario), ok = checks.filter((r) => r.ok).length, failing = checks.filter((r) => !r.ok);
   const gatesBad = gatesOf(c).filter((g) => !g.ok);
-  const gateTxt = gatesBad.length ? `, S2 не пройден: ${gatesBad.map(gateFailText).join(', ')}` : gatesOf(c).length ? ', S2 пройден' : '';
+  const gateTxt = gatesBad.length ? `, S2 не пройден: ${esc(gatesBad.map(gateFailText).join(', '))}` : gatesOf(c).length ? ', S2 пройден' : '';
   return failing.length
     ? `<div class="pill bad"><span class="dot">${ICON.x}</span>${scenario}: ${ok} из ${checks.length}, ${failing.map(failText).join('; ')}${gateTxt}</div>`
     : `<div class="pill${gatesBad.length ? ' warn' : ''}"><span class="dot">${gatesBad.length ? ICON.x : ICON.check}</span>${scenario}: ${ok} из ${checks.length} ограничений выполнены (c0 ≤ ${fmt(state.data.meta.scenarios[scenario].c0_max, 0)})${gateTxt}</div>`;
@@ -191,19 +196,19 @@ const statusPill = (c, scenario) => {
 // ---------- шапка, навигация, вкладки ----------
 function renderChrome() {
   const d = state.data;
-  $('#nav').innerHTML = PAGES.map(([k, t, ic, grp]) => (grp ? `<div class="grp">${grp}</div>` : '') + `<a data-page="${k}" class="${k === state.page ? 'on' : ''}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ic}</svg><span>${t}</span></a>`).join('');
+  $('#nav').innerHTML = PAGES.map(([k, t, ic, grp]) => (grp ? `<div class="grp">${grp}</div>` : '') + `<a data-page="${k}" role="link" tabindex="0" aria-current="${k === state.page ? 'page' : 'false'}" class="${k === state.page ? 'on' : ''}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ic}</svg><span>${t}</span></a>`).join('');
   const sc = d.meta.scenarios;
   if (!(state.scenario in sc)) state.scenario = Object.keys(sc)[0];
   $('#scenario').innerHTML = `<button class="dd-btn" type="button" title="Сценарий бюджета: меняется только лимит c0 (${esc(state.scenario)}: ≤ ${fmt(sc[state.scenario].c0_max, 0)})"><span class="k">Сценарий</span><b>${esc(state.scenario)}</b>${ICON.chev}</button>
-<div class="dd-pop">${Object.keys(sc).map((s) => `<div class="dd-it${s === state.scenario ? ' on' : ''}" data-s="${esc(s)}"><span class="ck">${ICON.tick}</span><div><b>${esc(s)}</b><span>${SCENARIO_NOTE[s] || 'сценарий кейса'}</span></div></div>`).join('')}</div>`;
+<div class="dd-pop" role="listbox" aria-label="Сценарий бюджета">${Object.keys(sc).map((s) => `<div class="dd-it${s === state.scenario ? ' on' : ''}" role="option" tabindex="0" aria-selected="${s === state.scenario}" data-s="${esc(s)}"><span class="ck">${ICON.tick}</span><div><b>${esc(s)}</b><span>${SCENARIO_NOTE[s] || 'сценарий кейса'}</span></div></div>`).join('')}</div>`;
   $('#theme').innerHTML = `<button type="button" data-theme="light" class="${state.theme === 'light' ? 'on' : ''}" title="Светлая тема">${ICON.sun}</button><button type="button" data-theme="dark" class="${state.theme === 'dark' ? 'on' : ''}" title="Тёмная тема">${ICON.moon}</button>`;
   const src = d.meta.dataset ? (d.meta.dataset.source === 'организаторы' ? '' : ', загружено') : '';
   $('#ver').textContent = `данные v${d.meta.case_version}${src}${state.api ? '' : ', статический файл'}`;
   $('#shell').classList.toggle('collapsed', state.collapsed);
 }
-const tabsHtml = (page) => `<nav class="tabs">${TABS[page].map(([k, t]) => `<a data-tab="${k}" class="${k === curTab(page) ? 'on' : ''}">${t}</a>`).join('')}</nav>`;
+const tabsHtml = (page) => `<nav class="tabs" role="tablist">${TABS[page].map(([k, t]) => `<a data-tab="${k}" role="tab" tabindex="0" aria-selected="${k === curTab(page)}" class="${k === curTab(page) ? 'on' : ''}">${t}</a>`).join('')}</nav>`;
 const pageHead = (title, pill, page = state.page) => `<div class="top"><h1>${title}</h1>${pill}</div>${tabsHtml(page)}`;
-const portfolioTag = () => (isFinal() ? finBadge() : tag('произвольный портфель', 'warn') + `<a class="more" data-final="1">Вернуть FINAL ${ICON.arrow}</a>`);
+const portfolioTag = () => (isFinal() ? finBadge() : tag('произвольный портфель', 'warn') + `<a class="more" role="link" tabindex="0" data-final="1">Вернуть FINAL ${ICON.arrow}</a>`);
 
 // ---------- страница «Портфель» ----------
 function renderPortfolio() {
@@ -219,7 +224,7 @@ function renderPortfolio() {
       const helpHero = `Показанный портфель: FINAL — решение гейта из <b>config/portfolio.json</b>, или произвольный портфель из конструктора. Четыре лота, у каждого режим доступа (буква в чипе; public core — режим с общественным ядром). В карточке лота — название из карточки сервиса, регион и архетип, стартовые затраты c0 лота с учётом режима. Место — среди ${t.ranked} комбинаций, допустимых в STRESS${d.meta.gates_filter ? ' и прошедших проверку команды S2' : ''}, по баллу модели выбора (0–1; веса: ${weightsTxt}); модель — советник, выбор портфеля управленческий.`;
       const lotCards = s.per_lot.map((r) => {
         const L = d.lots[r.lot];
-        return `<div class="hl-lot"><div class="hl-h"><span class="hl-code">${r.lot}</span><span class="mode">${r.mode}${r.public_core ? ', public core' : ''}</span></div><div class="hl-name">${esc(L.name)}</div><div class="hl-sub">${esc(L.region)}</div><div class="hl-c0">${fmt(r.c0)}<small>c0, млн руб.</small></div></div>`;
+        return `<div class="hl-lot"><div class="hl-h"><span class="hl-code">${esc(r.lot)}</span><span class="mode">${esc(r.mode)}${r.public_core ? ', public core' : ''}</span></div><div class="hl-name">${esc(L.name)}</div><div class="hl-sub">${esc(L.region)}</div><div class="hl-c0">${fmt(r.c0)}<small>c0, млн руб.</small></div></div>`;
       }).join('');
       const score = `<div class="hl-score"><div class="k">Место по баллу</div><div class="v">${s.rank ?? '—'}<small>из ${t.ranked}</small></div><div class="s">балл модели <b>${s.score.toFixed(2)}</b></div>${more('decision', 'Почему FINAL', 'why')}</div>`;
       const helpTiles = `Показатели портфеля в сценарии ${sc}. Тёмная часть полосы — использовано или порог, светлая — запас или превышение порога. c0 и OPEX — млн руб.; общественная ценность — усл. млн руб./год (синтетическая шкала кейса, не деньги); покрытие OPEX — поступления cash за год, делённые на OPEX. Запас по c0 — расстояние до лимита в каждом сценарии; отрицательный — лимит превышен.`;
@@ -248,15 +253,15 @@ ${tiles}
     builder() {
       if (!state.builder) state.builder = s.selection.map((x) => ({ lot: x.lot, mode: x.mode }));
       const st = builderStatus();
-      const lotOpts = (cur) => Object.entries(d.lots).map(([lid, L]) => `<option value="${lid}"${lid === cur ? ' selected' : ''}>${lid}, ${esc(L.name)}</option>`).join('');
+      const lotOpts = (cur) => Object.entries(d.lots).map(([lid, L]) => `<option value="${esc(lid)}"${lid === cur ? ' selected' : ''}>${esc(lid)}, ${esc(L.name)}</option>`).join('');
       const rows = state.builder.map((r, i) => {
         const L = d.lots[r.lot], dup = state.builder.filter((x) => x.lot === r.lot).length > 1;
         const M = d.modes[r.mode] || {};
         const eff = [`c0 ×${M.k_c0}`, `OPEX ×${M.k_opex}`, `ценность ×${M.k_vpub}`].join(', ');
         return `<div class="bld-row${dup ? ' dup' : ''}"><span class="bld-n">${i + 1}</span>
 <label class="bld-sel"><select class="bld-lot" data-i="${i}">${lotOpts(r.lot)}</select>${ICON.chev}</label>
-<div class="segc bld-mode" data-i="${i}" role="group" aria-label="Режим доступа">${Object.keys(d.modes).map((mm) => `<span tabindex="0" role="button" data-m="${mm}" class="${mm === r.mode ? 'on' : ''}">${mm}</span>`).join('')}</div>
-<div class="bld-info"><span class="bld-where">${esc(L.region)}, ${L.groups.join(', ')}${L.federal ? ', федеральный' : ''}</span><span class="bld-eff">режим ${r.mode}: ${eff}${M.public_core ? ', public core' : ''}</span></div></div>`;
+<div class="segc bld-mode" data-i="${i}" role="group" aria-label="Режим доступа">${Object.keys(d.modes).map((mm) => `<span tabindex="0" role="button" aria-pressed="${mm === r.mode}" data-m="${esc(mm)}" class="${mm === r.mode ? 'on' : ''}">${esc(mm)}</span>`).join('')}</div>
+<div class="bld-info"><span class="bld-where">${esc(L.region)}, ${esc(L.groups.join(', '))}${L.federal ? ', федеральный' : ''}</span><span class="bld-eff">режим ${esc(r.mode)}: ${eff}${M.public_core ? ', public core' : ''}</span></div></div>`;
       }).join('');
       const same = st.id === state.selected;
       const helpB = `Эксперт собирает любой портфель без правки JSON: четыре разных лота из <b>lots.csv</b> и режим доступа A/B/C каждого (коэффициенты из <b>access_modes.csv</b>; A и режимы с public core отмечены). Порядок строк не важен — комбинация приводится к порядку лотов кейса. Счёт делает сервер (<b>app/backend</b>, формулы case_core); интерфейс только показывает результат. Сценарий BASE/STRESS выбирается в шапке и меняет лимит c0. Кнопка «Вернуть FINAL» возвращает решение гейта.`;
@@ -321,14 +326,14 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
     lots() {
       const lotRow = (r) => {
         const L = d.lots[r.lot];
-        return `<tr><td><div class="name"><span class="code">${r.lot}</span>, ${esc(L.name)}</div><div class="sub">${esc(L.archetype)} архетип, ${L.groups.join(', ')}</div></td><td><span class="mode">${r.mode}${r.public_core ? ', public core' : ''}</span></td><td class="num">${fmt(r.c0)}</td><td class="num">${fmt(r.opex, 2)}</td><td class="num">${fmt(r.vpub)}</td><td class="num">${fmt(r.cash, 2)}</td><td class="num">${fmt(r.t_rep, 2)}</td><td class="num">${fmt(r.readiness, 1)}</td><td class="num">${fmt(r.resilience, 1)}</td><td class="num">${fmt(r.scale, 1)}</td></tr>`;
+        return `<tr><td><div class="name"><span class="code">${esc(r.lot)}</span>, ${esc(L.name)}</div><div class="sub">${esc(L.archetype)} архетип, ${esc(L.groups.join(', '))}</div></td><td><span class="mode">${esc(r.mode)}${r.public_core ? ', public core' : ''}</span></td><td class="num">${fmt(r.c0)}</td><td class="num">${fmt(r.opex, 2)}</td><td class="num">${fmt(r.vpub)}</td><td class="num">${fmt(r.cash, 2)}</td><td class="num">${fmt(r.t_rep, 2)}</td><td class="num">${fmt(r.readiness, 1)}</td><td class="num">${fmt(r.resilience, 1)}</td><td class="num">${fmt(r.scale, 1)}</td></tr>`;
       };
       const modesTxt = Object.entries(d.modes).map(([k, v]) => `<b>Режим ${k}:</b> k_c0 ${v.k_c0}, k_opex ${v.k_opex}, ценность ×${v.k_vpub}, якорные ×${v.k_anchor}, коммерческие ×${v.k_commercial}${v.public_core ? ', public core' : ''}`).join('. ');
       const helpLots = `c0, OPEX и cash — млн руб.; ценность — усл. млн руб./год; готовность, устойчивость и тираж — индексы 1–5 из <b>lots.csv</b>. Значения после применения режима: c0 и OPEX умножены на k_c0 и k_opex, ценность — на k_vpub, поступления = якорные × k_anchor + коммерческие × k_commercial. ${modesTxt}. t_rep — показатель воспроизводимости лота (коэффициент масштабируемости решения). В строке «Портфель» — суммы; для t_rep и индексов — средние.`;
       // карточки сервисов: название для интерфейса и тексты из app/config/lots_ui.csv (файл участника записки)
       const svcCard = (r) => {
         const L = d.lots[r.lot], c = L.card;
-        const head = `<div class="sv-h"><div class="name"><span class="code">${r.lot}</span>, ${esc(L.name)}</div><span class="mode">${r.mode}${r.public_core ? ', public core' : ''}</span></div>`;
+        const head = `<div class="sv-h"><div class="name"><span class="code">${esc(r.lot)}</span>, ${esc(L.name)}</div><span class="mode">${esc(r.mode)}${r.public_core ? ', public core' : ''}</span></div>`;
         if (!c) return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}</div><p class="muted">Карточка сервиса не подготовлена</p></div>`;
         const sameMode = !c.mode || c.mode === r.mode;
         const row = (k, v) => (v ? `<dt>${k}</dt><dd>${esc(v)}</dd>` : '');
@@ -341,7 +346,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       const helpRep = `Тиражирование между регионами: для каждого лота — что переносится в следующий регион без изменений (ядро) и что настраивается на месте. Формулировки — из карточек сервисов (<b>app/config/lots_ui.csv</b>, столбцы «Повторно используемая часть» и «Местная адаптация»; полные карточки — <b>docs/team/participant-2/service_cards_full.csv</b>). Общее ядро портфеля и правила адаптации — в карточке решения <b>config/team.json</b> (replicable_core, local_adaptation) и в разделе записки о тиражировании; оператор и приёмка в инструмент не выносятся.`;
       const repRow = (r) => {
         const L = d.lots[r.lot], c = L.card;
-        const name = `<td><div class="name"><span class="code">${r.lot}</span>, ${esc(L.name)}</div><div class="sub">${esc(L.region)}</div></td>`;
+        const name = `<td><div class="name"><span class="code">${esc(r.lot)}</span>, ${esc(L.name)}</div><div class="sub">${esc(L.region)}</div></td>`;
         return c && (c.core || c.adaptation) ? `<tr>${name}<td>${esc(c.core || '—')}</td><td>${esc(c.adaptation || '—')}</td></tr>` : `<tr>${name}<td colspan="2" class="muted">Карточка сервиса не подготовлена</td></tr>`;
       };
       const rep = `<div class="card"><h2>Тиражирование: ядро и адаптация${help(helpRep)}</h2>
@@ -368,21 +373,23 @@ let pendingNav = null;   // куда хотели уйти, пока висит 
 function askBeforeLeave(goThere) {
   pendingNav = goThere;
   const st = builderStatus();
-  const calc = st.error ? '' : '<span class="btn" data-leave="calc">Рассчитать и перейти</span>';
+  const calc = st.error ? '' : '<span class="btn" role="button" tabindex="0" data-leave="calc">Рассчитать и перейти</span>';
   const why = st.error ? esc(st.error) : 'Собранный состав ещё не рассчитан: другие экраны показывают прежний портфель.';
   $('#dlg').innerHTML = `<div class="dlg-box" role="dialog" aria-modal="true" aria-labelledby="dlg-t">
 <h3 id="dlg-t">Состав изменён</h3><p>${why}</p>
-<div class="dlg-a">${calc}<span class="btn ghost" data-leave="drop">Уйти без расчёта</span><span class="btn ghost" data-leave="stay">Остаться</span></div></div>`;
+<div class="dlg-a">${calc}<span class="btn ghost" role="button" tabindex="0" data-leave="drop">Уйти без расчёта</span><span class="btn ghost" role="button" tabindex="0" data-leave="stay">Остаться</span></div></div>`;
   $('#dlg').classList.add('open');
+  $('#dlg [data-leave]').focus();
 }
 function closeDialog() { $('#dlg').classList.remove('open'); $('#dlg').innerHTML = ''; pendingNav = null; }
+const dialogOpen = () => $('#dlg').classList.contains('open');
 
 function builderStatus() {
   const d = state.data, rows = state.builder;
   const lots = rows.map((r) => r.lot);
   const dup = [...new Set(lots.filter((l, i) => lots.indexOf(l) !== i))];
   if (dup.length) return { error: `Лот ${dup.join(', ')} выбран дважды — нужны четыре разных лота` };
-  if (rows.some((r) => !(r.mode in d.modes))) return { error: 'У каждого лота должен быть режим A, B или C' };
+  if (rows.some((r) => !(r.mode in d.modes))) return { error: `У каждого лота должен быть режим ${Object.keys(d.modes).join(', ')}` };
   const order = Object.keys(d.lots);
   const id = rows.slice().sort((a, b) => order.indexOf(a.lot) - order.indexOf(b.lot)).map((r) => `${r.lot}:${r.mode}`).join('|');
   if (!state.api && !d.combinations[id]) return { id, error: 'Без сервера доступны только комбинации из собранного файла. Запустите python app/server.py — тогда считается любой портфель.' };
@@ -396,7 +403,7 @@ function renderWhy() {
   if (!state.comparator || !alts.some((a) => a.name === state.comparator)) state.comparator = alts.some((a) => a.name === why.comparator) ? why.comparator : alts[0]?.name;
   const cmpA = alts.find((a) => a.name === state.comparator), cmp = cmpA ? combo(cmpA.id) : null;
   const mS = d.meta.scenarios.STRESS.c0_max - f.metrics.c0;
-  const pill = `<div class="pill"><span class="dot">${ICON.check}</span>${f.rank ? `${f.rank}-е место из ${t.ranked}` : 'вне ranking'}, балл ${f.score.toFixed(2)}</div>`;
+  const pill = `<div class="pill"><span class="dot">${ICON.check}</span>${f.rank ? `${f.rank}-е место из ${t.ranked}` : 'без места'}, балл ${f.score.toFixed(2)}</div>`;
   const notFinal = isFinal() ? '' : `<div class="callout warn">Сейчас на других экранах показан произвольный портфель; этот экран — про решение команды FINAL. <a class="more" data-final="1">Вернуть FINAL ${ICON.arrow}</a></div>`;
   const metricsRow = [
     ['vpub', 'Общественная ценность', 'усл. млн руб./год', 0, +1],
@@ -483,7 +490,7 @@ function barChart(items) {
     g += `<rect class="b b1" x="${(cx - bw - 2).toFixed(1)}" y="${(base - hv).toFixed(1)}" width="${bw}" height="${hv.toFixed(1)}" rx="3" style="fill:var(--s1)"></rect><rect class="b b2" x="${(cx + 2).toFixed(1)}" y="${(base - hc).toFixed(1)}" width="${bw}" height="${hc.toFixed(1)}" rx="3" style="fill:var(--s2)"></rect>`;
     g += `<text class="n t" x="${(cx - bw / 2 - 2).toFixed(1)}" y="${(base - hv - 6).toFixed(1)}" text-anchor="middle">${fmt(c.metrics.vpub, 0)}</text>`;
     g += `<text class="n t cv" x="${(cx + bw / 2 + 2).toFixed(1)}" y="${(base - hc - 6).toFixed(1)}" text-anchor="middle">${fmt(c.metrics.cash, 0)}</text>`;
-    g += `<g class="xl"><text x="${cx.toFixed(1)}" y="204" text-anchor="middle">${lots.slice(0, 2).join(', ')}</text><text x="${cx.toFixed(1)}" y="215" text-anchor="middle">${lots.slice(2).join(', ')}</text></g><g class="xm"><text x="${cx.toFixed(1)}" y="228" text-anchor="middle">${modesOf(c)}</text></g></g>`;
+    g += `<g class="xl"><text x="${cx.toFixed(1)}" y="204" text-anchor="middle">${esc(lots.slice(0, 2).join(', '))}</text><text x="${cx.toFixed(1)}" y="215" text-anchor="middle">${esc(lots.slice(2).join(', '))}</text></g><g class="xm"><text x="${cx.toFixed(1)}" y="228" text-anchor="middle">${modesHtml(c)}</text></g></g>`;
   });
   return `<div class="chart"><svg viewBox="0 0 ${W} 244" width="100%" role="img" aria-label="Общественная ценность и поступления"><line class="axis" x1="${x0}" x2="${x1}" y1="${base}" y2="${base}"></line>${g}</svg>
 <div class="legend"><span class="lg lg1"><i style="background:var(--s1)"></i>Общественная ценность</span><span class="lg lg2"><i style="background:var(--s2)"></i>Поступления cash</span><span class="lg lg3"><i class="line"></i>порог ${fmt(floor, 0)}</span></div></div>`;
@@ -503,7 +510,7 @@ function c0Chart(items) {
     const pc = ok ? 'ok' : c.ok.BASE ? 'warn' : 'bad';
     // строка одной комбинации — в группе с прозрачной областью наведения (подсветка строки и всплывающая подсказка)
     g += `<g class="cb"><title>${esc(`${lotsOf(c)}, ${modesOf(c)} — c0 ${fmt(c.metrics.c0)} млн руб., STRESS ${ok ? 'проходит' : 'не проходит'}`)}</title><rect class="hit" x="0" y="${(y - rowH / 2).toFixed(1)}" width="${x1}" height="${rowH}" rx="6"></rect>`;
-    g += `<text class="xl" x="200" y="${(y + 4).toFixed(1)}" text-anchor="end" style="fill:var(--ink)">${lotsOf(c)}, ${modesOf(c)}</text><line class="grid" x1="${x0}" x2="${x1}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"></line><circle class="p ${pc}" cx="${cx.toFixed(1)}" cy="${y.toFixed(1)}" r="6" style="fill:var(${ok ? '--good' : c.ok.BASE ? '--warn' : '--crit'});stroke:var(--surface)" stroke-width="2"></circle>`;
+    g += `<text class="xl" x="200" y="${(y + 4).toFixed(1)}" text-anchor="end" style="fill:var(--ink)">${lotsHtml(c)}, ${modesHtml(c)}</text><line class="grid" x1="${x0}" x2="${x1}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"></line><circle class="p ${pc}" cx="${cx.toFixed(1)}" cy="${y.toFixed(1)}" r="6" style="fill:var(${ok ? '--good' : c.ok.BASE ? '--warn' : '--crit'});stroke:var(--surface)" stroke-width="2"></circle>`;
     const right = cx + 70 <= x1; // подпись справа от точки, у правого края — слева
     g += right ? `<text class="n t" x="${(cx + 11).toFixed(1)}" y="${(y + 4).toFixed(1)}">${fmt(c.metrics.c0)}</text>` : `<text class="n t" x="${(cx - 11).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end">${fmt(c.metrics.c0)}</text>`;
     g += '</g>';
@@ -554,8 +561,9 @@ function renderStress() {
         const margin = r.op === '<=' ? r.threshold - r.fact : r.fact - r.threshold;
         const rel = r.threshold ? margin / r.threshold : 0;
         if (r.id === 'public_core_lots') return { cls: !r.ok ? 'bad' : margin === 0 ? 'thin' : 'ok', text: `${r.fact}, ${margin === 0 ? 'граница' : signed(margin, 0)}`, rel: margin === 0 ? 0 : rel };
-        const dec = r.id === 'kcash_floor' || r.id === 't_rep_floor' || r.metric ? 2 : r.id === 'vpub_floor' ? 0 : 1;
-        const relTxt = Math.abs(rel) < 0.1 ? (rel * 100).toFixed(1) : Math.round(rel * 100);
+        // точность такая, чтобы запас не выглядел нулём рядом с ненулевой долей (t_rep: 0.003 → 0.4 %)
+        const dec = r.id === 't_rep_floor' || r.metric ? 3 : r.id === 'kcash_floor' ? 2 : r.id === 'vpub_floor' ? 0 : 1;
+        const relTxt = fmt(rel * 100, Math.abs(rel) < 0.1 ? 1 : 0);
         return { cls: !r.ok ? 'bad' : rel < thin ? 'thin' : 'ok', text: `${signed(margin, dec)}, ${relTxt} %`, rel };
       };
       const gcols = (d.meta.gates || []).map((g) => g.id);
@@ -566,7 +574,7 @@ function renderStress() {
         const cells = all.map((k) => cell(rs[k]));
         const badCols = all.filter((k, i) => cells[i].cls === 'bad');
         const weakest = badCols.length ? badCols.map((k) => short[k]).join(', ') + ', нарушение' : all.filter((k, i) => cells[i].cls === 'thin').map((k) => short[k]).join(', ') || short[all[cells.map((x) => x.rel).indexOf(Math.min(...cells.map((x) => x.rel)))]];
-        return `<tr class="${c.id === s.id ? 'hl' : ''}"><td><div class="name">${lotsOf(c)}</div><div class="sub">${modesOf(c)}${c.id === s.id ? ', показана' : ''}${isFinalId(c.id) ? ', FINAL' : ''}</div></td>${cells.map((x) => `<td><span class="cell ${x.cls}">${x.text}</span></td>`).join('')}<td>${weakest}</td></tr>`;
+        return `<tr class="${c.id === s.id ? 'hl' : ''}"><td><div class="name">${lotsHtml(c)}</div><div class="sub">${modesHtml(c)}${c.id === s.id ? ', показана' : ''}${isFinalId(c.id) ? ', FINAL' : ''}</div></td>${cells.map((x) => `<td><span class="cell ${x.cls}">${x.text}</span></td>`).join('')}<td>${weakest}</td></tr>`;
       }).join('');
       const helpMatrix = `<div class="lg"><span><i class="sw ok"></i>запас ≥ ${Math.round(thin * 100)} %</span><span><i class="sw thin"></i>тонкий запас или граница</span><span><i class="sw bad"></i>нарушение</span></div>В ячейке — факт минус порог и доля от порога в сценарии STRESS (c0 ≤ ${fmt(d.meta.scenarios.STRESS.c0_max, 0)}). Состав (4 лота, архетипы, группы) выполнен у всех и в таблицу не вынесен. «Слабое место» — нарушенное или самое тонкое условие. Счётчик в заголовке относится к сравниваемым вариантам, а не к FINAL.${gateHelp(d)}`;
       const gateHeads = (d.meta.gates || []).map((g) => `<th>S2: якорь / OPEX ${OP[g.op]} ${fmt(g.threshold, 2)}</th>`).join('');
@@ -582,7 +590,7 @@ function renderStress() {
       const rowD = (label, a, b, dec) => `<tr><td>${label}</td><td class="num">${fmt(a, dec)}</td><td class="num">${fmt(b, dec)}</td><td class="num">${signed(b - a, dec)}</td></tr>`;
       const change = describeChange(fail, s);
       return `<div class="row2 w">
-<div class="card"><h2>Что можно сделать${chips(fail)}${help(`Комбинация ${lotsOf(fail)}, ${modesOf(fail)} не проходит STRESS. Правило кейса: лимит бюджета не меняет исходную стоимость лотов, c0 снижается только сменой режима или состава. Перевод лота из A в B даёт −5 % его c0 и −18 % ценности, но лот перестаёт быть public core. Каждая строка пересчитана через case_core; в столбце STRESS — запас до лимита c0. Это машинные рекомендации движка, а не вывод аналитика: полный список одношаговых замен для портфеля команды — <b>results/repairs_stress.csv</b> (для BASE — <b>repairs_base.csv</b>).`)}</h2>
+<div class="card"><h2>Что можно сделать${chips(fail)}${help(`Комбинация ${lotsHtml(fail)}, ${modesHtml(fail)} не проходит STRESS. Правило кейса: лимит бюджета не меняет исходную стоимость лотов, c0 снижается только сменой режима или состава. Перевод лота из A в B даёт −5 % его c0 и −18 % ценности, но лот перестаёт быть public core. Каждая строка пересчитана через case_core; в столбце STRESS — запас до лимита c0. Это машинные рекомендации движка, а не вывод аналитика: полный список одношаговых замен для портфеля команды — <b>results/repairs_stress.csv</b> (для BASE — <b>repairs_base.csv</b>).`)}</h2>
 <div class="tw"><table><tr><th>Действие</th><th class="num">c0</th><th class="num">Ценность</th><th>STRESS</th></tr>${rowsA}</table></div></div>
 <div class="card"><h2>Замена: ${esc(change)}${help('Что меняется — цена управленческого решения при сокращении бюджета: разница между отвергнутой комбинацией с максимальной ценностью и показанным портфелем. Решение принимает межрегиональный заказчик; договоры по исключённому лоту не заключаются до второго этапа.')}</h2>
 <div class="tw"><table><tr><th></th><th class="num">до</th><th class="num">после</th><th class="num">Δ</th></tr>
@@ -596,11 +604,32 @@ ${rowD('Стартовые затраты c0', fail.metrics.c0, s.metrics.c0, 1)
 // ---------- сборка ----------
 const ctx = { state, esc, help, icon: ICON, head: (title, pill) => pageHead(title, pill), tab: () => curTab(), toast: (...a) => toast(...a), render: () => render(), reload: async () => { state.data = await loadDashboard(); state.selected = state.data.selected; state.builder = null; store.del('kp.selected'); render(); } };
 let lastView = null;   // страница/вкладка последнего рендера
+// Перерисовка заменяет разметку целиком, и активный элемент исчезает вместе с ней:
+// запоминаем, что было в фокусе, и после перерисовки возвращаем фокус тому же элементу.
+function focusKey(el) {
+  if (!el || el === document.body || !el.closest) return null;
+  const q = (v) => CSS.escape(v);
+  if (el.closest('#nav') && el.dataset.page) return `#nav a[data-page="${q(el.dataset.page)}"]`;
+  if (el.closest('#theme') && el.dataset.theme) return `#theme button[data-theme="${q(el.dataset.theme)}"]`;
+  if (el.closest('#scenario')) return '#scenario .dd-btn';
+  if (!el.closest('#main')) return null;
+  if (el.id) return `#${q(el.id)}`;
+  if (el.dataset.id) return `#main [data-id="${q(el.dataset.id)}"]`;
+  if (el.dataset.cmp) return `#main [data-cmp="${q(el.dataset.cmp)}"]`;
+  if (el.dataset.m && el.parentElement?.dataset.i !== undefined) return `#main .bld-mode[data-i="${q(el.parentElement.dataset.i)}"] span[data-m="${q(el.dataset.m)}"]`;
+  if (el.dataset.i !== undefined) return `#main ${el.tagName.toLowerCase()}[data-i="${q(el.dataset.i)}"]`;
+  if (el.dataset.tab) return `#main [data-tab="${q(el.dataset.tab)}"]${el.dataset.page ? `[data-page="${q(el.dataset.page)}"]` : ':not([data-page])'}`;
+  if (el.dataset.final) return '#main [data-final]';
+  return null;
+}
 function render() {
+  const key = focusKey(document.activeElement);
   renderChrome();
   const pages = { portfolio: renderPortfolio, why: renderWhy, compare: renderCompare, stress: renderStress, data: () => renderData(ctx) };
   $('#main').innerHTML = (pages[state.page] || renderPortfolio)();
   if (state.page === 'data') mountData(ctx);
+  if (key) document.querySelector(key)?.focus({ preventScroll: true });
+  fixHash();
   // Наверх — только при переходе на другую страницу или вкладку. Перерисовка на месте
   // (смена варианта сравнения, фильтр S2, выбор комбинации) не должна сбрасывать прокрутку.
   const view = `${state.page}/${curTab()}`;
@@ -612,10 +641,20 @@ function go(page, tab) {
   if (location.hash.replace('#', '') !== hashOf()) location.hash = hashOf();
   render();
 }
+let reqSeq = 0;   // номер последнего запроса к серверу: ответ более раннего игнорируется
 async function select(id) {
   if (id !== state.selected) {
     if (state.api) {
-      try { state.data = await loadDashboard(id); } catch (e) { toast('Не рассчитано: ' + e.message, false); return; }
+      const seq = ++reqSeq;
+      let data;
+      try { data = await loadDashboard(id); } catch (e) { toast('Не рассчитано: ' + e.message, false); return; }
+      if (seq !== reqSeq) return;   // пока считали, выбрали другую строку
+      state.data = data;
+      // сервер пропал посреди работы: загрузился собранный файл, в котором этой комбинации может не быть
+      if (!state.data.combinations[id]) {
+        if (!state.data.combinations[state.selected]) state.selected = state.data.selected;
+        toast('Сервер недоступен: показаны только комбинации из собранного файла', false); render(); return;
+      }
     } else if (!state.data.combinations[id]) { toast('Без сервера доступны только комбинации из собранного файла', false); return; }
     state.selected = id;
     store.set('kp.selected', id);
@@ -661,7 +700,7 @@ function toast(msg, ok = true) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
 }
-const closeMenus = () => document.querySelectorAll('.help.open,.dd.open').forEach((o) => o.classList.remove('open'));
+const closeMenus = () => document.querySelectorAll('.help.open,.dd.open').forEach((o) => { o.classList.remove('open'); o.querySelector('.help.open > i, i[aria-expanded]')?.setAttribute('aria-expanded', 'false'); });
 
 document.addEventListener('click', async (e) => {
   // сначала всплывающие элементы: кнопка «?», выбор сценария; любой другой клик вне подсказки закрывает их
@@ -669,13 +708,14 @@ document.addEventListener('click', async (e) => {
   if (hb) {
     const h = hb.parentElement, was = h.classList.contains('open');
     closeMenus();
-    if (!was) h.classList.add('open');
+    if (!was) { h.classList.add('open'); hb.setAttribute('aria-expanded', 'true'); }
     return;
   }
   if (e.target.closest('#scenario .dd-btn')) { const dd = $('#scenario'), was = dd.classList.contains('open'); closeMenus(); if (!was) dd.classList.add('open'); return; }
   const it = e.target.closest('#scenario .dd-it');
   if (it) { state.scenario = it.dataset.s; closeMenus(); render(); return; }
   if (!e.target.closest('.pop')) closeMenus();
+  if (e.target.id === 'dlg') return closeDialog();   // клик по затемнённому фону — «Остаться»
   const leave = e.target.closest('[data-leave]');
   if (leave) {
     const how = leave.dataset.leave, next = pendingNav;
@@ -708,7 +748,8 @@ document.addEventListener('click', async (e) => {
   if (gt) {
     if (!state.api) { render(); return toast('«S2 как фильтр» доступен только с сервером (python app/server.py)', false); }
     state.gatesFilter = gt.checked; store.set('kp.gates', gt.checked ? '1' : '0');
-    try { state.data = await loadDashboard(state.selected); } catch (err) { toast('Не пересчитано: ' + err.message, false); }
+    const seq = ++reqSeq;
+    try { const data = await loadDashboard(state.selected); if (seq !== reqSeq) return; state.data = data; } catch (err) { toast('Не пересчитано: ' + err.message, false); }
     render(); return;
   }
   const row = e.target.closest('tr.pick');
@@ -718,7 +759,7 @@ document.addEventListener('change', (e) => {
   const lotSel = e.target.closest('select.bld-lot');
   if (lotSel) { state.builder[+lotSel.dataset.i].lot = lotSel.value; render(); }
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenus(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeMenus(); if (dialogOpen()) closeDialog(); } });
 // Клавиатурная доступность: Enter и пробел работают как клик для строк выбора, чипов сравнения,
 // режимов в конструкторе, кнопок и кнопки подсказки «?».
 document.addEventListener('keydown', async (e) => {
@@ -727,6 +768,9 @@ document.addEventListener('keydown', async (e) => {
   if (!t || !t.closest) return;
   const hb = t.closest('.help i');
   if (hb) { e.preventDefault(); hb.click(); return; }
+  // пункты меню, вкладки, ссылки «подробнее», «Вернуть FINAL», пункты выбора сценария — якоря без href: кликаем сами
+  const act = t.closest('#nav a, .tabs a, a.more, a[data-final], #scenario .dd-it');
+  if (act) { e.preventDefault(); act.click(); return; }
   const row = t.closest('tr.pick');
   if (row) { e.preventDefault(); if (row.dataset.id !== state.selected) await select(row.dataset.id); return; }
   const cmp = t.closest('[data-cmp]');
@@ -736,7 +780,7 @@ document.addEventListener('keydown', async (e) => {
   const btn = t.closest('span.btn, span.chip[data-cmp]');
   if (btn) { e.preventDefault(); btn.click(); return; }
 });
-window.addEventListener('hashchange', () => { const before = hashOf(); if (parseHash() && hashOf() !== before) render(); });
+window.addEventListener('hashchange', () => { const before = hashOf(); const ok = parseHash(); fixHash(); if (ok && hashOf() !== before) render(); });
 
 (async () => {
   const remembered = store.get('kp.selected');

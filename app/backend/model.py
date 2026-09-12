@@ -15,7 +15,13 @@ def combo_id(selection) -> str:
 
 
 def parse_id(cid: str):
-    return [tuple(part.split(":")) for part in cid.split("|")]
+    pairs = []
+    for part in str(cid).split("|"):
+        bits = part.split(":")
+        if len(bits) != 2 or not bits[0] or not bits[1]:
+            raise ValueError(f"неверный id комбинации {cid!r}: ожидается LOT:MODE|LOT:MODE|…")
+        pairs.append((bits[0], bits[1]))
+    return pairs
 
 
 def canonical_id(case: Case, selection) -> str:

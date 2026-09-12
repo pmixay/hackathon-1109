@@ -242,7 +242,7 @@ tr.hl .lot{background:var(--hl-chip)}
 /* ---- стресс-матрица ---- */
 .matrix td{text-align:center}
 .matrix td:first-child,.matrix th:first-child,.matrix td:last-child,.matrix th:last-child{text-align:left}
-.cell{display:inline-block;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;padding:6px 12px;border-radius:9px;min-width:104px}
+.cell{display:inline-block;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;padding:6px 12px;border-radius:9px;min-width:104px;white-space:nowrap}
 .cell.ok{background:var(--good-soft);color:var(--good-ink)}.cell.thin{background:var(--warn-soft);color:var(--warn-ink)}.cell.bad{background:var(--crit-soft);color:var(--crit-ink)}
 
 /* ---- карточки сервисов (тексты из config/lots_ui.csv) ---- */
@@ -486,5 +486,6 @@ table.brk td .sub{font-size:12px}
 .tsw button:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
 .help i:focus-visible{border-color:var(--brand);color:var(--brand)}
 /* ---- доступность с клавиатуры и коды вариантов (аудит 12.09: Т2, Т4) ---- */
-tr.pick:focus-visible,.btn:focus-visible,.chip[data-cmp]:focus-visible,.bld-mode span:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:6px}
+tr.pick:focus-visible,.btn:focus-visible,.chip[data-cmp]:focus-visible,.bld-mode span:focus-visible,.tabs a:focus-visible,.more:focus-visible,.dd-it:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:6px}
+.nav a:focus-visible{outline:2px solid #fff;outline-offset:-2px}
 .alt-code{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--rule);border-radius:6px;padding:1px 5px;margin-right:5px;vertical-align:2px}

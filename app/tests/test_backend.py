@@ -458,6 +458,37 @@ class EdgeCases(unittest.TestCase):
         cfg["scenarios"]["STRESS"] = {"c0_max_mrub": 1180}
         self.assertTrue(ingest.validate_config(json.dumps(cfg))["ok"])
 
+    # проверки загрузки не должны падать исключением ни на одном «структурно странном» файле (аудит 12.09)
+    def test_upload_validation_never_raises(self):
+        lots = (REPO / "data" / "lots.csv").read_text(encoding="utf-8")
+        header, first, *rest = lots.splitlines()
+        rep = ingest.validate_lots("\n".join([header, first + ",лишнее,поле", *rest]))   # строка длиннее заголовка
+        self.assertTrue(rep["ok"], rep)
+        rep = ingest.validate_lots("\ufeff" + lots)                                       # BOM из Excel
+        self.assertTrue(rep["ok"], rep)
+        for text in ("[]", "null", "1", '"x"'):
+            rep = ingest.validate_config(text)
+            self.assertFalse(rep["ok"])
+            self.assertIn("объектом", rep["errors"][0])
+
+    def test_upload_rejects_ids_that_break_combination_ids(self):
+        lots = (REPO / "data" / "lots.csv").read_text(encoding="utf-8")
+        for bad in ("FL|OOD", "FL:OOD", "FL<b>OOD", "FL OOD"):
+            rep = ingest.validate_lots(lots.replace("FLOOD", bad, 1))
+            self.assertFalse(rep["ok"], bad)
+            self.assertTrue(any("lot_id" in e and "латиница" in e for e in rep["errors"]), rep["errors"])
+        modes = (REPO / "data" / "access_modes.csv").read_text(encoding="utf-8")
+        rep = ingest.validate_modes(modes.replace("\nC,", "\nC:D,", 1))
+        self.assertFalse(rep["ok"])
+        self.assertTrue(any("mode_id" in e for e in rep["errors"]), rep["errors"])
+        self.assertTrue(ingest.validate_modes(modes)["ok"])
+
+    def test_parse_id_rejects_malformed_ids(self):
+        self.assertEqual(model.parse_id("FIRE:A|ENV:A"), [("FIRE", "A"), ("ENV", "A")])
+        for cid in ("bogus", "FIRE:A|ENV:A|", "FIRE:A:B|ENV:A", ":A|ENV:A", ""):
+            with self.assertRaisesRegex(ValueError, "неверный id комбинации"):
+                model.parse_id(cid)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -30,6 +30,13 @@ APP = Path(__file__).resolve().parent
 STATIC = APP / "static"
 
 
+MAX_BODY = 8 * 1024 * 1024   # три файла организаторов весят килобайты; лимит защищает поток сервера от случайного гигабайта
+
+
+class PayloadTooLarge(ValueError):
+    pass
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(STATIC), **kw)
@@ -49,8 +56,17 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def _body(self) -> dict:
-        """JSON-тело POST; не объект или не JSON → ValueError → 400."""
+        """JSON-тело POST; не объект или не JSON → ValueError → 400; больше MAX_BODY → 413."""
         length = int(self.headers.get("Content-Length") or 0)
+        if length > MAX_BODY:
+            # дочитать умеренно большое тело, чтобы клиент получил ответ 413, а не обрыв соединения
+            remaining = length if length <= 8 * MAX_BODY else 0
+            while remaining > 0:
+                chunk = self.rfile.read(min(65536, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+            raise PayloadTooLarge(f"тело запроса {length} байт, допустимо до {MAX_BODY // (1024 * 1024)} МБ")
         body = json.loads(self.rfile.read(length) or b"{}")  # JSONDecodeError — подкласс ValueError
         if not isinstance(body, dict):
             raise ValueError("тело запроса должно быть JSON-объектом")
@@ -60,6 +76,8 @@ class Handler(SimpleHTTPRequestHandler):
         # Ошибки API всегда отдаём JSON: иначе соединение рвётся без ответа, и интерфейс молча уходит в статический режим.
         try:
             return fn(url)
+        except PayloadTooLarge as e:
+            return self._json(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, {"error": str(e)})
         except ValueError as e:
             return self._json(HTTPStatus.BAD_REQUEST, {"error": str(e)})
         except Exception as e:  # noqa: BLE001 — сообщить клиенту, а не уронить поток сервера
@@ -83,13 +101,29 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(HTTPStatus.OK, ingest.describe())
         return self._json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint"})
 
+    def do_HEAD(self):
+        # HEAD на API — те же заголовки, что у GET, без тела; статика — как у SimpleHTTPRequestHandler
+        url = urlparse(self.path)
+        if url.path.startswith("/api/"):
+            self.send_response(HTTPStatus.OK if url.path in ("/api/dashboard", "/api/data") else HTTPStatus.NOT_FOUND)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            return None
+        if url.path == "/":
+            self.path = "/index.html"
+        return super().do_HEAD()
+
     def do_POST(self):
         return self._api(self._post_api, urlparse(self.path))
 
     def _post_api(self, url):
         if url.path == "/api/data":
             body = self._body()
-            files = {k: v for k, v in (body.get("files") or {}).items() if k in ingest.FILES and isinstance(v, str)}
+            sent = body.get("files")
+            if not isinstance(sent, dict):
+                raise ValueError("files должен быть объектом {имя файла: текст}")
+            files = {k: v for k, v in sent.items() if k in ingest.FILES and isinstance(v, str)}
             if not files:
                 return self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "нет файлов", "report": {}})
             report = ingest.validate(files)

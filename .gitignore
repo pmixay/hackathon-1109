@@ -1,4 +1,7 @@
 __pycache__/
 *.pyc
+.venv/
+.pytest_cache/
 cases/case02/results_all_portfolios.csv
 app/data/
+results/enumeration.csv

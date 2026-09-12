@@ -1,0 +1,14 @@
+{
+  "method": "weighted_sum_minmax",
+  "feasibility_scenario": "BASE",
+  "owner": "участник 3 (модель выбора); значения ниже — стартовый черновик из docs/team/B-model.md",
+  "criteria": [
+    {"key": "vpub", "direction": "max", "weight": 0.30, "rationale": "общественная ценность — главная цель заказчика по постановке"},
+    {"key": "c0", "direction": "min", "weight": 0.15, "rationale": "стартовые затраты ограничены лимитом бюджета"},
+    {"key": "kcash", "direction": "max", "weight": 0.15, "rationale": "устойчивое финансирование: покрытие OPEX поступлениями"},
+    {"key": "readiness", "direction": "max", "weight": 0.10, "rationale": "готовность к запуску снижает риск реализации"},
+    {"key": "resilience", "direction": "max", "weight": 0.10, "rationale": "устойчивость сервиса к сбоям и изменению условий"},
+    {"key": "scale", "direction": "max", "weight": 0.10, "rationale": "тиражируемость между регионами"},
+    {"key": "margin:STRESS:c0_limit", "direction": "max", "weight": 0.10, "rationale": "запас по лимиту стресс-сценария (1180 − c0)"}
+  ]
+}

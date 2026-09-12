@@ -1,0 +1,39 @@
+{
+  "variants": [
+    {
+      "name": "FINAL",
+      "selection": [{"lot_id": "FIRE", "mode_id": "A"}, {"lot_id": "ENV", "mode_id": "A"}, {"lot_id": "AGRI", "mode_id": "B"}, {"lot_id": "TRANS", "mode_id": "B"}],
+      "note": "итоговый портфель команды (подтверждён участником 3 12.09 11:02): два лота ЧС/экологии в A как public core, два экономических лота в B; cash покрывает OPEX полностью"
+    },
+    {
+      "name": "V1",
+      "selection": [{"lot_id": "FIRE", "mode_id": "A"}, {"lot_id": "AGRI", "mode_id": "A"}, {"lot_id": "TRANS", "mode_id": "A"}, {"lot_id": "ENV", "mode_id": "A"}],
+      "note": "пожары Сибири + три экономических лота; проходит STRESS при любых режимах"
+    },
+    {
+      "name": "V2",
+      "selection": [{"lot_id": "FLOOD", "mode_id": "A"}, {"lot_id": "AGRI", "mode_id": "A"}, {"lot_id": "TRANS", "mode_id": "B"}, {"lot_id": "ENV", "mode_id": "A"}],
+      "note": "паводки Дальнего Востока вместо пожаров; выше денежный поток"
+    },
+    {
+      "name": "V3",
+      "selection": [{"lot_id": "FIRE", "mode_id": "A"}, {"lot_id": "FLOOD", "mode_id": "A"}, {"lot_id": "TRANS", "mode_id": "A"}, {"lot_id": "ENV", "mode_id": "A"}],
+      "note": "максимум общественной ценности (два лота ЧС), не проходит STRESS"
+    },
+    {
+      "name": "V4",
+      "selection": [{"lot_id": "AGRI", "mode_id": "A"}, {"lot_id": "TRANS", "mode_id": "A"}, {"lot_id": "ENV", "mode_id": "A"}, {"lot_id": "SSA", "mode_id": "A"}],
+      "note": "с федеральным лотом; ценность ниже, федеральный соплательщик"
+    },
+    {
+      "name": "V5",
+      "selection": [{"lot_id": "FIRE", "mode_id": "A"}, {"lot_id": "AGRI", "mode_id": "B"}, {"lot_id": "INFRA", "mode_id": "A"}, {"lot_id": "TRANS", "mode_id": "B"}],
+      "note": "лучшее покрытие OPEX деньгами, ровно 2 public core"
+    },
+    {
+      "name": "V6",
+      "selection": [{"lot_id": "AGRI", "mode_id": "A"}, {"lot_id": "INFRA", "mode_id": "A"}, {"lot_id": "TRANS", "mode_id": "A"}, {"lot_id": "ENV", "mode_id": "A"}],
+      "note": "самый дешёвый, без лотов ЧС"
+    }
+  ]
+}

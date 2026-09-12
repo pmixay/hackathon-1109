@@ -1,0 +1,239 @@
+from __future__ import annotations
+
+import json
+import math
+from dataclasses import dataclass, replace
+from pathlib import Path
+
+from .calc import coverage, evaluate
+from .case import Case
+from .checks import run_checks
+from .validation import InputError, require_valid_selection
+
+DIRECTIONS = ("max", "min")
+MARGIN_PREFIX = "margin:"
+
+
+class WeightsError(InputError):
+    kind = "invalid_weights"
+
+
+@dataclass(frozen=True)
+class Criterion:
+    key: str
+    direction: str
+    weight: float
+    rationale: str = ""
+
+
+@dataclass(frozen=True)
+class SelectionModel:
+    method: str
+    feasibility_scenario: str
+    criteria: tuple
+
+    @property
+    def total_weight(self) -> float:
+        return sum(criterion.weight for criterion in self.criteria)
+
+    def with_weight(self, key: str, weight: float) -> SelectionModel:
+        criteria = tuple(replace(c, weight=weight) if c.key == key else c for c in self.criteria)
+        return replace(self, criteria=criteria)
+
+
+@dataclass(frozen=True)
+class ScoredVariant:
+    name: str
+    feasible: bool
+    values: dict
+    normalized: dict
+    score: float | None
+    rank: int | None
+
+
+@dataclass(frozen=True)
+class WeightSensitivity:
+    key: str
+    factor: float
+    weight: float
+    leader: str | None
+    leader_changed: bool
+    ranking: tuple
+
+
+@dataclass(frozen=True)
+class ParameterSensitivity:
+    parameter: str
+    factor: float
+    scenario: str
+    feasible: bool
+    failed_checks: tuple
+
+
+def parse_selection_model(raw) -> SelectionModel:
+    if not isinstance(raw, dict):
+        raise WeightsError([f"описание модели выбора должно быть объектом JSON, получено {type(raw).__name__}"])
+    items = raw.get("criteria")
+    if not isinstance(items, list):
+        raise WeightsError(["criteria: ожидается список критериев"])
+    problems = []
+    criteria = []
+    seen = set()
+    for index, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            problems.append(f"критерий {index}: ожидается объект с полями key, direction, weight")
+            continue
+        key = str(item.get("key") or "").strip()
+        direction = str(item.get("direction") or "").strip()
+        weight = item.get("weight")
+        if not key:
+            problems.append(f"критерий {index}: пустой key")
+        elif key in seen:
+            problems.append(f"критерий {index}: key {key} повторяется")
+        seen.add(key)
+        if direction not in DIRECTIONS:
+            problems.append(f"критерий {key or index}: direction должен быть max или min, получено {direction!r}")
+        if isinstance(weight, bool) or not isinstance(weight, (int, float)) or not math.isfinite(weight) or weight < 0:
+            problems.append(f"критерий {key or index}: weight должен быть неотрицательным числом, получено {weight!r}")
+            weight = 0.0
+        criteria.append(Criterion(key=key, direction=direction, weight=float(weight), rationale=str(item.get("rationale") or "")))
+    if not criteria:
+        problems.append("список критериев пуст")
+    elif sum(c.weight for c in criteria) <= 0:
+        problems.append("сумма весов должна быть больше нуля")
+    if problems:
+        raise WeightsError(problems)
+    return SelectionModel(
+        method=str(raw.get("method") or "weighted_sum_minmax"),
+        feasibility_scenario=str(raw.get("feasibility_scenario") or "BASE"),
+        criteria=tuple(criteria),
+    )
+
+
+def load_selection_model(path) -> SelectionModel:
+    return parse_selection_model(json.loads(Path(path).read_text(encoding="utf-8")))
+
+
+def criterion_value(results: dict, key: str, base_scenario: str) -> float:
+    metrics = results[base_scenario].metrics
+    if hasattr(metrics, key):
+        return float(getattr(metrics, key))
+    if key.startswith(MARGIN_PREFIX):
+        _, scenario_id, code = key.split(":", 2)
+        for check in results[scenario_id].checks:
+            if check.code == code:
+                return float(check.margin)
+        raise KeyError(f"unknown check {code!r} for criterion {key!r}")
+    raise KeyError(f"unknown criterion {key!r}")
+
+
+def normalize(values: dict, direction: str) -> dict:
+    if not values:
+        return {}
+    low, high = min(values.values()), max(values.values())
+    if math.isclose(low, high):
+        return {name: 1.0 for name in values}
+    normalized = {name: (value - low) / (high - low) for name, value in values.items()}
+    if direction == "min":
+        normalized = {name: 1.0 - value for name, value in normalized.items()}
+    return normalized
+
+
+def score_variants(evaluated: dict, model: SelectionModel) -> list:
+    scenario = model.feasibility_scenario
+    candidates = [name for name, results in evaluated.items() if results[scenario].feasible]
+    values = {c.key: {name: criterion_value(evaluated[name], c.key, scenario) for name in candidates} for c in model.criteria}
+    normalized = {c.key: normalize(values[c.key], c.direction) for c in model.criteria}
+    total = model.total_weight
+    scores = {name: sum(c.weight * normalized[c.key][name] for c in model.criteria) / total for name in candidates}
+    order = sorted(candidates, key=lambda name: (-scores[name], name))
+    ranks = {name: position for position, name in enumerate(order, start=1)}
+    scored = []
+    for name, results in evaluated.items():
+        feasible = name in ranks
+        scored.append(ScoredVariant(
+            name=name,
+            feasible=feasible,
+            values={c.key: criterion_value(results, c.key, scenario) for c in model.criteria},
+            normalized={c.key: normalized[c.key][name] for c in model.criteria} if feasible else {},
+            score=scores[name] if feasible else None,
+            rank=ranks.get(name),
+        ))
+    scored.sort(key=lambda item: (item.rank is None, item.rank or 0, item.name))
+    return scored
+
+
+def leader_of(scored) -> str | None:
+    for item in scored:
+        if item.rank == 1:
+            return item.name
+    return None
+
+
+def ranking_of(scored) -> tuple:
+    return tuple(item.name for item in scored if item.rank is not None)
+
+
+def weight_sensitivity(evaluated: dict, model: SelectionModel, delta: float = 0.2) -> list:
+    baseline = leader_of(score_variants(evaluated, model))
+    rows = []
+    for criterion in model.criteria:
+        for factor in (1.0 - delta, 1.0 + delta):
+            weight = criterion.weight * factor
+            scored = score_variants(evaluated, model.with_weight(criterion.key, weight))
+            leader = leader_of(scored)
+            rows.append(WeightSensitivity(
+                key=criterion.key,
+                factor=factor,
+                weight=weight,
+                leader=leader,
+                leader_changed=leader != baseline,
+                ranking=ranking_of(scored),
+            ))
+    return rows
+
+
+def perturb(metrics, parameter: str, factor: float):
+    if parameter == "vpub":
+        return replace(metrics, vpub=metrics.vpub * factor)
+    if parameter == "cash":
+        cash = metrics.cash * factor
+        return replace(
+            metrics,
+            cash=cash,
+            anchor_cash=metrics.anchor_cash * factor,
+            commercial_cash=metrics.commercial_cash * factor,
+            kcash=coverage(cash, metrics.opex),
+            opex_gap=metrics.opex - cash,
+        )
+    if parameter == "opex":
+        opex = metrics.opex * factor
+        return replace(
+            metrics,
+            opex=opex,
+            kcash=coverage(metrics.cash, opex),
+            opex_gap=opex - metrics.cash,
+        )
+    if parameter == "c0":
+        return replace(metrics, c0=metrics.c0 * factor)
+    raise KeyError(f"unsupported parameter {parameter!r}")
+
+
+def parameter_sensitivity(case: Case, selection, parameters=("vpub", "cash"), delta: float = 0.2) -> list:
+    pairs = require_valid_selection(case, selection)
+    _, metrics = evaluate(case, pairs)
+    rows = []
+    for parameter in parameters:
+        for factor in (1.0 - delta, 1.0 + delta):
+            perturbed = perturb(metrics, parameter, factor)
+            for scenario_id, scenario in case.scenarios.items():
+                checks = run_checks(perturbed, case.constraints, scenario)
+                failed = tuple(check.code for check in checks if not check.passed)
+                rows.append(ParameterSensitivity(
+                    parameter=parameter,
+                    factor=factor,
+                    scenario=scenario_id,
+                    feasible=not failed,
+                    failed_checks=failed,
+                ))
+    return rows

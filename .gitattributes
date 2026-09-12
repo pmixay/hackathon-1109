@@ -1,0 +1,9 @@
+data/lots.csv -text
+data/access_modes.csv -text
+config/case_config.json -text
+src/case_core.py -text
+cases/case02/data/lots.csv -text
+cases/case02/data/access_modes.csv -text
+cases/case02/config/case_config.json -text
+cases/case02/case_core.py -text
+config/case_checksums.json -text

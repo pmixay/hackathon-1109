@@ -13,6 +13,10 @@
 
 - `app/` — расчётный инструмент: интерфейс (`static/`), расчётный слой на
   стандартной библиотеке (`backend/`), конфиги команды (`config/`), тесты.
+- `src/kosmo/` — независимый расчётный движок кейса 02 на Python 3.10+.
+- `config/` — итоговый портфель, альтернативы, веса и допущения команды.
+- `data/` — неизменённые данные организаторов; `results/` — единственный источник цифр для записки и слайдов.
+- `tests/` — 333 теста, включая сверку с каноническим ядром на всех 5670 комбинациях.
 - `cases/case02/` — материалы организаторов Кейса 02: README, канонический расчёт
   `case_core.py`, данные и конфиг. Не редактируются.
 - `cases/case01/` — материалы Кейса 01, сохранены как история выбора.
@@ -24,3 +28,20 @@
 - `docs/case-research.md` — сверка обоих кейсов с ТЗ до выбора; исторический документ.
 - `tools/` — `case02_enumerate.py` (перебор всех портфелей Кейса 02),
   `case01_baseline.py` (базовые числа Кейса 01).
+
+## Быстрый запуск расчётного движка
+
+Нужен Python 3.10 или новее. Внешних зависимостей у движка нет; `pandas` ставится только для теста сверки с каноническим кодом.
+
+```bash
+python -m venv .venv
+.venv/Scripts/pip install -r requirements.txt      # Linux/macOS: .venv/bin/pip
+set PYTHONPATH=src                                  # Linux/macOS: export PYTHONPATH=src
+python -m kosmo calc                                # итоговый портфель из config/portfolio.json, оба сценария
+python -m kosmo calc --lots FIRE:A ENV:A AGRI:B TRANS:B --scenario STRESS
+python -m kosmo compare --weights config/weights.json
+python -m kosmo export                              # перевыгрузить results/
+python -m pytest -q                                 # 333 теста, около 25 секунд
+```
+
+Подробности, формат входа и выхода, формулы и коды выхода: [docs/calc-engine.md](docs/calc-engine.md). Допущения по SLA, источникам данных и эксплуатационной архитектуре: [config/assumptions.json](config/assumptions.json) (проектное описание, в движке не реализовано).

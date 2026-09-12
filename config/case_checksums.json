@@ -1,0 +1,6 @@
+{
+  "data/lots.csv": "8e2b6244178344f9f97050ce5c9f337cd311e9f86bbd96bbbfbdde6999c4ba8b",
+  "data/access_modes.csv": "2669239db6c366c15b13df9d874dc3c8a790ba961bfeddbf9c428fa82fb861c7",
+  "config/case_config.json": "aae20d265b69fa8ec309ce8dc435fb1ae43ed34510c2746baa5024b472426463",
+  "src/case_core.py": "0a6da8b99dbb2e6ff03cb94012f539d8cd0b9c7dd05525bda5b202ebb461e20c"
+}

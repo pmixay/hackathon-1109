@@ -1,0 +1,337 @@
+{
+  "generated_at": "2026-09-12T08:16:51+00:00",
+  "case": {
+    "case_id": "SEP-KOSMOS-INFRA-2026",
+    "version": "1.1",
+    "verified": true,
+    "checksums": {
+      "data/lots.csv": "8e2b6244178344f9f97050ce5c9f337cd311e9f86bbd96bbbfbdde6999c4ba8b",
+      "data/access_modes.csv": "2669239db6c366c15b13df9d874dc3c8a790ba961bfeddbf9c428fa82fb861c7",
+      "config/case_config.json": "aae20d265b69fa8ec309ce8dc435fb1ae43ed34510c2746baa5024b472426463",
+      "src/case_core.py": "0a6da8b99dbb2e6ff03cb94012f539d8cd0b9c7dd05525bda5b202ebb461e20c"
+    }
+  },
+  "portfolio": {
+    "name": "FINAL",
+    "selection": [
+      {
+        "lot_id": "FIRE",
+        "mode_id": "A"
+      },
+      {
+        "lot_id": "ENV",
+        "mode_id": "A"
+      },
+      {
+        "lot_id": "AGRI",
+        "mode_id": "B"
+      },
+      {
+        "lot_id": "TRANS",
+        "mode_id": "B"
+      }
+    ],
+    "note": "итоговый портфель команды; подтверждён участником 3 (экономист) 12.09.2026 11:02 и командой 11:03; до этого здесь был черновик V1"
+  },
+  "custom_modes": [],
+  "scenario": "STRESS",
+  "selection": [
+    {
+      "lot_id": "FIRE",
+      "mode_id": "A"
+    },
+    {
+      "lot_id": "ENV",
+      "mode_id": "A"
+    },
+    {
+      "lot_id": "AGRI",
+      "mode_id": "B"
+    },
+    {
+      "lot_id": "TRANS",
+      "mode_id": "B"
+    }
+  ],
+  "lots": [
+    {
+      "lot_id": "FIRE",
+      "mode_id": "A",
+      "service": "Siberian forest fire monitoring",
+      "territorial_archetype": "Siberian",
+      "federal": false,
+      "capability_groups": [
+        "EO"
+      ],
+      "capability_set": [
+        "EO"
+      ],
+      "public_core": true,
+      "c0": 336.0,
+      "opex": 89.25,
+      "vpub": 560.0,
+      "anchor_cash": 75.0,
+      "commercial_cash": 8.75,
+      "cash": 83.75,
+      "opex_gap": 5.5,
+      "t_rep": 0.68,
+      "readiness": 4.3,
+      "resilience": 3.5,
+      "scale": 4.5
+    },
+    {
+      "lot_id": "ENV",
+      "mode_id": "A",
+      "service": "Environmental monitoring",
+      "territorial_archetype": "VolgaCaspian",
+      "federal": false,
+      "capability_groups": [
+        "EO"
+      ],
+      "capability_set": [
+        "EO"
+      ],
+      "public_core": true,
+      "c0": 294.0,
+      "opex": 78.75,
+      "vpub": 360.0,
+      "anchor_cash": 55.0,
+      "commercial_cash": 21.25,
+      "cash": 76.25,
+      "opex_gap": 2.5,
+      "t_rep": 0.73,
+      "readiness": 4.4,
+      "resilience": 4.2,
+      "scale": 4.7
+    },
+    {
+      "lot_id": "AGRI",
+      "mode_id": "B",
+      "service": "Agricultural analytics",
+      "territorial_archetype": "South",
+      "federal": false,
+      "capability_groups": [
+        "EO",
+        "PNT/InSAR"
+      ],
+      "capability_set": [
+        "EO",
+        "PNT/InSAR"
+      ],
+      "public_core": false,
+      "c0": 260.0,
+      "opex": 75.0,
+      "vpub": 188.6,
+      "anchor_cash": 24.0,
+      "commercial_cash": 84.0,
+      "cash": 108.0,
+      "opex_gap": -33.0,
+      "t_rep": 0.74,
+      "readiness": 4.6,
+      "resilience": 4.1,
+      "scale": 4.8
+    },
+    {
+      "lot_id": "TRANS",
+      "mode_id": "B",
+      "service": "Transport monitoring",
+      "territorial_archetype": "Central",
+      "federal": false,
+      "capability_groups": [
+        "PNT/InSAR",
+        "EO"
+      ],
+      "capability_set": [
+        "EO",
+        "PNT/InSAR"
+      ],
+      "public_core": false,
+      "c0": 250.0,
+      "opex": 70.0,
+      "vpub": 180.39999999999998,
+      "anchor_cash": 36.0,
+      "commercial_cash": 66.5,
+      "cash": 102.5,
+      "opex_gap": -32.5,
+      "t_rep": 0.77,
+      "readiness": 4.8,
+      "resilience": 4.4,
+      "scale": 4.7
+    }
+  ],
+  "metrics": {
+    "selected_lots": 4,
+    "c0": 1140.0,
+    "opex": 313.0,
+    "vpub": 1289.0,
+    "cash": 370.5,
+    "anchor_cash": 190.0,
+    "commercial_cash": 180.5,
+    "kcash": 1.18370607028754,
+    "opex_gap": -57.5,
+    "t_rep": 0.73,
+    "readiness": 4.525,
+    "resilience": 4.05,
+    "scale": 4.675,
+    "territorial_archetypes": 4,
+    "capability_groups": 2,
+    "capability_set": [
+      "EO",
+      "PNT/InSAR"
+    ],
+    "public_core_lots": 2
+  },
+  "checks": [
+    {
+      "code": "exact_lot_count",
+      "label": "Ровно четыре уникальных лота",
+      "metric": "selected_lots",
+      "operator": "==",
+      "threshold": 4.0,
+      "actual": 4.0,
+      "unit": "шт.",
+      "scope": "common",
+      "passed": true,
+      "margin": 0.0,
+      "status": "выполнено"
+    },
+    {
+      "code": "territorial_archetypes",
+      "label": "Территориальные архетипы среди нефедеральных лотов",
+      "metric": "territorial_archetypes",
+      "operator": ">=",
+      "threshold": 3.0,
+      "actual": 4.0,
+      "unit": "шт.",
+      "scope": "common",
+      "passed": true,
+      "margin": 1.0,
+      "status": "выполнено"
+    },
+    {
+      "code": "capability_groups",
+      "label": "Разные группы космических возможностей",
+      "metric": "capability_groups",
+      "operator": ">=",
+      "threshold": 2.0,
+      "actual": 2.0,
+      "unit": "шт.",
+      "scope": "common",
+      "passed": true,
+      "margin": 0.0,
+      "status": "выполнено"
+    },
+    {
+      "code": "public_core_lots",
+      "label": "Лоты в режиме с public core",
+      "metric": "public_core_lots",
+      "operator": ">=",
+      "threshold": 2.0,
+      "actual": 2.0,
+      "unit": "шт.",
+      "scope": "common",
+      "passed": true,
+      "margin": 0.0,
+      "status": "выполнено"
+    },
+    {
+      "code": "c0_limit",
+      "label": "Стартовые затраты портфеля",
+      "metric": "c0",
+      "operator": "<=",
+      "threshold": 1180.0,
+      "actual": 1140.0,
+      "unit": "млн руб.",
+      "scope": "STRESS",
+      "passed": true,
+      "margin": 40.0,
+      "status": "выполнено"
+    },
+    {
+      "code": "opex_limit",
+      "label": "Годовые эксплуатационные расходы портфеля",
+      "metric": "opex",
+      "operator": "<=",
+      "threshold": 360.0,
+      "actual": 313.0,
+      "unit": "млн руб./год",
+      "scope": "common",
+      "passed": true,
+      "margin": 47.0,
+      "status": "выполнено"
+    },
+    {
+      "code": "vpub_floor",
+      "label": "Годовая общественная ценность портфеля",
+      "metric": "vpub",
+      "operator": ">=",
+      "threshold": 1000.0,
+      "actual": 1289.0,
+      "unit": "млн руб./год",
+      "scope": "common",
+      "passed": true,
+      "margin": 289.0,
+      "status": "выполнено"
+    },
+    {
+      "code": "kcash_floor",
+      "label": "Покрытие OPEX денежными поступлениями",
+      "metric": "kcash",
+      "operator": ">=",
+      "threshold": 0.6,
+      "actual": 1.18370607028754,
+      "unit": "доля",
+      "scope": "common",
+      "passed": true,
+      "margin": 0.58370607028754,
+      "status": "выполнено"
+    },
+    {
+      "code": "t_rep_floor",
+      "label": "Средний t_rep по портфелю",
+      "metric": "t_rep",
+      "operator": ">=",
+      "threshold": 0.63,
+      "actual": 0.73,
+      "unit": "индекс",
+      "scope": "common",
+      "passed": true,
+      "margin": 0.09999999999999998,
+      "status": "выполнено"
+    }
+  ],
+  "feasible": true,
+  "failed_checks": [],
+  "notes": [
+    {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1140.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+        "FIRE",
+        "ENV",
+        "AGRI",
+        "TRANS"
+      ]
+    },
+    {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (190.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+        "FIRE",
+        "ENV",
+        "AGRI",
+        "TRANS"
+      ]
+    },
+    {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 40.0 млн руб. (3.4%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+        "FIRE",
+        "ENV",
+        "AGRI",
+        "TRANS"
+      ]
+    }
+  ]
+}

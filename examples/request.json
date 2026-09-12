@@ -1,0 +1,26 @@
+{
+  "portfolio": {
+    "name": "V1",
+    "selection": [
+      {
+        "lot_id": "FIRE",
+        "mode_id": "A"
+      },
+      {
+        "lot_id": "AGRI",
+        "mode_id": "A"
+      },
+      {
+        "lot_id": "TRANS",
+        "mode_id": "A"
+      },
+      {
+        "lot_id": "ENV",
+        "mode_id": "A"
+      }
+    ],
+    "note": "черновик до гейта 12.09 01:00; итоговое решение команды записывается сюда"
+  },
+  "scenario": "STRESS",
+  "custom_mode": null
+}

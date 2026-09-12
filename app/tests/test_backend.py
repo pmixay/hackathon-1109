@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from backend import evaluate as ev, model, payload  # noqa: E402
+from backend import evaluate as ev, ingest, model, payload  # noqa: E402
 
 from kosmo import calculate, calculate_all_scenarios, load_portfolio, score_variants  # noqa: E402
 
@@ -258,7 +258,8 @@ class Export(unittest.TestCase):
             self.assertEqual(fresh, committed)
             self.assertEqual(fresh["portfolio"]["name"], "FINAL")
             for name in ("portfolio_detail.csv", "portfolio_metrics.json", "team_decision_config.json"):
-                self.assertEqual((Path(tmp) / name).read_bytes(), (REPO / "results" / name).read_bytes(), name)
+                norm = lambda b: b.replace(b"\r\n", b"\n")  # csv пишет CRLF, а в checkout git может быть LF: сравниваем содержимое, не переводы строк
+            self.assertEqual(norm((Path(tmp) / name).read_bytes()), norm((REPO / "results" / name).read_bytes()), name)
 
     def test_export_matches_template_format(self):
         import csv
@@ -301,6 +302,148 @@ class Export(unittest.TestCase):
             rows = (out / "alternatives.csv").read_text(encoding="utf-8").splitlines()
             self.assertEqual(len(rows), 1 + 2 * 10)
             self.assertTrue(rows[1].startswith(other))
+
+
+
+class Payload2(unittest.TestCase):
+    """Поля контракта для конструктора, экрана «Почему FINAL» и сценария S2."""
+
+    FINAL = "FIRE:A|AGRI:B|TRANS:B|ENV:A"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.d = payload.build_dashboard()
+
+    def test_final_and_alternatives_present(self):
+        d = self.d
+        self.assertEqual(d["final"], self.FINAL)
+        self.assertEqual(d["final_name"], "FINAL")
+        self.assertIn(d["final"], d["combinations"])
+        names = [a["name"] for a in d["alternatives"]]
+        self.assertIn("FINAL", names)
+        self.assertIn("V2", names)
+        for a in d["alternatives"]:
+            self.assertIn(a["id"], d["combinations"], a["name"])
+        self.assertEqual(next(a for a in d["alternatives"] if a["name"] == "FINAL")["id"], self.FINAL)
+        self.assertTrue(d["why_final"].get("status"))
+
+    def test_score_breakdown_sums_to_score(self):
+        keys = [b["key"] for b in self.d["combinations"][self.FINAL]["breakdown"]]
+        self.assertEqual(keys, ["vpub", "c0", "kcash", "readiness", "resilience", "scale", "margin:STRESS:c0_limit"])
+        for c in self.d["combinations"].values():
+            self.assertAlmostEqual(sum(b["contribution"] for b in c["breakdown"]), c["score"], places=3, msg=c["id"])
+            for b in c["breakdown"]:
+                self.assertTrue(0 <= b["z"] <= 1)
+                self.assertTrue(b["lo"] <= b["hi"])
+
+    def test_breakdown_matches_ranking_full_csv(self):
+        """z-значения FINAL те же, что в results/ranking_full.csv движка (участник 3)."""
+        import csv
+
+        path = Path(__file__).resolve().parents[2] / "results" / "ranking_full.csv"
+        if not path.exists():
+            self.skipTest("нет results/ranking_full.csv")
+        with open(path, encoding="utf-8", newline="") as f:
+            row = next(r for r in csv.DictReader(f) if r["variant"] == self.FINAL)
+        for b in self.d["combinations"][self.FINAL]["breakdown"]:
+            self.assertAlmostEqual(b["z"], float(row["z_" + b["key"]]), places=3, msg=b["key"])
+        self.assertAlmostEqual(self.d["combinations"][self.FINAL]["score"], float(row["score"]), places=3)
+
+    def test_s2_commercial_zero(self):
+        f = self.d["combinations"][self.FINAL]
+        self.assertAlmostEqual(f["metrics"]["anchor_cash"], 190.0)
+        self.assertAlmostEqual(f["metrics"]["commercial_cash"], 180.5)
+        self.assertAlmostEqual(f["s2"]["cash"], 190.0)
+        self.assertAlmostEqual(f["s2"]["kcash"], 190.0 / 313.0)
+        self.assertAlmostEqual(f["s2"]["opex_gap"], 123.0)
+        self.assertTrue(f["s2"]["kcash_ok"])
+
+    def test_arbitrary_portfolio_keeps_final(self):
+        d = payload.build_dashboard("FIRE:A|FLOOD:A|TRANS:A|ENV:A")
+        self.assertEqual(d["selected"], "FIRE:A|FLOOD:A|TRANS:A|ENV:A")
+        self.assertEqual(d["final"], self.FINAL)
+        self.assertIn(self.FINAL, d["combinations"])
+        c = d["combinations"][d["selected"]]
+        self.assertTrue(c["ok"]["BASE"]); self.assertFalse(c["ok"]["STRESS"])
+        bad = [r for r in c["checks"]["STRESS"] if not r["ok"]]
+        self.assertEqual([r["id"] for r in bad], ["c0_limit"])
+        self.assertAlmostEqual(bad[0]["fact"] - bad[0]["threshold"], 69.5)
+        self.assertIsNone(c["rank"])
+
+    def test_service_cards_have_payer_and_risk(self):
+        for lid in ("FIRE", "ENV", "AGRI", "TRANS"):
+            card = self.d["lots"][lid]["card"]
+            self.assertTrue(card["payer"] and card["risk"] and card["problem"], lid)
+
+
+class EdgeCases(unittest.TestCase):
+    """Крайние входы: неполные альтернативы, нет why_final.json, FINAL вне набора, набор без STRESS."""
+
+    FINAL = "FIRE:A|AGRI:B|TRANS:B|ENV:A"
+
+    def test_broken_alternatives_are_skipped(self):
+        import json
+        import tempfile
+
+        case, records = payload._enumerated()
+
+        def four(*pairs):
+            return [{"lot_id": lot, "mode_id": mode} for lot, mode in pairs]
+
+        variants = {"variants": [
+            {"name": "X", "selection": four(("NOPE", "A"), ("FIRE", "A"), ("ENV", "A"), ("AGRI", "A"))},  # неизвестный лот
+            {"name": "Y"},                                                                              # без selection
+            {"selection": four(("FIRE", "A"))},                                                          # без name
+            {"name": "Z", "selection": [{"lot_id": "FIRE"}]},                                             # без mode_id
+            "not a dict",
+            {"name": "V1", "selection": four(("ENV", "A"), ("FIRE", "A"), ("AGRI", "A"), ("TRANS", "A"))},  # порядок лотов произвольный
+        ]}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "alternatives.json"
+            path.write_text(json.dumps(variants), encoding="utf-8")
+            recs = dict(records)
+            alts = payload._alternatives(case, recs, path)
+            orig = payload._alternatives
+            payload._alternatives = lambda c, r, p=None: orig(c, r, path)
+            try:
+                d = payload.build_dashboard(self.FINAL)
+            finally:
+                payload._alternatives = orig
+        self.assertEqual([(a["name"], a["id"]) for a in alts], [("V1", "FIRE:A|AGRI:A|TRANS:A|ENV:A")])
+        self.assertEqual([a["name"] for a in d["alternatives"]], ["V1"])
+        self.assertIn(d["alternatives"][0]["id"], d["combinations"])
+
+    def test_without_why_final_file(self):
+        self.assertEqual(payload._why_final(Path("/nonexistent/why_final.json")), {})
+        orig = payload._why_final
+        payload._why_final = lambda path=None: {}
+        try:
+            d = payload.build_dashboard(self.FINAL)
+        finally:
+            payload._why_final = orig
+        self.assertEqual(d["why_final"], {})
+        self.assertEqual(d["final"], self.FINAL)
+
+    def test_final_missing_in_dataset(self):
+        from kosmo import Variant
+
+        orig = payload.team_portfolio
+        payload.team_portfolio = lambda: Variant(name="FINAL", selection=(("NOPE", "A"), ("FIRE", "A"), ("ENV", "A"), ("AGRI", "A")))
+        try:
+            with self.assertRaisesRegex(ValueError, "FINAL"):
+                payload.build_dashboard(self.FINAL)
+        finally:
+            payload.team_portfolio = orig
+
+    def test_config_requires_base_and_stress(self):
+        import json
+
+        cfg = {"case_version": "1.1", "constraints_common": {k: 1 for k in ingest.CONFIG_COMMON}, "scenarios": {"BASE": {"c0_max_mrub": 1300}, "CRISIS": {"c0_max_mrub": 1180}}}
+        rep = ingest.validate_config(json.dumps(cfg))
+        self.assertFalse(rep["ok"])
+        self.assertTrue(any("STRESS" in e for e in rep["errors"]))
+        cfg["scenarios"]["STRESS"] = {"c0_max_mrub": 1180}
+        self.assertTrue(ingest.validate_config(json.dumps(cfg))["ok"])
 
 
 if __name__ == "__main__":

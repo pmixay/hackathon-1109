@@ -52,13 +52,20 @@
                 "access_base": "Карта событий, время наблюдения, уверенность, статус проверки",
                 "access_extra": "История, интеграции и аналитика по отдельному заказу",
                 "kpi": "Время от сигнала до проверки",
-                "on_failure": "Время последнего обновления, номер инцидента, ручной канал" } }
+                "on_failure": "Время последнего обновления, номер инцидента, ручной канал",
+                "problem": "Большая территория и риск позднего обнаружения пожаров",
+                "payer": "МЧС — предположительно, по консультации трекера 12.09",   // всегда с пометкой «предположительно»
+                "risk": "Задержка или ложный сигнал; зависимость от одного источника" } }
   },
   "modes": {                          // коэффициенты access_modes.csv; custom = true у режима из config/custom_mode.json
     "A": { "k_c0": 1.05, "k_opex": 1.05, "k_vpub": 1.0, "k_anchor": 1.0, "k_commercial": 0.25, "public_core": true, "custom": false }
   },
 
-  "selected": "FIRE:A|AGRI:B|TRANS:B|ENV:A",   // выбранный портфель (решение гейта)
+  "selected": "FIRE:A|AGRI:B|TRANS:B|ENV:A",   // показанный портфель: FINAL или произвольный из конструктора (GET /api/dashboard?selected=<id>)
+  "final": "FIRE:A|AGRI:B|TRANS:B|ENV:A",      // решение гейта из config/portfolio.json (= meta.engine.portfolio_id); всегда есть в combinations
+  "final_name": "FINAL",
+  "alternatives": [ { "name": "V2", "id": "FLOOD:A|AGRI:A|TRANS:B|ENV:A", "note": "..." } ],   // config/alternatives.json (участник 3), id в порядке лотов; все есть в combinations
+  "why_final": { "status": "...", "headline": "...", "pareto": "...", "price": "...", "robustness": "...", "comparator": "V2" },  // app/config/why_final.json, тексты записки
   "suggestions": ["<id>", "..."],              // предложенные комбинации по убыванию балла; выбранная и портфель команды — всегда среди них
   "rejected": ["<id>"],                        // показываются серыми и не предлагаются: максимум ценности среди проходящих BASE, но не STRESS
                                                // (= stress.failing); при gates_filter перед ней — лучшая по баллу комбинация, не прошедшая gates
@@ -89,7 +96,10 @@
         "BASE": [ { "code": "c0_funding", "message": "...", "lots": ["FIRE", "AGRI", "TRANS", "ENV"] } ], "STRESS": [ "..." ]
       },
       "score": 0.7249,                         // балл kosmo.score_variants по всем admitted, 0–1 (для остальных — экстраполяция в тех же границах)
-      "rank": 3                                // место среди admitted; null для остальных
+      "rank": 3,                               // место среди admitted; null для остальных
+      "s2": { "cash": 190.0, "kcash": 0.607, "opex_gap": 123.0, "kcash_ok": true },   // сценарий команды «commercial cash = 0» из metrics и gate anchor_coverage; не официальный STRESS
+      "breakdown": [ { "key": "vpub", "direction": "max", "raw": 1289.0, "lo": 1001.4, "hi": 1370.4, "z": 0.7794, "weight": 0.3, "contribution": 0.2338 }, "..." ]
+                                               // разложение балла по критериям config/weights.json (ключ margin:STRESS:c0_limit — запас STRESS); Σ contribution = score; null, если ранжировать нечего
     }
   }
 }
@@ -111,6 +121,11 @@
 - Блок «Сервисы портфеля» — `lots[*].card` для лотов выбранной комбинации;
   строки доступа показываются, только если `card.mode` совпадает с режимом
   лота в комбинации.
+- Конструктор — id собирается из четырёх лотов и режимов в порядке `lots`
+  и запрашивается `GET /api/dashboard?selected=<id>`; без сервера доступны
+  только комбинации из собранного файла.
+- Экран «Почему FINAL» — `alternatives`, `why_final`, `breakdown` и `s2`
+  комбинаций; Δ относительно FINAL считаются из `metrics`.
 
 ## Экспорт для записки
 

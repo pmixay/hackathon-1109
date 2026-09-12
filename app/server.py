@@ -10,6 +10,7 @@ API
     GET  /api/data                      активный набор данных (файлы, хэши, версия)
     POST /api/data                      {"files": {"lots.csv": "...", ...}, "apply": true} — проверить, сохранить, применить
     POST /api/data/reset                вернуть файлы организаторов
+Ошибки API всегда отдаются JSON: 400 — неверный запрос (ValueError), 404 — нет такого пути, 500 — остальное.
 Без сервера интерфейс тоже работает: `python app/build.py` и любой статический
 хостинг папки app/static (например, `python -m http.server -d app/static`).
 """
@@ -49,37 +50,52 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _body(self) -> dict:
+        """JSON-тело POST; не объект или не JSON → ValueError → 400."""
+        length = int(self.headers.get("Content-Length") or 0)
+        body = json.loads(self.rfile.read(length) or b"{}")  # JSONDecodeError — подкласс ValueError
+        if not isinstance(body, dict):
+            raise ValueError("тело запроса должно быть JSON-объектом")
+        return body
+
+    def _api(self, fn, url):
+        # Ошибки API всегда отдаём JSON: иначе соединение рвётся без ответа, и интерфейс молча уходит в статический режим.
+        try:
+            return fn(url)
+        except ValueError as e:
+            return self._json(HTTPStatus.BAD_REQUEST, {"error": str(e)})
+        except Exception as e:  # noqa: BLE001 — сообщить клиенту, а не уронить поток сервера
+            return self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": f"{type(e).__name__}: {e}"})
+
     def do_GET(self):
         url = urlparse(self.path)
-        if url.path == "/api/dashboard":
-            query = parse_qs(url.query)
-            selected = query.get("selected", [None])[0]
-            gates = {"filter": True, "off": False}.get(query.get("gates", [""])[0])
-            try:
-                return self._json(HTTPStatus.OK, payload.build_dashboard(selected, gates_filter=gates))
-            except ValueError as e:
-                return self._json(HTTPStatus.BAD_REQUEST, {"error": str(e)})
-        if url.path == "/api/data":
-            return self._json(HTTPStatus.OK, ingest.describe())
+        if url.path.startswith("/api/"):
+            return self._api(self._get_api, url)
         if url.path == "/":
             self.path = "/index.html"
         return super().do_GET()
 
+    def _get_api(self, url):
+        if url.path == "/api/dashboard":
+            query = parse_qs(url.query)
+            selected = query.get("selected", [None])[0]
+            gates = {"filter": True, "off": False}.get(query.get("gates", [""])[0])
+            return self._json(HTTPStatus.OK, payload.build_dashboard(selected, gates_filter=gates))
+        if url.path == "/api/data":
+            return self._json(HTTPStatus.OK, ingest.describe())
+        return self._json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint"})
+
     def do_POST(self):
-        url = urlparse(self.path)
+        return self._api(self._post_api, urlparse(self.path))
+
+    def _post_api(self, url):
         if url.path == "/api/export":
-            length = int(self.headers.get("Content-Length") or 0)
-            body = json.loads(self.rfile.read(length) or b"{}")
-            try:
-                dash = payload.build_dashboard(body.get("selected"))
-            except ValueError as e:
-                return self._json(HTTPStatus.BAD_REQUEST, {"error": str(e)})
+            dash = payload.build_dashboard(self._body().get("selected"))
             written = sorted(Path(p).relative_to(RESULTS.parent).as_posix() for p in payload.export_results(dash, RESULTS).values())
             return self._json(HTTPStatus.OK, {"written": written, "dir": written[0].rsplit("/", 1)[0], "selected": dash["selected"]})
         if url.path == "/api/data":
-            length = int(self.headers.get("Content-Length") or 0)
-            body = json.loads(self.rfile.read(length) or b"{}")
-            files = {k: v for k, v in (body.get("files") or {}).items() if k in ingest.FILES}
+            body = self._body()
+            files = {k: v for k, v in (body.get("files") or {}).items() if k in ingest.FILES and isinstance(v, str)}
             if not files:
                 return self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "нет файлов", "report": {}})
             report = ingest.validate(files)

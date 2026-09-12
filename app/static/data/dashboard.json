@@ -15,7 +15,7 @@
    "portfolio_id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
    "weights_file": "config/weights.json"
   },
-  "generated_at": "2026-09-12T14:24:29+00:00",
+  "generated_at": "2026-09-12T15:33:31+00:00",
   "scenarios": {
    "BASE": {
     "c0_max": 1300.0
@@ -95,7 +95,10 @@
     "access_base": "Карта событий, время наблюдения, уверенность, статус проверки",
     "access_extra": "История, интеграции и аналитика по отдельному заказу",
     "kpi": "Время от сигнала до проверки",
-    "on_failure": "Время последнего обновления, номер инцидента, ручной канал"
+    "on_failure": "Время последнего обновления, номер инцидента, ручной канал",
+    "problem": "Большая территория и риск позднего обнаружения пожаров",
+    "payer": "МЧС — предположительно, по консультации трекера 12.09; уровень заказчика уточняется",
+    "risk": "Задержка или ложный сигнал; зависимость от одного источника; задержка бюджетных платежей"
    },
    "archetype": "Сибирский",
    "groups": [
@@ -123,7 +126,10 @@
     "access_base": "Агрегированная картина для якорного заказчика",
     "access_extra": "Детальная аналитика своих полей, история и интеграция",
     "kpi": "Доля сигналов, по которым принято действие",
-    "on_failure": "Последний достоверный слой и статус восстановления"
+    "on_failure": "Последний достоверный слой и статус восстановления",
+    "problem": "Неоднородное состояние полей и высокая цена позднего обнаружения отклонений",
+    "payer": "Минсельхоз за агрегированный слой — гипотеза команды; хозяйства, кооперативы или страховщики за детальную аналитику",
+    "risk": "Низкий коммерческий спрос у частного партнёра, облачность, ошибки границ полей и прав доступа"
    },
    "archetype": "Южный",
    "groups": [
@@ -163,7 +169,10 @@
     "access_base": "Агрегированная картина для якорного заказчика",
     "access_extra": "Данные своих объектов, история и API",
     "kpi": "Время от сигнала до решения",
-    "on_failure": "Последнее обновление, затронутые объекты и ручной порядок работы"
+    "on_failure": "Последнее обновление, затронутые объекты и ручной порядок работы",
+    "problem": "Много маршрутов и объектов, данные разрознены, осмотры нужно приоритизировать",
+    "payer": "Росавтодор только для дорожной части — предположительно, по консультации трекера 12.09; операторы и перевозчики за данные своих объектов",
+    "risk": "Пропуск деформации, неверный приоритет, закрытый формат, неправомерный доступ, низкий коммерческий спрос"
    },
    "archetype": "Центральный",
    "groups": [
@@ -182,7 +191,10 @@
     "access_base": "Карта зон риска, время наблюдения, уверенность, статус проверки",
     "access_extra": "Отчёты, история и аналитика объектов по договору",
     "kpi": "Доля подтверждённых сигналов",
-    "on_failure": "Время последнего обновления и предупреждение не принимать автоматическое решение"
+    "on_failure": "Время последнего обновления и предупреждение не принимать автоматическое решение",
+    "problem": "Большая акватория и территория контроля при ограниченном ресурсе инспекций",
+    "payer": "Минприроды — предположительно, по консультации трекера 12.09; уровень ведомства уточняется",
+    "risk": "Облачность, неверная интерпретация, раскрытие служебных данных, задержка бюджетных платежей"
    },
    "archetype": "Волго-Каспийский",
    "groups": [
@@ -231,6 +243,64 @@
   }
  },
  "selected": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+ "final": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+ "final_name": "FINAL",
+ "alternatives": [
+  {
+   "name": "FINAL",
+   "id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+   "note": "итоговый портфель команды (подтверждён участником 3 12.09 11:02): два лота ЧС/экологии в A как public core, два экономических лота в B; cash покрывает OPEX полностью"
+  },
+  {
+   "name": "V1",
+   "id": "FIRE:A|AGRI:A|TRANS:A|ENV:A",
+   "note": "пожары Сибири + три экономических лота; проходит STRESS при любых режимах"
+  },
+  {
+   "name": "V2",
+   "id": "FLOOD:A|AGRI:A|TRANS:B|ENV:A",
+   "note": "паводки Дальнего Востока вместо пожаров; выше денежный поток"
+  },
+  {
+   "name": "V3",
+   "id": "FIRE:A|FLOOD:A|TRANS:A|ENV:A",
+   "note": "максимум общественной ценности (два лота ЧС), не проходит STRESS"
+  },
+  {
+   "name": "V4",
+   "id": "AGRI:A|TRANS:A|ENV:A|SSA:A",
+   "note": "с федеральным лотом; ценность ниже, федеральный соплательщик"
+  },
+  {
+   "name": "V5",
+   "id": "FIRE:A|AGRI:B|INFRA:A|TRANS:B",
+   "note": "лучшее покрытие OPEX деньгами, ровно 2 public core"
+  },
+  {
+   "name": "V6",
+   "id": "AGRI:A|INFRA:A|TRANS:A|ENV:A",
+   "note": "самый дешёвый, без лотов ЧС"
+  },
+  {
+   "name": "V7",
+   "id": "FIRE:A|AGRI:C|TRANS:C|ENV:A",
+   "note": "математический лидер MCDA среди всех 143 STRESS-допустимых комбинаций; режимы C снижают общественную ценность и якорную устойчивость AGRI/TRANS"
+  },
+  {
+   "name": "V8",
+   "id": "FIRE:A|AGRI:C|TRANS:B|ENV:A",
+   "note": "второе место MCDA среди всех 143 STRESS-допустимых комбинаций; промежуточный компромисс между V7 и FINAL"
+  }
+ ],
+ "why_final": {
+  "status": "Выбранный командой вариант после управленческого отбора. Не математический лидер MCDA: при финальных весах — 3-е место из 143 STRESS-допустимых комбинаций.",
+  "headline": "Режимы B у AGRI и TRANS сохраняют гибридный доступ «якорный публичный слой + платная детализация» и дают на 46–90 млн руб./год больше общественной ценности, чем математические лидеры V8 и V7 с режимами C. Cash покрывает OPEX полностью, оба лота ЧС и экологии остаются в A как public core.",
+  "pareto": "FINAL входит во фронт Парето по общественной ценности, c0 и K_cash: ни один допустимый вариант не превосходит его по всем трём показателям одновременно.",
+  "price": "Цена решения относительно V7: на 10,2 млн руб. больше c0, на 7,25 млн руб./год больше OPEX, на 27,5 млн руб./год меньше cash и запас STRESS меньше на 10,2 млн руб.; взамен на 90 млн руб./год больше общественной ценности при положительном операционном балансе 57,5 млн руб./год и запасе STRESS 40 млн руб.",
+  "robustness": "При изменении каждого веса по отдельности на ±20 % FINAL занимает места 2–5 и ни разу не становится первым; при 3000 случайных векторах весов — первый в 8,4 % случаев, медианное место 14. Самый опасный параметр исполнения — c0: удорожание портфеля примерно на 3,5 % нарушает лимит STRESS; OPEX выдерживает рост почти на 15 %.",
+  "comparator": "V2",
+  "source": "docs/note/02-selection.md, results/ranking_full.csv, results/sensitivity_full.csv"
+ },
  "suggestions": [
   "FIRE:A|AGRI:C|TRANS:C|ENV:A",
   "FIRE:A|AGRI:B|TRANS:B|ENV:A",
@@ -292,6 +362,836 @@
   ]
  },
  "combinations": {
+  "AGRI:A|INFRA:A|TRANS:A|ENV:A": {
+   "id": "AGRI:A|INFRA:A|TRANS:A|ENV:A",
+   "selection": [
+    {
+     "lot": "AGRI",
+     "mode": "A"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "A"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "AGRI",
+     "mode": "A",
+     "public_core": true,
+     "c0": 273.0,
+     "opex": 78.75,
+     "vpub": 230.0,
+     "cash": 60.0,
+     "anchor_cash": 30.0,
+     "commercial_cash": 30.0,
+     "opex_gap": 18.75,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "INFRA",
+     "mode": "A",
+     "public_core": true,
+     "c0": 325.5,
+     "opex": 84.0,
+     "vpub": 300.0,
+     "cash": 81.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 26.25,
+     "opex_gap": 2.75,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A",
+     "public_core": true,
+     "c0": 262.5,
+     "opex": 73.5,
+     "vpub": 220.0,
+     "cash": 68.75,
+     "anchor_cash": 45.0,
+     "commercial_cash": 23.75,
+     "opex_gap": 4.75,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "opex_gap": 2.5,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1155.0,
+    "opex": 315.0,
+    "vpub": 1110.0,
+    "cash": 286.25,
+    "anchor_cash": 185.0,
+    "commercial_cash": 101.25,
+    "kcash": 0.9087301587301587,
+    "opex_gap": 28.75,
+    "t_rep": 0.7375,
+    "readiness": 4.475,
+    "resilience": 4.175,
+    "scale": 4.7,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 4
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1155.0,
+      "op": "<=",
+      "threshold": 1300.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 315.0,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1110.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 0.9087301587301587,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7375,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1155.0,
+      "op": "<=",
+      "threshold": 1180.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 315.0,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1110.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 0.9087301587301587,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7375,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5873015873015873,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1155.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 91% годового OPEX; непокрытые 28.8 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (185.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1155.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 91% годового OPEX; непокрытые 28.8 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (185.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 25.0 млн руб. (2.1%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "AGRI",
+       "INFRA",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
+   "score": 0.4361,
+   "rank": 90,
+   "s2": {
+    "cash": 185.0,
+    "kcash": 0.5873015873015873,
+    "opex_gap": 130.0,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1110.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.2943,
+     "weight": 0.3,
+     "contribution": 0.0883
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1155.0,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.4375,
+     "weight": 0.15,
+     "contribution": 0.0656
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 0.90873,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.0805,
+     "weight": 0.15,
+     "contribution": 0.0121
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.475,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.75,
+     "weight": 0.1,
+     "contribution": 0.075
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.175,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.8889,
+     "weight": 0.1,
+     "contribution": 0.0889
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.7,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.625,
+     "weight": 0.1,
+     "contribution": 0.0625
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 25.0,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.4375,
+     "weight": 0.1,
+     "contribution": 0.0438
+    }
+   ]
+  },
+  "AGRI:A|TRANS:A|ENV:A|SSA:A": {
+   "id": "AGRI:A|TRANS:A|ENV:A|SSA:A",
+   "selection": [
+    {
+     "lot": "AGRI",
+     "mode": "A"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    },
+    {
+     "lot": "SSA",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "AGRI",
+     "mode": "A",
+     "public_core": true,
+     "c0": 273.0,
+     "opex": 78.75,
+     "vpub": 230.0,
+     "cash": 60.0,
+     "anchor_cash": 30.0,
+     "commercial_cash": 30.0,
+     "opex_gap": 18.75,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A",
+     "public_core": true,
+     "c0": 262.5,
+     "opex": 73.5,
+     "vpub": 220.0,
+     "cash": 68.75,
+     "anchor_cash": 45.0,
+     "commercial_cash": 23.75,
+     "opex_gap": 4.75,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "opex_gap": 2.5,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    },
+    {
+     "lot": "SSA",
+     "mode": "A",
+     "public_core": true,
+     "c0": 346.5,
+     "opex": 99.75,
+     "vpub": 340.0,
+     "cash": 90.0,
+     "anchor_cash": 65.0,
+     "commercial_cash": 25.0,
+     "opex_gap": 9.75,
+     "t_rep": 0.64,
+     "readiness": 3.6,
+     "resilience": 3.1,
+     "scale": 4.9
+    }
+   ],
+   "metrics": {
+    "c0": 1176.0,
+    "opex": 330.75,
+    "vpub": 1150.0,
+    "cash": 295.0,
+    "anchor_cash": 195.0,
+    "commercial_cash": 100.0,
+    "kcash": 0.891912320483749,
+    "opex_gap": 35.75,
+    "t_rep": 0.72,
+    "readiness": 4.35,
+    "resilience": 3.95,
+    "scale": 4.775,
+    "archetypes": 3,
+    "groups": 3,
+    "public_core": 4
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 3.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 3.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1176.0,
+      "op": "<=",
+      "threshold": 1300.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 330.75,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1150.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 0.891912320483749,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.72,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 3.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 3.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1176.0,
+      "op": "<=",
+      "threshold": 1180.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 330.75,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1150.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 0.891912320483749,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.72,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5895691609977324,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1176.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 89% годового OPEX; непокрытые 35.8 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (195.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "federal_lot",
+      "message": "Федеральный лот не входит в счётчик территориальных архетипов; нужен федеральный заказчик и схема софинансирования",
+      "lots": [
+       "SSA"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1176.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 89% годового OPEX; непокрытые 35.8 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (195.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     },
+     {
+      "code": "federal_lot",
+      "message": "Федеральный лот не входит в счётчик территориальных архетипов; нужен федеральный заказчик и схема софинансирования",
+      "lots": [
+       "SSA"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 4.0 млн руб. (0.3%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "AGRI",
+       "TRANS",
+       "ENV",
+       "SSA"
+      ]
+     }
+    ]
+   },
+   "score": 0.2943,
+   "rank": 131,
+   "s2": {
+    "cash": 195.0,
+    "kcash": 0.5895691609977324,
+    "opex_gap": 135.75,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1150.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.4027,
+     "weight": 0.3,
+     "contribution": 0.1208
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1176.0,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.0625,
+     "weight": 0.15,
+     "contribution": 0.0094
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 0.891912,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.0431,
+     "weight": 0.15,
+     "contribution": 0.0065
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.35,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.125,
+     "weight": 0.1,
+     "contribution": 0.0125
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 3.95,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.3889,
+     "weight": 0.1,
+     "contribution": 0.0389
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.775,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 1.0,
+     "weight": 0.1,
+     "contribution": 0.1
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 4.0,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.0625,
+     "weight": 0.1,
+     "contribution": 0.0063
+    }
+   ]
+  },
   "AGRI:B|INFRA:B|TRANS:A|ENV:A": {
    "id": "AGRI:B|INFRA:B|TRANS:A|ENV:A",
    "selection": [
@@ -600,7 +1500,85 @@
     ]
    },
    "score": 0.5848,
-   "rank": 36
+   "rank": 36,
+   "s2": {
+    "cash": 168.0,
+    "kcash": 0.5467860048820179,
+    "opex_gap": 139.25,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1014.6,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.0358,
+     "weight": 0.3,
+     "contribution": 0.0107
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1126.5,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.9464,
+     "weight": 0.15,
+     "contribution": 0.142
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.205858,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.7404,
+     "weight": 0.15,
+     "contribution": 0.1111
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.475,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.75,
+     "weight": 0.1,
+     "contribution": 0.075
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.175,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.8889,
+     "weight": 0.1,
+     "contribution": 0.0889
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.7,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.625,
+     "weight": 0.1,
+     "contribution": 0.0625
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 53.5,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.9464,
+     "weight": 0.1,
+     "contribution": 0.0946
+    }
+   ]
   },
   "FIRE:A|AGRI:A|TRANS:A|ENV:A": {
    "id": "FIRE:A|AGRI:A|TRANS:A|ENV:A",
@@ -930,7 +1908,473 @@
     ]
    },
    "score": 0.583,
-   "rank": 37
+   "rank": 37,
+   "s2": {
+    "cash": 205.0,
+    "kcash": 0.6401249024199844,
+    "opex_gap": 115.25,
+    "kcash_ok": true
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1370.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.9989,
+     "weight": 0.3,
+     "contribution": 0.2997
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1165.5,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.25,
+     "weight": 0.15,
+     "contribution": 0.0375
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 0.901639,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.0647,
+     "weight": 0.15,
+     "contribution": 0.0097
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.525,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 1.0,
+     "weight": 0.1,
+     "contribution": 0.1
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.05,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.6111,
+     "weight": 0.1,
+     "contribution": 0.0611
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.675,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.5,
+     "weight": 0.1,
+     "contribution": 0.05
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 14.5,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.25,
+     "weight": 0.1,
+     "contribution": 0.025
+    }
+   ]
+  },
+  "FIRE:A|AGRI:B|INFRA:A|TRANS:B": {
+   "id": "FIRE:A|AGRI:B|INFRA:A|TRANS:B",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "AGRI",
+     "mode": "B"
+    },
+    {
+     "lot": "INFRA",
+     "mode": "A"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "opex_gap": 5.5,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "AGRI",
+     "mode": "B",
+     "public_core": false,
+     "c0": 260.0,
+     "opex": 75.0,
+     "vpub": 188.6,
+     "cash": 108.0,
+     "anchor_cash": 24.0,
+     "commercial_cash": 84.0,
+     "opex_gap": -33.0,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "INFRA",
+     "mode": "A",
+     "public_core": true,
+     "c0": 325.5,
+     "opex": 84.0,
+     "vpub": 300.0,
+     "cash": 81.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 26.25,
+     "opex_gap": 2.75,
+     "t_rep": 0.71,
+     "readiness": 4.1,
+     "resilience": 4.0,
+     "scale": 4.6
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B",
+     "public_core": false,
+     "c0": 250.0,
+     "opex": 70.0,
+     "vpub": 180.39999999999998,
+     "cash": 102.5,
+     "anchor_cash": 36.0,
+     "commercial_cash": 66.5,
+     "opex_gap": -32.5,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1171.5,
+    "opex": 318.25,
+    "vpub": 1229.0,
+    "cash": 375.5,
+    "anchor_cash": 190.0,
+    "commercial_cash": 185.5,
+    "kcash": 1.1798900235663787,
+    "opex_gap": -57.25,
+    "t_rep": 0.725,
+    "readiness": 4.449999999999999,
+    "resilience": 4.0,
+    "scale": 4.65,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1171.5,
+      "op": "<=",
+      "threshold": 1300.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 318.25,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1229.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.1798900235663787,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.725,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1171.5,
+      "op": "<=",
+      "threshold": 1180.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 318.25,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1229.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.1798900235663787,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.725,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5970149253731343,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1171.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (190.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1171.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (190.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 8.5 млн руб. (0.7%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "INFRA",
+       "TRANS"
+      ]
+     }
+    ]
+   },
+   "score": 0.4732,
+   "rank": 77,
+   "s2": {
+    "cash": 190.0,
+    "kcash": 0.5970149253731343,
+    "opex_gap": 128.25,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1229.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.6168,
+     "weight": 0.3,
+     "contribution": 0.185
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1171.5,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.1429,
+     "weight": 0.15,
+     "contribution": 0.0214
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.17989,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.6827,
+     "weight": 0.15,
+     "contribution": 0.1024
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.45,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.625,
+     "weight": 0.1,
+     "contribution": 0.0625
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.0,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.5,
+     "weight": 0.1,
+     "contribution": 0.05
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.65,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.375,
+     "weight": 0.1,
+     "contribution": 0.0375
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 8.5,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.1429,
+     "weight": 0.1,
+     "contribution": 0.0143
+    }
+   ]
   },
   "FIRE:A|AGRI:B|TRANS:B|ENV:A": {
    "id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
@@ -1240,7 +2684,85 @@
     ]
    },
    "score": 0.7249,
-   "rank": 3
+   "rank": 3,
+   "s2": {
+    "cash": 190.0,
+    "kcash": 0.6070287539936102,
+    "opex_gap": 123.0,
+    "kcash_ok": true
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1289.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.7794,
+     "weight": 0.3,
+     "contribution": 0.2338
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1140.0,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.7054,
+     "weight": 0.15,
+     "contribution": 0.1058
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.183706,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.6912,
+     "weight": 0.15,
+     "contribution": 0.1037
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.525,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 1.0,
+     "weight": 0.1,
+     "contribution": 0.1
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.05,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.6111,
+     "weight": 0.1,
+     "contribution": 0.0611
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.675,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.5,
+     "weight": 0.1,
+     "contribution": 0.05
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 40.0,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.7054,
+     "weight": 0.1,
+     "contribution": 0.0705
+    }
+   ]
   },
   "FIRE:A|AGRI:C|INFRA:B|TRANS:A": {
    "id": "FIRE:A|AGRI:C|INFRA:B|TRANS:A",
@@ -1550,7 +3072,473 @@
     ]
    },
    "score": 0.4893,
-   "rank": 70
+   "rank": 70,
+   "s2": {
+    "cash": 177.5,
+    "kcash": 0.5652866242038217,
+    "opex_gap": 136.5,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1168.6,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.4531,
+     "weight": 0.3,
+     "contribution": 0.1359
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1163.3,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.2893,
+     "weight": 0.15,
+     "contribution": 0.0434
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.265924,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.8738,
+     "weight": 0.15,
+     "contribution": 0.1311
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.45,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.625,
+     "weight": 0.1,
+     "contribution": 0.0625
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.0,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.5,
+     "weight": 0.1,
+     "contribution": 0.05
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.65,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.375,
+     "weight": 0.1,
+     "contribution": 0.0375
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 16.7,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.2893,
+     "weight": 0.1,
+     "contribution": 0.0289
+    }
+   ]
+  },
+  "FIRE:A|AGRI:C|TRANS:B|ENV:A": {
+   "id": "FIRE:A|AGRI:C|TRANS:B|ENV:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "AGRI",
+     "mode": "C"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "opex_gap": 5.5,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "AGRI",
+     "mode": "C",
+     "public_core": false,
+     "c0": 254.79999999999998,
+     "opex": 71.25,
+     "vpub": 142.6,
+     "cash": 127.5,
+     "anchor_cash": 13.5,
+     "commercial_cash": 114.0,
+     "opex_gap": -56.25,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B",
+     "public_core": false,
+     "c0": 250.0,
+     "opex": 70.0,
+     "vpub": 180.39999999999998,
+     "cash": 102.5,
+     "anchor_cash": 36.0,
+     "commercial_cash": 66.5,
+     "opex_gap": -32.5,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "opex_gap": 2.5,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1134.8,
+    "opex": 309.25,
+    "vpub": 1243.0,
+    "cash": 390.0,
+    "anchor_cash": 179.5,
+    "commercial_cash": 210.5,
+    "kcash": 1.2611156022635408,
+    "opex_gap": -80.75,
+    "t_rep": 0.73,
+    "readiness": 4.525,
+    "resilience": 4.05,
+    "scale": 4.675,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 2
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1134.8,
+      "op": "<=",
+      "threshold": 1300.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 309.25,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1243.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2611156022635408,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.73,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1134.8,
+      "op": "<=",
+      "threshold": 1180.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 309.25,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1243.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.2611156022635408,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.73,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": false,
+     "fact": 0.5804365400161682,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1134.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (179.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1134.8 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (179.5 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 45.2 млн руб. (3.8%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
+   "score": 0.7366,
+   "rank": 2,
+   "s2": {
+    "cash": 179.5,
+    "kcash": 0.5804365400161682,
+    "opex_gap": 129.75,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1243.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.6547,
+     "weight": 0.3,
+     "contribution": 0.1964
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1134.8,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.7982,
+     "weight": 0.15,
+     "contribution": 0.1197
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.261116,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.8631,
+     "weight": 0.15,
+     "contribution": 0.1295
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.525,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 1.0,
+     "weight": 0.1,
+     "contribution": 0.1
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.05,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.6111,
+     "weight": 0.1,
+     "contribution": 0.0611
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.675,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.5,
+     "weight": 0.1,
+     "contribution": 0.05
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 45.2,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.7982,
+     "weight": 0.1,
+     "contribution": 0.0798
+    }
+   ]
   },
   "FIRE:A|AGRI:C|TRANS:C|ENV:A": {
    "id": "FIRE:A|AGRI:C|TRANS:C|ENV:A",
@@ -1860,7 +3848,85 @@
     ]
    },
    "score": 0.7366,
-   "rank": 1
+   "rank": 1,
+   "s2": {
+    "cash": 163.75,
+    "kcash": 0.53556827473426,
+    "opex_gap": 142.0,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1199.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.5355,
+     "weight": 0.3,
+     "contribution": 0.1607
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1129.8,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.8875,
+     "weight": 0.15,
+     "contribution": 0.1331
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.301717,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.9533,
+     "weight": 0.15,
+     "contribution": 0.143
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.525,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 1.0,
+     "weight": 0.1,
+     "contribution": 0.1
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.05,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.6111,
+     "weight": 0.1,
+     "contribution": 0.0611
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.675,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.5,
+     "weight": 0.1,
+     "contribution": 0.05
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 50.2,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.8875,
+     "weight": 0.1,
+     "contribution": 0.0888
+    }
+   ]
   },
   "FIRE:A|FLOOD:A|INFRA:B|ENV:A": {
    "id": "FIRE:A|FLOOD:A|INFRA:B|ENV:A",
@@ -2170,7 +4236,491 @@
     ]
    },
    "score": 0.4173,
-   "rank": null
+   "rank": null,
+   "s2": {
+    "cash": 259.0,
+    "kcash": 0.7562043795620438,
+    "opex_gap": 83.5,
+    "kcash_ok": true
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1766.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 1.0,
+     "weight": 0.3,
+     "contribution": 0.3
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1297.0,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.0,
+     "weight": 0.15,
+     "contribution": 0.0
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.091241,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.4858,
+     "weight": 0.15,
+     "contribution": 0.0729
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.2,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 3.975,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.4444,
+     "weight": 0.1,
+     "contribution": 0.0444
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.5,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": -117.0,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    }
+   ]
+  },
+  "FIRE:A|FLOOD:A|TRANS:A|ENV:A": {
+   "id": "FIRE:A|FLOOD:A|TRANS:A|ENV:A",
+   "selection": [
+    {
+     "lot": "FIRE",
+     "mode": "A"
+    },
+    {
+     "lot": "FLOOD",
+     "mode": "A"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FIRE",
+     "mode": "A",
+     "public_core": true,
+     "c0": 336.0,
+     "opex": 89.25,
+     "vpub": 560.0,
+     "cash": 83.75,
+     "anchor_cash": 75.0,
+     "commercial_cash": 8.75,
+     "opex_gap": 5.5,
+     "t_rep": 0.68,
+     "readiness": 4.3,
+     "resilience": 3.5,
+     "scale": 4.5
+    },
+    {
+     "lot": "FLOOD",
+     "mode": "A",
+     "public_core": true,
+     "c0": 357.0,
+     "opex": 94.5,
+     "vpub": 600.0,
+     "cash": 96.25,
+     "anchor_cash": 85.0,
+     "commercial_cash": 11.25,
+     "opex_gap": -1.75,
+     "t_rep": 0.62,
+     "readiness": 4.0,
+     "resilience": 4.2,
+     "scale": 4.2
+    },
+    {
+     "lot": "TRANS",
+     "mode": "A",
+     "public_core": true,
+     "c0": 262.5,
+     "opex": 73.5,
+     "vpub": 220.0,
+     "cash": 68.75,
+     "anchor_cash": 45.0,
+     "commercial_cash": 23.75,
+     "opex_gap": 4.75,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "opex_gap": 2.5,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1249.5,
+    "opex": 336.0,
+    "vpub": 1740.0,
+    "cash": 325.0,
+    "anchor_cash": 260.0,
+    "commercial_cash": 65.0,
+    "kcash": 0.9672619047619048,
+    "opex_gap": 11.0,
+    "t_rep": 0.7,
+    "readiness": 4.375,
+    "resilience": 4.075,
+    "scale": 4.525,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 4
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1249.5,
+      "op": "<=",
+      "threshold": 1300.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 336.0,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1740.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 0.9672619047619048,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": false,
+      "fact": 1249.5,
+      "op": "<=",
+      "threshold": 1180.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 336.0,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1740.0,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 0.9672619047619048,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.7,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": false
+   },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.7738095238095238,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": false,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1249.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 97% годового OPEX; непокрытые 11.0 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "FIRE",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (260.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии BASE: 50.5 млн руб. (3.9%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1249.5 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "opex_gap",
+      "message": "Денежные поступления покрывают 97% годового OPEX; непокрытые 11.0 млн руб./год требуют названного источника (субсидия, бюджетное обязательство)",
+      "lots": [
+       "FIRE",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (260.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FIRE",
+       "FLOOD",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
+   "score": 0.4232,
+   "rank": null,
+   "s2": {
+    "cash": 260.0,
+    "kcash": 0.7738095238095238,
+    "opex_gap": 76.0,
+    "kcash_ok": true
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1740.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 1.0,
+     "weight": 0.3,
+     "contribution": 0.3
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1249.5,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.0,
+     "weight": 0.15,
+     "contribution": 0.0
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 0.967262,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.2105,
+     "weight": 0.15,
+     "contribution": 0.0316
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.375,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.25,
+     "weight": 0.1,
+     "contribution": 0.025
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.075,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.6667,
+     "weight": 0.1,
+     "contribution": 0.0667
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.525,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": -69.5,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    }
+   ]
   },
   "FIRE:A|FLOOD:B|INFRA:B|ENV:A": {
    "id": "FIRE:A|FLOOD:B|INFRA:B|ENV:A",
@@ -2480,7 +5030,85 @@
     ]
    },
    "score": 0.4254,
-   "rank": null
+   "rank": null,
+   "s2": {
+    "cash": 242.0,
+    "kcash": 0.7159763313609467,
+    "opex_gap": 96.0,
+    "kcash_ok": true
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1658.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 1.0,
+     "weight": 0.3,
+     "contribution": 0.3
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1280.0,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.0,
+     "weight": 0.15,
+     "contribution": 0.0
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.115385,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.5394,
+     "weight": 0.15,
+     "contribution": 0.0809
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.2,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 3.975,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.4444,
+     "weight": 0.1,
+     "contribution": 0.0444
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.5,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": -100.0,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    }
+   ]
   },
   "FIRE:A|INFRA:C|TRANS:A|ENV:C": {
    "id": "FIRE:A|INFRA:C|TRANS:A|ENV:C",
@@ -2790,7 +5418,85 @@
     ]
    },
    "score": 0.4036,
-   "rank": 102
+   "rank": 102,
+   "s2": {
+    "cash": 169.5,
+    "kcash": 0.5467741935483871,
+    "opex_gap": 140.5,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1189.2,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.5089,
+     "weight": 0.3,
+     "contribution": 0.1527
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1176.7,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.05,
+     "weight": 0.15,
+     "contribution": 0.0075
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.233871,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.8026,
+     "weight": 0.15,
+     "contribution": 0.1204
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.4,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.375,
+     "weight": 0.1,
+     "contribution": 0.0375
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.025,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.5556,
+     "weight": 0.1,
+     "contribution": 0.0556
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.625,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.25,
+     "weight": 0.1,
+     "contribution": 0.025
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 3.3,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.05,
+     "weight": 0.1,
+     "contribution": 0.005
+    }
+   ]
   },
   "FIRE:A|INFRA:C|TRANS:C|ENV:A": {
    "id": "FIRE:A|INFRA:C|TRANS:C|ENV:A",
@@ -3100,7 +5806,85 @@
     ]
    },
    "score": 0.4503,
-   "rank": 86
+   "rank": 86,
+   "s2": {
+    "cash": 175.0,
+    "kcash": 0.5636070853462157,
+    "opex_gap": 135.5,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1242.4,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.6531,
+     "weight": 0.3,
+     "contribution": 0.1959
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1178.8,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.0125,
+     "weight": 0.15,
+     "contribution": 0.0019
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.272142,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.8876,
+     "weight": 0.15,
+     "contribution": 0.1331
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.4,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.375,
+     "weight": 0.1,
+     "contribution": 0.0375
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.025,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.5556,
+     "weight": 0.1,
+     "contribution": 0.0556
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.625,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.25,
+     "weight": 0.1,
+     "contribution": 0.025
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 1.2,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.0125,
+     "weight": 0.1,
+     "contribution": 0.0013
+    }
+   ]
   },
   "FIRE:B|FLOOD:B|INFRA:B|ENV:B": {
    "id": "FIRE:B|FLOOD:B|INFRA:B|ENV:B",
@@ -3410,7 +6194,85 @@
     ]
    },
    "score": 0.4626,
-   "rank": null
+   "rank": null,
+   "s2": {
+    "cash": 216.0,
+    "kcash": 0.6545454545454545,
+    "opex_gap": 114.0,
+    "kcash_ok": true
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1492.4,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 1.0,
+     "weight": 0.3,
+     "contribution": 0.3
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1250.0,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.0,
+     "weight": 0.15,
+     "contribution": 0.0
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.227273,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.7879,
+     "weight": 0.15,
+     "contribution": 0.1182
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.2,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 3.975,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.4444,
+     "weight": 0.1,
+     "contribution": 0.0444
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.5,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": -70.0,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.0,
+     "weight": 0.1,
+     "contribution": 0.0
+    }
+   ]
   },
   "FIRE:C|INFRA:A|TRANS:C|ENV:A": {
    "id": "FIRE:C|INFRA:A|TRANS:C|ENV:A",
@@ -3720,7 +6582,473 @@
     ]
    },
    "score": 0.3093,
-   "rank": 127
+   "rank": 127,
+   "s2": {
+    "cash": 164.0,
+    "kcash": 0.5290322580645161,
+    "opex_gap": 146.0,
+    "kcash_ok": false
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1143.6,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.3854,
+     "weight": 0.3,
+     "contribution": 0.1156
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1178.1,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.025,
+     "weight": 0.15,
+     "contribution": 0.0038
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.080645,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.4623,
+     "weight": 0.15,
+     "contribution": 0.0693
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.4,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.375,
+     "weight": 0.1,
+     "contribution": 0.0375
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.025,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 0.5556,
+     "weight": 0.1,
+     "contribution": 0.0556
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.625,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.25,
+     "weight": 0.1,
+     "contribution": 0.025
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 1.9,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.025,
+     "weight": 0.1,
+     "contribution": 0.0025
+    }
+   ]
+  },
+  "FLOOD:A|AGRI:A|TRANS:B|ENV:A": {
+   "id": "FLOOD:A|AGRI:A|TRANS:B|ENV:A",
+   "selection": [
+    {
+     "lot": "FLOOD",
+     "mode": "A"
+    },
+    {
+     "lot": "AGRI",
+     "mode": "A"
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B"
+    },
+    {
+     "lot": "ENV",
+     "mode": "A"
+    }
+   ],
+   "per_lot": [
+    {
+     "lot": "FLOOD",
+     "mode": "A",
+     "public_core": true,
+     "c0": 357.0,
+     "opex": 94.5,
+     "vpub": 600.0,
+     "cash": 96.25,
+     "anchor_cash": 85.0,
+     "commercial_cash": 11.25,
+     "opex_gap": -1.75,
+     "t_rep": 0.62,
+     "readiness": 4.0,
+     "resilience": 4.2,
+     "scale": 4.2
+    },
+    {
+     "lot": "AGRI",
+     "mode": "A",
+     "public_core": true,
+     "c0": 273.0,
+     "opex": 78.75,
+     "vpub": 230.0,
+     "cash": 60.0,
+     "anchor_cash": 30.0,
+     "commercial_cash": 30.0,
+     "opex_gap": 18.75,
+     "t_rep": 0.74,
+     "readiness": 4.6,
+     "resilience": 4.1,
+     "scale": 4.8
+    },
+    {
+     "lot": "TRANS",
+     "mode": "B",
+     "public_core": false,
+     "c0": 250.0,
+     "opex": 70.0,
+     "vpub": 180.39999999999998,
+     "cash": 102.5,
+     "anchor_cash": 36.0,
+     "commercial_cash": 66.5,
+     "opex_gap": -32.5,
+     "t_rep": 0.77,
+     "readiness": 4.8,
+     "resilience": 4.4,
+     "scale": 4.7
+    },
+    {
+     "lot": "ENV",
+     "mode": "A",
+     "public_core": true,
+     "c0": 294.0,
+     "opex": 78.75,
+     "vpub": 360.0,
+     "cash": 76.25,
+     "anchor_cash": 55.0,
+     "commercial_cash": 21.25,
+     "opex_gap": 2.5,
+     "t_rep": 0.73,
+     "readiness": 4.4,
+     "resilience": 4.2,
+     "scale": 4.7
+    }
+   ],
+   "metrics": {
+    "c0": 1174.0,
+    "opex": 322.0,
+    "vpub": 1370.4,
+    "cash": 335.0,
+    "anchor_cash": 206.0,
+    "commercial_cash": 129.0,
+    "kcash": 1.0403726708074534,
+    "opex_gap": -13.0,
+    "t_rep": 0.715,
+    "readiness": 4.45,
+    "resilience": 4.225,
+    "scale": 4.6,
+    "archetypes": 4,
+    "groups": 2,
+    "public_core": 3
+   },
+   "checks": {
+    "BASE": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 3.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1174.0,
+      "op": "<=",
+      "threshold": 1300.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 322.0,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1370.4,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.0403726708074534,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.715,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ],
+    "STRESS": [
+     {
+      "id": "exact_lot_count",
+      "ok": true,
+      "fact": 4.0,
+      "op": "=",
+      "threshold": 4.0
+     },
+     {
+      "id": "territorial_archetypes",
+      "ok": true,
+      "fact": 4.0,
+      "op": ">=",
+      "threshold": 3.0
+     },
+     {
+      "id": "capability_groups",
+      "ok": true,
+      "fact": 2.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "public_core_lots",
+      "ok": true,
+      "fact": 3.0,
+      "op": ">=",
+      "threshold": 2.0
+     },
+     {
+      "id": "c0_limit",
+      "ok": true,
+      "fact": 1174.0,
+      "op": "<=",
+      "threshold": 1180.0
+     },
+     {
+      "id": "opex_limit",
+      "ok": true,
+      "fact": 322.0,
+      "op": "<=",
+      "threshold": 360.0
+     },
+     {
+      "id": "vpub_floor",
+      "ok": true,
+      "fact": 1370.4,
+      "op": ">=",
+      "threshold": 1000.0
+     },
+     {
+      "id": "kcash_floor",
+      "ok": true,
+      "fact": 1.0403726708074534,
+      "op": ">=",
+      "threshold": 0.6
+     },
+     {
+      "id": "t_rep_floor",
+      "ok": true,
+      "fact": 0.715,
+      "op": ">=",
+      "threshold": 0.63
+     }
+    ]
+   },
+   "ok": {
+    "BASE": true,
+    "STRESS": true
+   },
+   "gates": [
+    {
+     "id": "anchor_coverage",
+     "ok": true,
+     "fact": 0.639751552795031,
+     "op": ">=",
+     "threshold": 0.6,
+     "label": "S2: покрытие OPEX якорными платежами",
+     "metric": "anchor_kcash"
+    }
+   ],
+   "admitted": true,
+   "notes": {
+    "BASE": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1174.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (206.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ],
+    "STRESS": [
+     {
+      "code": "c0_funding",
+      "message": "Источник покрытия стартовых затрат 1174.0 млн руб. кейсом не задан: нужно назвать плательщика (бюджет заказчика, федеральное софинансирование, ГЧП) и механизм закупки",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "anchor_payer",
+      "message": "Плательщик якорной компоненты (206.0 млн руб./год) кейсом не назван: назначить заказчика и договорную форму по каждому лоту",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     },
+     {
+      "code": "c0_tight_margin",
+      "message": "Запас по лимиту стартовых затрат в сценарии STRESS: 6.0 млн руб. (0.5%); портфель чувствителен к уточнению стоимости лотов",
+      "lots": [
+       "FLOOD",
+       "AGRI",
+       "TRANS",
+       "ENV"
+      ]
+     }
+    ]
+   },
+   "score": 0.5555,
+   "rank": 51,
+   "s2": {
+    "cash": 206.0,
+    "kcash": 0.639751552795031,
+    "opex_gap": 116.0,
+    "kcash_ok": true
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1370.4,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 1.0,
+     "weight": 0.3,
+     "contribution": 0.3
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1174.0,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.0982,
+     "weight": 0.15,
+     "contribution": 0.0147
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.040373,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.3728,
+     "weight": 0.15,
+     "contribution": 0.0559
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.45,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.625,
+     "weight": 0.1,
+     "contribution": 0.0625
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.225,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 1.0,
+     "weight": 0.1,
+     "contribution": 0.1
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.6,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.125,
+     "weight": 0.1,
+     "contribution": 0.0125
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 6.0,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.0982,
+     "weight": 0.1,
+     "contribution": 0.0098
+    }
+   ]
   },
   "FLOOD:A|AGRI:C|TRANS:B|ENV:A": {
    "id": "FLOOD:A|AGRI:C|TRANS:B|ENV:A",
@@ -4030,7 +7358,85 @@
     ]
    },
    "score": 0.6454,
-   "rank": 17
+   "rank": 17,
+   "s2": {
+    "cash": 189.5,
+    "kcash": 0.6025437201907791,
+    "opex_gap": 125.0,
+    "kcash_ok": true
+   },
+   "breakdown": [
+    {
+     "key": "vpub",
+     "direction": "max",
+     "raw": 1283.0,
+     "lo": 1001.4,
+     "hi": 1370.4,
+     "z": 0.7631,
+     "weight": 0.3,
+     "contribution": 0.2289
+    },
+    {
+     "key": "c0",
+     "direction": "min",
+     "raw": 1155.8,
+     "lo": 1123.5,
+     "hi": 1179.5,
+     "z": 0.4232,
+     "weight": 0.15,
+     "contribution": 0.0635
+    },
+    {
+     "key": "kcash",
+     "direction": "max",
+     "raw": 1.279809,
+     "lo": 0.8724939855653568,
+     "hi": 1.3227597145122918,
+     "z": 0.9046,
+     "weight": 0.15,
+     "contribution": 0.1357
+    },
+    {
+     "key": "readiness",
+     "direction": "max",
+     "raw": 4.45,
+     "lo": 4.325,
+     "hi": 4.525,
+     "z": 0.625,
+     "weight": 0.1,
+     "contribution": 0.0625
+    },
+    {
+     "key": "resilience",
+     "direction": "max",
+     "raw": 4.225,
+     "lo": 3.775,
+     "hi": 4.225,
+     "z": 1.0,
+     "weight": 0.1,
+     "contribution": 0.1
+    },
+    {
+     "key": "scale",
+     "direction": "max",
+     "raw": 4.6,
+     "lo": 4.575,
+     "hi": 4.775,
+     "z": 0.125,
+     "weight": 0.1,
+     "contribution": 0.0125
+    },
+    {
+     "key": "margin:STRESS:c0_limit",
+     "direction": "max",
+     "raw": 24.2,
+     "lo": 0.5,
+     "hi": 56.5,
+     "z": 0.4232,
+     "weight": 0.1,
+     "contribution": 0.0423
+    }
+   ]
   }
  }
 }

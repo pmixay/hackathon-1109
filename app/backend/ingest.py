@@ -131,8 +131,8 @@ def validate_config(text: str) -> dict:
         for name, s in scen.items():
             if not isinstance(s, dict) or not _is_number(s.get("c0_max_mrub")):
                 errors.append(f"scenarios.{name}: нет числового c0_max_mrub")
-        if "BASE" not in scen or "STRESS" not in scen:
-            warnings.append("ожидались сценарии BASE и STRESS")
+        if "BASE" not in scen or "STRESS" not in scen:  # модель выбора и экраны построены на этих двух сценариях
+            errors.append("нужны сценарии BASE и STRESS — на них построены расчёт и экраны")
     if "case_version" not in cfg:
         warnings.append("нет case_version")
     return {"ok": not errors, "errors": errors, "warnings": warnings,

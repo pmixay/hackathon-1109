@@ -27,6 +27,9 @@ UI_COLUMNS = {
     "Дополнительный доступ": "access_extra",
     "Главный KPI": "kpi",
     "Что показать при сбое": "on_failure",
+    "Проблема": "problem",
+    "Предполагаемый плательщик": "payer",
+    "Ключевой риск": "risk",
 }
 
 CONSTRAINT_KEYS = {
@@ -78,12 +81,50 @@ def team_portfolio() -> Variant:
     return load_portfolio(TEAM_CONFIG / "portfolio.json")
 
 
+def _why_final(path: Path | None = None) -> dict:
+    """Тексты экрана «Почему FINAL» (app/config/why_final.json, формулировки участника 3); нет файла — пустой словарь."""
+    path = path or CONFIG / "why_final.json"
+    if not path.exists():
+        return {}
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    return {k: v for k, v in data.items() if not str(k).startswith("_")} if isinstance(data, dict) else {}
+
+
+def _alternatives(case, records: dict, path: Path | None = None) -> list:
+    """Именованные варианты записки (config/alternatives.json): name, id в порядке лотов кейса, note.
+    Неполные записи и варианты с лотами вне набора данных пропускаются; найденные считаются движком и добавляются в records."""
+    path = path or TEAM_CONFIG / "alternatives.json"
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8") as f:
+        raw = json.load(f)
+    items = raw.get("variants") if isinstance(raw, dict) else raw
+    out = []
+    for v in items if isinstance(items, list) else []:
+        if not isinstance(v, dict):
+            continue
+        name, parts = v.get("name"), v.get("selection") or []
+        if not name or not parts or not all(isinstance(p, dict) and "lot_id" in p and "mode_id" in p for p in parts):
+            continue  # неполная запись файла участника: пропускаем, не роняя сборку
+        try:
+            cid = model.canonical_id(case, [(p["lot_id"], p["mode_id"]) for p in parts])
+            if cid not in records:
+                records[cid] = model.record(case, model.parse_id(cid))
+        except ValueError:
+            continue  # лот или режим вне набора данных
+        out.append({"name": str(name), "id": cid, "note": str(v.get("note", ""))})
+    return out
+
+
 def selection_model():
     return load_selection_model(TEAM_CONFIG / "weights.json")
 
 
-def _combo_payload(rec, score, rank):
+def _combo_payload(rec, score, rank, kcash_min: float):
     m = rec["metrics"]
+    breakdown = getattr(score, "breakdown", None)
+    gate = next((g for g in rec.get("gates", []) if g.get("id") == "anchor_coverage"), None)
     return {
         "id": rec["id"],
         "selection": [{"lot": lot, "mode": mode} for lot, mode in rec["selection"]],
@@ -130,24 +171,35 @@ def _combo_payload(rec, score, rank):
         "notes": {scenario: [{"code": note.code, "message": note.message, "lots": list(note.lots)} for note in result.notes] for scenario, result in rec["results"].items()},
         "score": round(score(rec), 4),
         "rank": rank.get(rec["id"]),
+        # дополнительный сценарий команды S2 «commercial cash = 0»: не официальный STRESS, только якорные поступления
+        "s2": {"cash": m.anchor_cash, "kcash": (m.anchor_cash / m.opex) if m.opex else None, "opex_gap": m.opex - m.anchor_cash,
+               "kcash_ok": bool(gate["ok"]) if gate else bool(m.opex and m.anchor_cash / m.opex >= kcash_min - 1e-9)},
+        # разложение балла по критериям: raw, границы нормализации, z, вес, вклад; Σ contribution = score
+        "breakdown": [dict(b, raw=round(b["raw"], 6), z=round(b["z"], 4), contribution=round(b["contribution"], 4)) for b in breakdown(rec)] if breakdown else None,
     }
 
 
 def build_dashboard(selected_id: str | None = None, root: Path | None = None, gates_filter: bool | None = None) -> dict:
     root = Path(root) if root is not None else ingest.active_root()
     case, enumerated = _enumerated_for(str(root))
-    records = enumerated
+    records = dict(enumerated)  # копия: произвольные комбинации (конструктор, альтернативы записки) не попадают в кэш перебора
     ui_cfg = _load("model.json")
     ru = _load("lots_ru.json")
     ui = _lots_ui()
     portfolio = team_portfolio()
     default_id = model.canonical_id(case, portfolio.selection)
     selected_id = model.canonical_id(case, model.parse_id(selected_id)) if selected_id else default_id
-    if selected_id not in records:
-        try:
-            records = {**records, selected_id: model.record(case, model.parse_id(selected_id))}
-        except ValueError as error:
-            raise ValueError(f"Неизвестная комбинация: {selected_id} ({error})") from None
+
+    def ensure(cid: str, what: str):
+        if cid not in records:
+            try:
+                records[cid] = model.record(case, model.parse_id(cid))
+            except ValueError as error:
+                raise ValueError(f"{what}: {cid} ({error})") from None
+
+    ensure(default_id, "Портфель FINAL из config/portfolio.json отсутствует в наборе данных")
+    ensure(selected_id, "Неизвестная комбинация")
+    alternatives = _alternatives(case, records)   # до балла: экран «Почему FINAL» показывает их балл и место
 
     sel_model = selection_model()
     if gates_filter is not None:
@@ -163,8 +215,8 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None, ga
     comparison = list(suggestions) + rejected_ids
     actions = model.stress_actions(records, rejected, selected_id, score, case, allowed_modes=allowed) if rejected else []
 
-    wanted = set(comparison) | {selected_id} | {a["id"] for a in actions}
-    combos = {cid: _combo_payload(records[cid], score, rank) for cid in sorted(wanted)}
+    wanted = set(comparison) | {selected_id, default_id} | {a["id"] for a in actions} | {a["id"] for a in alternatives}
+    combos = {cid: _combo_payload(records[cid], score, rank, float(case.constraints.kcash_min)) for cid in sorted(wanted)}
 
     return {
         "meta": {
@@ -221,6 +273,10 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None, ga
             for mid, mode in case.modes.items()
         },
         "selected": selected_id,
+        "final": default_id,                       # решение гейта (config/portfolio.json); selected может быть произвольным портфелем из конструктора
+        "final_name": portfolio.name,
+        "alternatives": alternatives,              # именованные варианты записки для экрана «Почему FINAL»
+        "why_final": _why_final(),                 # формулировки участника 3 из app/config/why_final.json
         "suggestions": suggestions,
         "rejected": rejected_ids,
         "comparison": comparison,

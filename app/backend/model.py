@@ -91,6 +91,23 @@ def make_scorer(records: dict, model: SelectionModel, feasible_scenario: str = "
         return acc / total
 
     rank = {name: item.rank for name, item in scored.items() if item.rank is not None}
+
+    def breakdown(rec) -> list:
+        """Разложение балла по критериям: raw, границы нормализации, z (0–1), вес, вклад = вес × z / Σвесов."""
+        item = scored[rec["id"]]
+        rows = []
+        for criterion in model.criteria:
+            low, high = bounds[criterion.key]
+            value = item.values[criterion.key] if criterion.key in item.values else criterion_value(rec["results"], criterion.key, feasible_scenario)
+            if criterion.key in item.normalized:
+                z = item.normalized[criterion.key]
+            else:
+                x = 1.0 if math.isclose(low, high) else max(0.0, min(1.0, (value - low) / (high - low)))
+                z = x if criterion.direction == "max" else 1.0 - x
+            rows.append({"key": criterion.key, "direction": criterion.direction, "raw": float(value), "lo": low, "hi": high, "z": z, "weight": criterion.weight, "contribution": criterion.weight * z / total})
+        return rows
+
+    score.breakdown = breakdown
     return score, rank
 
 

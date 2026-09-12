@@ -2,7 +2,7 @@
  "meta": {
   "case_id": "SEP-KOSMOS-INFRA-2026",
   "case_version": "1.1",
-  "generated_at": "2026-09-12T09:28:33+00:00",
+  "generated_at": "2026-09-12T12:08:15+00:00",
   "scenarios": {
    "BASE": {
     "c0_max": 1300

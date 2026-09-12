@@ -106,19 +106,22 @@ export function renderData(ctx) {
   const anyLoaded = FILES.some((n) => upload.files[n] !== undefined);
   const allOk = anyLoaded && FILES.every((n) => !upload.report[n] || upload.report[n].ok);
   const previews = FILES.filter((n) => upload.report[n]?.ok).map((n) => previewOf(n, ctx)).join('');
-  const helpUpload = 'Формат организаторов: lots.csv (14 полей на лот), access_modes.csv (коэффициенты режимов и public_core), case_config.json (constraints_common и scenarios с c0_max_mrub). Файлы проверяются здесь на структуру и типы, затем на сервере, сохраняются в app/data/uploads и становятся активным набором; все экраны пересчитываются. Непереданные файлы берутся из текущего набора. «Вернуть файлы организаторов» возвращает исходный набор из cases/case02.';
+  const helpUpload = 'Три файла в формате организаторов, можно загружать по одному: lots.csv (14 полей на лот), access_modes.csv (коэффициенты режимов и public_core), case_config.json (constraints_common и scenarios с c0_max_mrub). Файлы проверяются здесь на структуру и типы, затем на сервере, сохраняются в app/data/uploads и становятся активным набором; все экраны пересчитываются. Непереданные файлы берутся из текущего набора. «Вернуть файлы организаторов» возвращает исходный набор из cases/case02.';
   const fmtCard = `<div class="card"><h2>Формат организаторов${help('Обязательные столбцы и типы. Лишние столбцы игнорируются, порядок не важен. Разделитель — запятая, кодировка UTF-8. capability_groups — список через точку с запятой (EO; PNT/InSAR; SATCOM; SSA), federal и public_core — true/false.')}</h2>
 <div class="fmt"><div><b>lots.csv</b><div class="cols">${LOT_COLUMNS.map((c) => `<span class="lot${LOT_NUMERIC.includes(c) ? '' : ' txt'}">${c}</span>`).join('')}</div></div>
 <div><b>access_modes.csv</b><div class="cols">${MODE_COLUMNS.map((c) => `<span class="lot${c === 'mode_id' || c === 'public_core' ? ' txt' : ''}">${c}</span>`).join('')}</div></div>
 <div><b>case_config.json</b><div class="cols"><span class="lot txt">case_version</span>${CONFIG_COMMON.map((c) => `<span class="lot">constraints_common.${c}</span>`).join('')}<span class="lot">scenarios.&lt;имя&gt;.c0_max_mrub</span></div></div></div>
-<div class="legend"><span><i style="background:var(--rule-2)"></i>число</span><span><i style="background:#e6f2ea"></i>текст или true/false</span></div></div>`;
+<div class="legend"><span><i style="background:var(--rule-2)"></i>число</span><span><i style="background:var(--brand-soft)"></i>текст или true/false</span></div></div>`;
 
-  return `<div class="top"><h1>Данные</h1>${pill}</div>
-<div class="card"><h2>Текущий набор<span class="u">по нему считаются все экраны</span>${help('Активный набор данных: исходные файлы организаторов или загруженный набор. Хэш — первые 12 знаков SHA-256 содержимого; он же подтверждает, что файлы организаторов не менялись.')}</h2>${cur}</div>
-<div class="card dz" id="dz"><h2>Загрузить новый набор<span class="u">три файла в формате организаторов; можно по одному</span>${help(helpUpload)}</h2>
+  const body = {
+    current: () => `<div class="card"><h2>Текущий набор${help('По этому набору считаются все экраны. Активный набор данных: исходные файлы организаторов или загруженный набор. Хэш — первые 12 знаков SHA-256 содержимого; он же подтверждает, что файлы организаторов не менялись.')}</h2>${cur}</div>`,
+    upload: () => `<div class="card dz" id="dz"><h2>Загрузить новый набор${help(helpUpload)}</h2>
 <div class="slots">${FILES.map(slot).join('')}</div>${issues}
 <div class="acts2"><span class="btn${allOk && state.api && !upload.busy ? '' : ' off'}" id="apply">${upload.busy ? 'Применяю…' : 'Применить и пересчитать'}</span><span class="btn ghost${anyLoaded ? '' : ' off'}" id="clear">Очистить</span><span class="btn ghost${state.api && ds && ds.source !== 'организаторы' ? '' : ' off'}" id="reset">Вернуть файлы организаторов</span>${!state.api ? '<span class="note">применение требует сервера</span>' : ''}</div></div>
-${previews}${fmtCard}`;
+${previews}`,
+    format: () => fmtCard,
+  };
+  return ctx.head('Данные', pill) + body[ctx.tab()]();
 }
 
 function previewOf(n, ctx) {

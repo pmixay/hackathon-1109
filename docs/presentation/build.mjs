@@ -215,13 +215,42 @@ const page = () => {
     if (p.key === FINAL_KEY || p.rank === 1) continue;
     s.addShape('ellipse', { x: X(p.c0) - 0.045, y: Y(p.vpub) - 0.045, w: 0.09, h: 0.09, fill: { color: C.mint, transparency: 35 }, line: { color: C.mint, width: 0 } });
   }
-  const mark = (key, color, label, dx, dy) => {
-    const p = pts.find((q) => q.key === key);
-    s.addShape('ellipse', { x: X(p.c0) - 0.105, y: Y(p.vpub) - 0.105, w: 0.21, h: 0.21, fill: { color }, line: { color: C.white, width: 1.5 } });
-    T(s, label, { x: X(p.c0) + dx, y: Y(p.vpub) + dy, w: 1.9, h: 0.24, fontSize: 9.5, bold: true, color });
+  // Подписи ставим туда, где под ними нет точек: перебираем позиции вокруг
+  // маркера и берём ту, что накрывает меньше всего облака.
+  // Ширины замерены по Montserrat Bold 9,5 pt.
+  const LABEL_W = { 'первый по баллу': 1.24, 'наш выбор': 0.8 };
+  const LH = 0.22;
+  const place = (cx, cy, w) => {
+    const around = [
+      [0.18, -LH / 2], [-w - 0.18, -LH / 2],
+      [-w / 2, -0.48], [-w / 2, 0.26],
+      [0.16, -0.46], [-w - 0.16, -0.46],
+      [0.16, 0.26], [-w - 0.16, 0.26],
+    ];
+    let best = null;
+    for (const [dx, dy] of around) {
+      const x0 = cx + dx, y0 = cy + dy, x1 = x0 + w, y1 = y0 + LH;
+      if (x0 < px0 || x1 > px1 - 0.04 || y0 < py0 - 0.3 || y1 > py1) continue;
+      let hits = 0;
+      for (const q of pts) {
+        const qx = X(q.c0), qy = Y(q.vpub);
+        if (qx > x0 - 0.07 && qx < x1 + 0.07 && qy > y0 - 0.07 && qy < y1 + 0.07) hits += 1;
+      }
+      if (!best || hits < best.hits) best = { dx, dy, hits };
+      if (hits === 0) break;
+    }
+    return best ?? { dx: 0.18, dy: -LH / 2, hits: 0 };
   };
-  mark(leader.variant, C.brass, 'первый по баллу', 0.16, -0.32);
-  mark(FINAL_KEY, C.deep, 'наш выбор', 0.18, -0.1);
+  const mark = (key, color, label) => {
+    const p = pts.find((q) => q.key === key);
+    const cx = X(p.c0), cy = Y(p.vpub);
+    const w = LABEL_W[label];
+    const { dx, dy } = place(cx, cy, w);
+    s.addShape('ellipse', { x: cx - 0.105, y: cy - 0.105, w: 0.21, h: 0.21, fill: { color }, line: { color: C.white, width: 1.5 } });
+    T(s, label, { x: cx + dx, y: cy + dy, w, h: LH, fontSize: 9.5, bold: true, color, align: dx < 0 ? 'right' : 'left' });
+  };
+  mark(leader.variant, C.brass, 'первый по баллу');
+  mark(FINAL_KEY, C.deep, 'наш выбор');
 
   const rx = 9.06;
   card(s, { x: rx, y: 2.06, w: 3.55, h: 4.36 });

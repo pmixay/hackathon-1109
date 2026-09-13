@@ -1,155 +1,100 @@
-// Шаблон «Космо · тёмно-зелёный» — собственный шаблон команды.
+// Шаблон «Космо · светлый»: белые карточки на светлом фоне, зелёные градиенты
+// внутри данных. Собран нами по правилам презентационного шаблона КРОК
+// (design.croc.ru/presentations): повторяющиеся элементы связывают слайды,
+// слайд не перегружают, кегль крупный, текста мало, на слайде остаётся воздух,
+// всё выровнено по одной сетке.
 //
-// Основан на правилах презентационного шаблона КРОК (design.croc.ru/presentations):
-// повторяющиеся элементы связывают слайды в одну презентацию; слайд не перегружают
-// информацией; крупный кегль и минимум текста; воздух на слайде, второстепенное —
-// в сноски и приложения; все элементы выровнены друг относительно друга.
-// Палитра своя: тёмно-зелёная тема интерфейса `app/static/styles.css`.
+// Палитра — светлая тема интерфейса из app/static/styles.css.
 
 export const C = {
-  bg: '08130E',        // фон слайда
-  bgSoft: '0B1A13',    // фон вспомогательных полос
-  card: '0F1D17',      // карточка
-  card2: '17271F',     // приподнятая карточка
-  rule: '1E3228',      // линия/обводка
-  ink: 'E6F2EB',       // основной текст
-  ink2: 'A5BDB0',      // вторичный текст
-  muted: '7E9689',     // подписи
-  mint: '55B894',      // акцент бренда
-  mintDeep: '2F7A5F',  // приглушённый акцент
-  deep: '0F6F40',      // плотный зелёный
-  brass: 'C39E53',     // запас и диагностика
-  crit: 'CC7468',      // нарушение
-  white: 'FFFFFF',
+  page: 'F4F7F5',   // фон слайда
+  white: 'FFFFFF',  // карточка
+  ink: '0E1F16',    // заголовки и цифры
+  ink2: '3E5147',   // основной текст
+  muted: '6B7C73',  // редкие подписи
+  rule: 'E1E8E3',   // граница карточки
+  deep: '0B4A2E',   // тёмная зелень
+  brand: '0F6F40',  // акцент
+  accent: '17A05C',
+  mint: '55B894',
+  soft: 'E8F4EC',   // светлая заливка
+  brass: 'A9762B',  // запас и предупреждение
+  crit: 'B1483C',   // нарушение
 };
 
 export const F = 'Montserrat';
 
-// Сетка: 12 колонок, поля 0,62", межколонник 0,2".
-export const L = {
-  W: 13.333,
-  H: 7.5,
-  M: 0.62,             // боковое поле
-  colGap: 0.2,
-  bodyTop: 1.78,       // верх контентной области
-  bodyBottom: 6.72,    // низ контентной области
-  footY: 6.92,
-};
-L.CW = (L.W - 2 * L.M - 11 * L.colGap) / 12; // ширина колонки
-export const col = (n) => n * L.CW + (n - 1) * L.colGap;      // ширина n колонок
-export const colX = (i) => L.M + (i - 1) * (L.CW + L.colGap); // левый край колонки i
+// Сетка: 12 колонок, поля 0,72", межколонник 0,2".
+export const L = { W: 13.333, H: 7.5, M: 0.72, gap: 0.22 };
+L.CW = (L.W - 2 * L.M - 11 * 0.2) / 12;
 
-// Повторяющиеся элементы шаблона: кольца на фоне и подвал с линией.
-const rings = [
-  { shape: 'ellipse', x: 9.9, y: 3.5, w: 6.2, h: 6.2, line: { color: C.rule, width: 1 }, fill: { color: C.bg, transparency: 100 } },
-  { shape: 'ellipse', x: 11.4, y: 5.0, w: 3.6, h: 3.6, line: { color: C.rule, width: 1 }, fill: { color: C.bg, transparency: 100 } },
-];
-
-export function defineMasters(pres) {
+export function defineLayout(pres) {
   pres.defineLayout({ name: 'KOSMO', width: L.W, height: L.H });
   pres.layout = 'KOSMO';
-
-  pres.defineSlideMaster({
-    title: 'COVER',
-    background: { color: C.bg },
-    objects: [
-      { rect: { x: 0, y: 0, w: L.W, h: 0.14, fill: { color: C.mint } } },
-      ...rings.map((r) => ({ [r.shape]: { x: r.x, y: r.y, w: r.w, h: r.h, line: r.line, fill: r.fill } })),
-    ],
-  });
-
-  pres.defineSlideMaster({
-    title: 'BASE',
-    background: { color: C.bg },
-    objects: [
-      { rect: { x: 0, y: 0, w: 0.14, h: L.H, fill: { color: C.mint } } },
-      ...rings.map((r) => ({ [r.shape]: { x: r.x, y: r.y, w: r.w, h: r.h, line: r.line, fill: r.fill } })),
-      { rect: { x: L.M, y: L.footY, w: L.W - 2 * L.M, h: 0.012, fill: { color: C.rule } } },
-    ],
-  });
 }
 
-// ——— типовые элементы ———
+export const shadow = () => ({ type: 'outer', color: '0E1F16', blur: 14, offset: 3, angle: 90, opacity: 0.1 });
 
-export function head(slide, { kicker, title, lead }) {
-  slide.addText(kicker.toUpperCase(), {
-    x: L.M, y: 0.44, w: L.W - 2 * L.M, h: 0.26, isTextBox: true, margin: 0,
-    fontFace: F, fontSize: 10.5, bold: true, charSpacing: 2.2, color: C.mint,
-  });
-  slide.addText(title, {
-    x: L.M, y: 0.76, w: L.W - 2 * L.M - 0.6, h: 0.62, isTextBox: true, margin: 0,
-    fontFace: F, fontSize: 27, bold: true, color: C.ink, lineSpacingMultiple: 1.0,
+const T = (s, text, o) => s.addText(text, { isTextBox: true, margin: 0, fontFace: F, ...o });
+export { T as text };
+
+// Заголовок слайда: громкий, без надзаголовков и мелких серых подписей.
+export function head(slide, { title, lead, size = 40 }) {
+  T(slide, title, {
+    x: L.M, y: 0.6, w: L.W - 2 * L.M, h: 0.86,
+    fontSize: size, bold: true, color: C.ink,
   });
   if (lead) {
-    slide.addText(lead, {
-      x: L.M, y: 1.36, w: L.W - 2 * L.M - 2.4, h: 0.3, isTextBox: true, margin: 0,
-      fontFace: F, fontSize: 12.5, color: C.ink2,
+    T(slide, lead, {
+      x: L.M, y: 1.46, w: L.W - 2 * L.M - 1.2, h: 0.34,
+      fontSize: 13.5, color: C.ink2,
     });
   }
 }
 
-export function foot(slide, { section, n, total }) {
-  slide.addText(section, {
-    x: L.M, y: L.footY + 0.06, w: 7, h: 0.26, isTextBox: true, margin: 0,
-    fontFace: F, fontSize: 9, color: C.muted,
-  });
-  slide.addText(`${n} / ${total}`, {
-    x: L.W - L.M - 2, y: L.footY + 0.06, w: 2, h: 0.26, isTextBox: true, margin: 0,
-    fontFace: F, fontSize: 9, color: C.muted, align: 'right',
+export function foot(slide, { n, total }) {
+  T(slide, `${n} / ${total}`, {
+    x: L.W - L.M - 1, y: 6.92, w: 1, h: 0.28,
+    fontSize: 10, color: '9BAAA2', align: 'right',
   });
 }
 
-export function card(slide, { x, y, w, h, fill = C.card, line = C.rule, radius = 0.1 }) {
+export function card(slide, { x, y, w, h, fill = C.white, line = C.rule, radius = 0.18 }) {
   slide.addShape('roundRect', {
     x, y, w, h, rectRadius: radius,
-    fill: { color: fill }, line: { color: line, width: 1 },
+    fill: { color: fill }, line: { color: line, width: 1 }, shadow: shadow(),
   });
 }
 
-export function chip(slide, { x, y, w, h = 0.42, text, color = C.ink2, border = C.rule, fill = C.card, size = 11, bold = false, align = 'center' }) {
+export function chip(slide, { x, y, w, h = 0.46, text, color = C.brand, border = 'C8E5D5', fill = C.white, size = 11.5, bold = true, align = 'center' }) {
   slide.addShape('roundRect', {
-    x, y, w, h, rectRadius: 0.08,
-    fill: { color: fill }, line: { color: border, width: 1 },
+    x, y, w, h, rectRadius: 0.1,
+    fill: { color: fill }, line: { color: border, width: 1 }, shadow: shadow(),
   });
-  slide.addText(text, {
-    x: x + 0.1, y, w: w - 0.2, h, isTextBox: true, margin: 0,
-    fontFace: F, fontSize: size, bold, color, align, valign: 'middle',
-  });
+  T(slide, text, { x: x + 0.14, y, w: w - 0.28, h, fontSize: size, bold, color, align, valign: 'middle' });
 }
 
-// Круглый значок с иконкой. `img` — data-URI PNG из assets.mjs.
-export function badge(slide, { x, y, d = 0.78, img, fill = C.card2, line = C.mint, pad = 0.19 }) {
+// Круглый значок с иконкой.
+export function badge(slide, { x, y, d = 0.76, img, fill = C.soft, line = 'C8E5D5', pad = 0.19 }) {
   slide.addShape('ellipse', { x, y, w: d, h: d, fill: { color: fill }, line: { color: line, width: 1 } });
   if (img) slide.addImage({ data: img, x: x + pad, y: y + pad, w: d - 2 * pad, h: d - 2 * pad });
 }
 
-// Крупное число с подписью — основной способ подать цифру.
-export function stat(slide, { x, y, w, value, label, unit, size = 32, color = C.ink, align = 'left' }) {
-  slide.addText(
-    [
-      { text: value, options: { fontSize: size, bold: true, color } },
-      ...(unit ? [{ text: ' ' + unit, options: { fontSize: size * 0.42, bold: true, color: C.muted } }] : []),
-    ],
-    { x, y, w, h: size / 62, isTextBox: true, margin: 0, fontFace: F, align },
-  );
-  slide.addText(label, {
-    x, y: y + size / 62 + 0.02, w, h: 0.24, isTextBox: true, margin: 0,
-    fontFace: F, fontSize: 10, color: C.muted, align,
-  });
+export function stat(slide, { x, y, w, value, label, size = 30, color = C.ink, align = 'left' }) {
+  T(slide, value, { x, y, w, h: size / 58, fontSize: size, bold: true, color, align });
+  T(slide, label, { x, y: y + size / 58 + 0.02, w, h: 0.26, fontSize: 10.5, color: C.ink2, align });
 }
 
-// Тонкая шкала «факт против порога».
-export function meter(slide, { x, y, w, h = 0.11, frac, color = C.mint, track = C.rule }) {
-  slide.addShape('roundRect', { x, y, w, h, rectRadius: 0.05, fill: { color: track }, line: { color: track, width: 0 } });
-  const fw = Math.max(0.06, Math.min(1, frac) * w);
-  slide.addShape('roundRect', { x, y, w: fw, h, rectRadius: 0.05, fill: { color }, line: { color, width: 0 } });
+// Тонкая шкала «сколько до предела осталось».
+export function meter(slide, { x, y, w, h = 0.12, frac, color = C.mint, track = 'E4EDE7' }) {
+  slide.addShape('roundRect', { x, y, w, h, rectRadius: 0.06, fill: { color: track }, line: { color: track, width: 0 } });
+  slide.addShape('roundRect', { x, y, w: Math.max(0.06, Math.min(1, frac) * w), h, rectRadius: 0.06, fill: { color }, line: { color, width: 0 } });
 }
 
 // Связка между блоками: нарисованный треугольник, а не символ стрелки.
-export function flow(slide, { x, y, d = 0.16, color = C.mint, dir = 'right' }) {
+export function flow(slide, { x, y, d = 0.18, color = C.mint, dir = 'right' }) {
   slide.addShape('triangle', {
-    x, y, w: d, h: d,
-    rotate: dir === 'right' ? 90 : 180,
+    x, y, w: d, h: d, rotate: dir === 'right' ? 90 : 180,
     fill: { color }, line: { color, width: 0 },
   });
 }

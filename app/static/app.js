@@ -76,6 +76,8 @@ const tag = (t, cls = '') => `<span class="tag${cls ? ' ' + cls : ''}">${esc(t)}
 // читался как пятый лот. Комбинации называются составом и режимами, а не версиями.
 const finBadge = () => `<span class="fin">${ICON.tick}FINAL</span>`;
 const isFinalId = (id) => id === state.data?.final;
+const foldOpen = (name) => !!state.fold[name];
+const foldT = (name, what) => `<span class="fold-t" role="button" tabindex="0" data-fold="${name}" aria-expanded="${foldOpen(name)}" aria-controls="fold-${name}" aria-label="${foldOpen(name) ? 'Свернуть' : 'Развернуть'}: ${esc(what)}">${foldOpen(name) ? 'Свернуть' : 'Развернуть'} ${ICON.chev}</span>`;
 const more = (tab, label, page = null) => `<a class="more" role="link" tabindex="0" data-tab="${tab}"${page ? ` data-page="${page}"` : ''}>${label} ${ICON.arrow}</a>`;
 
 // localStorage может быть недоступен (приватный режим, запрет cookies) — интерфейс работает и без памяти между сессиями
@@ -99,7 +101,8 @@ const state = {
   theme: document.documentElement.dataset.theme || 'light',
   dataset: null,
   gatesFilter: store.get('kp.gates') === '1',   // проверки команды S2 как фильтр ранжирования (только для исследования)
-  foldLots: store.get('kp.lots') === '1',       // развёрнута ли таблица «Лоты портфеля» (по умолчанию свёрнута)
+  // складные блоки: карточки лотов на обзоре и таблица показателей; по умолчанию свёрнуты
+  fold: { hero: store.get('kp.fold.hero') === '1', lots: store.get('kp.fold.lots') === '1' },
 };
 const curTab = (page = state.page) => state.tab[page] || TABS[page][0][0];
 function parseHash() {
@@ -247,7 +250,13 @@ ${tile('Покрытие OPEX', fmt(m.kcash, 2), 'cash / OPEX', Math.min(1, cons
         const all = gatesBad.length === 0;
         return `<div class="sum-it"><div class="sum-h"><span class="circ${all ? '' : ' bad'}">${all ? ICON.check : ICON.x}</span><span class="t">Проверка команды S2 <span class="tag warn">диагностика</span></span><span class="n">${gates.length - gatesBad.length} из ${gates.length}</span></div><div class="sum-l">${gates.map((g) => `<span class="${g.ok ? '' : 'bad'}"><i></i>${esc(gateName(g))}${g.ok ? '' : ', ' + esc(gateFailText(g))}</span>`).join('')}</div></div>`;
       };
-      return `<div class="card"><h2>${isFinal() ? 'Итоговый портфель' : 'Показанный портфель'} ${portfolioTag()}${help(helpHero)}</h2><div class="hero">${lotCards}${score}</div></div>
+      // Пять крупных карточек занимали половину первого экрана: по умолчанию они свёрнуты
+      // до строки «лот · режим · c0» с местом по баллу, разворачиваются кнопкой.
+      const heroSum = `<div class="fold-sum">${s.per_lot.map((r) => `<span class="fl"><b>${esc(r.lot)}</b><i>${esc(r.mode)}</i>${fmt(r.c0)}<small>c0</small></span>`).join('')}
+<span class="fl tt">Место<b>${s.rank ?? '—'}</b><em>из ${t.ranked}</em><b>${s.score.toFixed(2)}</b><em>балл</em></span>${more('decision', 'Почему FINAL', 'why')}</div>`;
+      return `<div class="card fold${foldOpen('hero') ? ' open' : ''}"><h2>${isFinal() ? 'Итоговый портфель' : 'Показанный портфель'} ${portfolioTag()}${foldT('hero', 'карточки лотов')}${help(helpHero)}</h2>
+${heroSum}
+<div class="fold-b" id="fold-hero"><div class="fold-in"><div class="hero">${lotCards}${score}</div></div></div></div>
 ${tiles}
 <div class="card"><h2>Ограничения ${tag(sc)}${more('checks', 'Факт и пороги')}${help(helpChecks)}</h2><div class="sum">${grp('Состав портфеля', COMPOSITION)}${grp('Финансовые и качественные пороги', THRESHOLDS)}${grpGates()}</div></div>`;
     },
@@ -356,9 +365,9 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       // «лот · режим · c0» и итога, разворачивается по кнопке (класс на карточке, без перерисовки).
       const sumLots = `<div class="fold-sum">${s.per_lot.map((r) => `<span class="fl"><b>${esc(r.lot)}</b><i>${esc(r.mode)}</i>${fmt(r.c0)}<small>c0</small></span>`).join('')}
 <span class="fl tt">Портфель${[['c0', fmt(m.c0)], ['OPEX', fmt(m.opex, 2)], ['ценность', fmt(m.vpub)], ['cash', fmt(m.cash, 2)]].map(([k, v]) => `<em>${k}</em><b>${v}</b>`).join('')}</span></div>`;
-      return `<div class="card fold${state.foldLots ? ' open' : ''}"><h2>Лоты портфеля ${portfolioTag()}<span class="fold-t more" role="button" tabindex="0" aria-expanded="${!!state.foldLots}" aria-controls="lots-full">${state.foldLots ? 'Свернуть' : 'Все показатели'} ${ICON.chev}</span>${help(helpLots)}</h2>
+      return `<div class="card fold${foldOpen('lots') ? ' open' : ''}"><h2>Лоты портфеля ${portfolioTag()}${foldT('lots', 'таблица всех показателей')}${help(helpLots)}</h2>
 ${sumLots}
-<div class="fold-b" id="lots-full"><div class="fold-in">
+<div class="fold-b" id="fold-lots"><div class="fold-in">
 <div class="tw wide"><table><tr><th>Лот</th><th>Режим</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">t_rep</th><th class="num">Готовность</th><th class="num">Устойчивость</th><th class="num">Тираж</th></tr>
 ${s.per_lot.map(lotRow).join('')}
 <tr class="total"><td>Портфель</td><td></td><td class="num">${fmt(m.c0)}</td><td class="num">${fmt(m.opex, 2)}</td><td class="num">${fmt(m.vpub)}</td><td class="num">${fmt(m.cash, 2)}</td><td class="num">${fmt(m.t_rep, 3)}</td><td class="num">${fmt(m.readiness, 2)}</td><td class="num">${fmt(m.resilience, 2)}</td><td class="num">${fmt(m.scale, 2)}</td></tr></table></div></div></div></div>
@@ -849,11 +858,13 @@ document.addEventListener('click', async (e) => {
   if (th) { setTheme(th.dataset.theme, th); return; }
   const fold = e.target.closest('.fold-t');
   if (fold) {
-    const card = fold.closest('.fold'), open = !card.classList.contains('open');
+    // класс на карточке, без перерисовки: иначе анимации разворота не видно
+    const name = fold.dataset.fold, card = fold.closest('.fold'), open = !card.classList.contains('open');
     card.classList.toggle('open', open);
     fold.setAttribute('aria-expanded', String(open));
-    fold.firstChild.textContent = open ? 'Свернуть ' : 'Все показатели ';
-    state.foldLots = open; store.set('kp.lots', open ? '1' : '0');
+    fold.setAttribute('aria-label', `${open ? 'Свернуть' : 'Развернуть'}: ${fold.getAttribute('aria-label').split(': ').slice(1).join(': ')}`);
+    fold.firstChild.textContent = open ? 'Свернуть ' : 'Развернуть ';
+    state.fold[name] = open; store.set(`kp.fold.${name}`, open ? '1' : '0');
     return;
   }
   if (e.target.closest('#collapse')) { state.collapsed = !state.collapsed; store.set('kp.collapsed', state.collapsed ? '1' : '0'); $('#shell').classList.toggle('collapsed', state.collapsed); return; }

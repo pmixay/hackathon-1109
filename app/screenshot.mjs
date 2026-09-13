@@ -2,7 +2,8 @@
 //   node app/screenshot.mjs [outDir=app/screenshots]
 // Файлы: <страница>.png — первая вкладка (светлая тема), <страница>-<вкладка>.png — остальные вкладки,
 // <страница>-dark.png — первая вкладка в тёмной теме, scenario-menu.png — открытый выбор сценария,
-// portfolio-lots-open.png — развёрнутая таблица «Лоты портфеля» (по умолчанию она свёрнута),
+// portfolio-open.png и portfolio-lots-open.png — развёрнутые карточки лотов и таблица показателей
+// (на экране оба блока по умолчанию свёрнуты),
 // portfolio-builder-fail.png и portfolio-checks-fail.png — произвольный портфель с нарушением STRESS (конструктор и таблица проверок).
 // Нужен playwright с Chromium (npm i -g playwright && npx playwright install chromium).
 // FONT_DIR — локальный кэш Google Fonts (см. docs/mockup/README.md), если сеть недоступна.
@@ -56,9 +57,10 @@ try {
     await page.waitForTimeout(300);
   } });
   await shot(light, 'portfolio/checks', 'portfolio-checks-fail.png', { before: async (page) => { await page.click('#scenario .dd-btn'); await page.click('#scenario .dd-it[data-s="STRESS"]'); await page.waitForTimeout(300); } });
-  // таблица лотов по умолчанию свёрнута: отдельный снимок развёрнутой
+  // карточки лотов и таблица показателей по умолчанию свёрнуты: отдельные снимки развёрнутых
   await shot(light, 'portfolio/lots', 'portfolio-lots-open.png', { before: async (page) => { await page.click('.fold-t'); await page.waitForTimeout(500); } });
-  await light.evaluate(() => localStorage.removeItem('kp.lots'));
+  await shot(light, 'portfolio/overview', 'portfolio-open.png', { before: async (page) => { await page.click('.fold-t'); await page.waitForTimeout(500); } });
+  await light.evaluate(() => { localStorage.removeItem('kp.fold.lots'); localStorage.removeItem('kp.fold.hero'); });
   await light.evaluate(() => localStorage.removeItem('kp.selected'));
   await light.close();
   const dark = await open('dark');

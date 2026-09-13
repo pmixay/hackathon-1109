@@ -366,9 +366,11 @@ table.bs b.neg{color:var(--crit)}
 table.alts td .sub{max-width:520px}
 .alt-h{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 /* складная карточка: компактная строка вместо большой таблицы, разворот по кнопке */
-.card.fold h2 .fold-t{margin-left:auto;cursor:pointer;user-select:none}
+/* кнопка разворота: видимый элемент управления, а не ссылка — иначе её не находят глазами */
+.card.fold h2 .fold-t{margin-left:auto;display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:1px solid var(--rule);border-radius:10px;background:var(--surface);color:var(--ink-2);font-family:var(--f-ui);font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none}
+.card.fold h2 .fold-t:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
 .card.fold h2 .fold-t+.help{margin-left:0}
-.card.fold h2 .fold-t svg{transition:transform .2s ease}
+.card.fold h2 .fold-t svg{width:14px;height:14px;transition:transform .2s ease}
 .card.fold.open h2 .fold-t svg{transform:rotate(180deg)}
 .fold-sum{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .card.fold.open .fold-sum{display:none}
@@ -378,6 +380,8 @@ table.alts td .sub{max-width:520px}
 .fl small{font-size:11.5px;color:var(--muted)}
 .fl.tt{background:var(--brand-soft);font-weight:600;color:var(--ink)}
 .fl.tt em{font-style:normal;font-size:11.5px;color:var(--ink-2);margin-left:6px}
+.fl.tt em+b{margin-left:8px}
+.fold-sum .more{margin-left:4px}
 .fl.tt b{font-family:var(--f-num);font-size:13.5px}
 /* разворот: grid-template-rows 0fr → 1fr анимируется без фиксированной высоты */
 .fold-b{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1)}

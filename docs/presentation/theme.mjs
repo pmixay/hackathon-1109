@@ -38,18 +38,12 @@ export const shadow = () => ({ type: 'outer', color: '0E1F16', blur: 14, offset:
 const T = (s, text, o) => s.addText(text, { isTextBox: true, margin: 0, fontFace: F, ...o });
 export { T as text };
 
-// Заголовок слайда: громкий, без надзаголовков и мелких серых подписей.
-export function head(slide, { title, lead, size = 40 }) {
+// Заголовок слайда: громкий, без надзаголовков и подводок.
+export function head(slide, { title, size = 40 }) {
   T(slide, title, {
-    x: L.M, y: 0.6, w: L.W - 2 * L.M, h: 0.86,
+    x: L.M, y: 0.82, w: L.W - 2 * L.M, h: 0.86,
     fontSize: size, bold: true, color: C.ink,
   });
-  if (lead) {
-    T(slide, lead, {
-      x: L.M, y: 1.46, w: L.W - 2 * L.M - 1.2, h: 0.34,
-      fontSize: 13.5, color: C.ink2,
-    });
-  }
 }
 
 export function foot(slide, { n, total }) {

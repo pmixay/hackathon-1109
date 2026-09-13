@@ -76,13 +76,10 @@ const backupPage = () => {
   const s = page();
   s.addImage({ data: G.cover, x: 0, y: 0, w: L.W, h: L.H });
   T(s, 'Космос\nкак инфраструктура', {
-    x: L.M, y: 1.42, w: 9.4, h: 2.5, fontSize: 46, bold: true, color: C.ink, lineSpacingMultiple: 1.05,
-  });
-  T(s, 'Четыре работающих сервиса для региона', {
-    x: L.M, y: 4.02, w: 7, h: 0.4, fontSize: 16, color: C.ink2,
+    x: L.M, y: 1.5, w: 9.4, h: 2.5, fontSize: 46, bold: true, color: C.ink, lineSpacingMultiple: 1.05,
   });
   ['FIRE-A', 'ENV-A', 'AGRI-B', 'TRANS-B'].forEach((t, i) => {
-    chip(s, { x: L.M + i * 1.82, y: 4.72, w: 1.66, h: 0.52, text: t, size: 12.5 });
+    chip(s, { x: L.M + i * 1.82, y: 3.88, w: 1.66, h: 0.52, text: t, size: 12.5 });
   });
   [
     [nf(m.c0), 'старт, млн ₽'],
@@ -91,12 +88,12 @@ const backupPage = () => {
     [nf(c0Stress.margin), 'запас, млн ₽'],
   ].forEach(([v, lab], i) => {
     const x = L.M + i * 3.06;
-    card(s, { x, y: 5.5, w: 2.86, h: 1.1 });
-    T(s, v, { x: x + 0.26, y: 5.64, w: 2.4, h: 0.5, fontSize: 24, bold: true, color: C.ink });
-    T(s, lab, { x: x + 0.26, y: 6.12, w: 2.4, h: 0.3, fontSize: 10.5, color: C.ink2 });
+    card(s, { x, y: 5.3, w: 2.86, h: 1.1 });
+    T(s, v, { x: x + 0.26, y: 5.44, w: 2.4, h: 0.5, fontSize: 24, bold: true, color: C.ink });
+    T(s, lab, { x: x + 0.26, y: 5.92, w: 2.4, h: 0.3, fontSize: 10.5, color: C.ink2 });
   });
   T(s, 'Команда «Молоток». Голубев Павел, Петр Кузнецов, Тимофей Максимов, Лихатин Андрей, Потапенко Филипп', {
-    x: L.M, y: 6.82, w: 11.5, h: 0.3, fontSize: 10.5, color: C.ink2,
+    x: L.M, y: 6.72, w: 11.5, h: 0.3, fontSize: 10.5, color: C.ink2,
   });
   s.addNotes(notes(1));
 }
@@ -104,7 +101,7 @@ const backupPage = () => {
 // ─────────────────────────────────────────── 2. Идея
 {
   const s = page();
-  head(s, { title: 'Регион покупает результат', lead: 'Космический сервис полезен там, где он заканчивается решением человека.' });
+  head(s, { title: 'Регион покупает результат' });
 
   const cards = [
     { ic: I.target, t: 'Готовый ответ', b: 'Короткий ответ вместо снимков: где событие, насколько ему верить и что делать дальше.' },
@@ -133,7 +130,7 @@ const backupPage = () => {
 // ─────────────────────────────────────────── 3. Портфель
 {
   const s = page();
-  head(s, { title: 'Четыре сервиса. Четыре региона.', lead: 'Каждый заканчивается конкретным действием пользователя.' });
+  head(s, { title: 'Четыре сервиса. Четыре региона.' });
 
   const items = [
     { code: 'FIRE-A', ic: I.fire, region: 'Сибирь', user: 'Лесные и диспетчерские службы', act: 'проверить сигнал', kpi: 'время до проверки' },
@@ -171,7 +168,7 @@ const backupPage = () => {
 // ─────────────────────────────────────────── 4. Выбор
 {
   const s = page();
-  head(s, { title: 'Баланс важнее максимума', lead: `Из ${nf(ALL_COMBOS)} портфелей условия проходят ${admitted}. Каждая точка — один из них.` });
+  head(s, { title: 'Баланс важнее максимума' });
 
   card(s, { x: L.M, y: 2.06, w: 8.1, h: 4.36 });
   const pts = ranking.map((r) => ({ key: r.variant, c0: Number(r.c0), vpub: Number(r.vpub), rank: Number(r.rank) }));
@@ -262,7 +259,7 @@ const backupPage = () => {
 // ─────────────────────────────────────────── 5. Деньги
 {
   const s = page();
-  head(s, { title: 'Деньги сходятся', lead: 'Два контура на старте, положительный баланс в год и запас при урезанном бюджете.' });
+  head(s, { title: 'Деньги сходятся' });
 
   // Старт
   card(s, { x: L.M, y: 2.06, w: 7.0, h: 2.5 });
@@ -322,7 +319,7 @@ const backupPage = () => {
 // ─────────────────────────────────────────── 6. План
 {
   const s = page();
-  head(s, { title: 'Пять шагов до 2033 года', lead: 'У каждого шага есть результат, ответственный и признак завершения.' });
+  head(s, { title: 'Пять шагов до 2033 года' });
 
   const stages = [
     { y: '2027, первое полугодие', t: 'Заказчики и договоры', o: 'заказчик', ic: I.flag },
@@ -364,18 +361,15 @@ const backupPage = () => {
   const s = page();
   s.addImage({ data: G.final, x: 0, y: 0, w: L.W, h: L.H });
   T(s, 'Дальше — живая демонстрация', {
-    x: 0, y: 1.0, w: L.W, h: 0.9, fontSize: 44, bold: true, color: C.ink, align: 'center',
-  });
-  T(s, 'Соберём портфель, сломаем его заменой лота и вернём обратно.', {
-    x: 0, y: 1.92, w: L.W, h: 0.4, fontSize: 16, color: C.ink2, align: 'center',
+    x: 0, y: 1.14, w: L.W, h: 0.9, fontSize: 44, bold: true, color: C.ink, align: 'center',
   });
   s.addShape('roundRect', {
-    x: 4.72, y: 2.62, w: 3.9, h: 3.9, rectRadius: 0.26,
+    x: 4.72, y: 2.48, w: 3.9, h: 3.9, rectRadius: 0.26,
     fill: { color: C.white }, line: { color: C.rule, width: 1 }, shadow: shadow(),
   });
-  s.addImage({ data: QR, x: 5.03, y: 2.93, w: 3.28, h: 3.28 });
+  s.addImage({ data: QR, x: 5.03, y: 2.79, w: 3.28, h: 3.28 });
   T(s, SITE.replace('https://', ''), {
-    x: 0, y: 6.68, w: L.W, h: 0.44, fontSize: 20, bold: true, color: C.brand, align: 'center',
+    x: 0, y: 6.58, w: L.W, h: 0.44, fontSize: 20, bold: true, color: C.brand, align: 'center',
   });
   s.addNotes(notes(7));
 }
@@ -383,7 +377,7 @@ const backupPage = () => {
 // ─────────────────────────────────────────── 8. Запасной: инструмент
 {
   const s = backupPage();
-  head(s, { title: 'Портфель собирается за минуту', lead: 'Эксперт меняет состав и сразу видит новый результат.' });
+  head(s, { title: 'Портфель собирается за минуту' });
 
   const bars = [
     { w: 7.4, g: G.pale, label: nf(ALL_COMBOS), cap: 'столько портфелей вообще можно собрать', color: C.deep },
@@ -412,7 +406,7 @@ const backupPage = () => {
 // ─────────────────────────────────────────── 9. Запасной: условия
 {
   const s = backupPage();
-  head(s, { title: 'Девять условий кейса', lead: 'Инструмент показывает по каждому факт, предел и остаток.' });
+  head(s, { title: 'Девять условий кейса' });
 
   const labels = {
     exact_lot_count: 'Четыре лота',
@@ -462,7 +456,7 @@ const backupPage = () => {
 // ─────────────────────────────────────────── 10. Запасной: договорная схема
 {
   const s = backupPage();
-  head(s, { title: 'Кто за что отвечает', lead: 'Заказчик держит стандарты и данные, конкуренция сохраняется.' });
+  head(s, { title: 'Кто за что отвечает' });
 
   const chain = [
     { ic: I.users, t: 'Заказчик', b: 'стандарты, права на историю данных, правила доступа и приёмка' },
@@ -502,7 +496,7 @@ const backupPage = () => {
 // ─────────────────────────────────────────── 11. Запасной: тиражирование
 {
   const s = backupPage();
-  head(s, { title: 'Тираж без переделки', lead: 'Следующий регион получает готовую основу.' });
+  head(s, { title: 'Тираж без переделки' });
 
   [
     { t: 'Переносим как есть', ic: I.copy, color: C.brand, items: ['каталог сервисов и ролей', 'обработку данных и модель событий', 'интерфейсы и форматы выгрузки', 'доступ и журналирование', 'шаблоны SLA и договоров', 'методику KPI и базу знаний'] },

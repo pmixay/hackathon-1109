@@ -99,6 +99,7 @@ const state = {
   theme: document.documentElement.dataset.theme || 'light',
   dataset: null,
   gatesFilter: store.get('kp.gates') === '1',   // проверки команды S2 как фильтр ранжирования (только для исследования)
+  foldLots: store.get('kp.lots') === '1',       // развёрнута ли таблица «Лоты портфеля» (по умолчанию свёрнута)
 };
 const curTab = (page = state.page) => state.tab[page] || TABS[page][0][0];
 function parseHash() {
@@ -217,11 +218,11 @@ function renderPortfolio() {
   const pill = statusPill(s, sc);
   const t = d.meta.totals, w = d.meta.weights, m = s.metrics, cons = d.meta.constraints, c0max = d.meta.scenarios[sc].c0_max;
   const weightsTxt = `ценность ${w.vpub}, c0 ${w.c0}, cash / OPEX ${w.kcash}, готовность ${w.readiness}, устойчивость ${w.resilience}, тираж ${w.scale}, запас по STRESS ${w.stress_margin}`;
-  const helpChecks = `Девять проверок <b>check_constraints</b>. Состав: ровно ${cons.selected_lots_exactly} лота, ≥ ${cons.min_territorial_archetypes} территориальных архетипа среди нефедеральных, ≥ ${cons.min_capability_groups} группы возможностей, ≥ ${cons.min_public_core_lots} лота с public core. Пороги: c0 ≤ ${fmt(d.meta.scenarios.BASE.c0_max, 0)} в BASE и ≤ ${fmt(d.meta.scenarios.STRESS.c0_max, 0)} в STRESS, OPEX ≤ ${cons.opex_max_mrub_per_year} млн руб./год, ценность ≥ ${fmt(cons.vpub_min_mrub_per_year, 0)}, cash / OPEX ≥ ${cons.kcash_min.toFixed(2)}, воспроизводимость t_rep (среднее по лотам) ≥ ${cons.t_rep_min}. Границы включительно. Сценарий в шапке меняет лимит c0.${gateHelp(d)}`;
+  const helpChecks = `Девять проверок ограничений кейса. Состав: ровно ${cons.selected_lots_exactly} лота, ≥ ${cons.min_territorial_archetypes} территориальных архетипа среди нефедеральных, ≥ ${cons.min_capability_groups} группы возможностей, ≥ ${cons.min_public_core_lots} лота с public core. Пороги: c0 ≤ ${fmt(d.meta.scenarios.BASE.c0_max, 0)} в BASE и ≤ ${fmt(d.meta.scenarios.STRESS.c0_max, 0)} в STRESS, OPEX ≤ ${cons.opex_max_mrub_per_year} млн руб./год, ценность ≥ ${fmt(cons.vpub_min_mrub_per_year, 0)}, cash / OPEX ≥ ${cons.kcash_min.toFixed(2)}, воспроизводимость t_rep (среднее по лотам) ≥ ${cons.t_rep_min}. Границы включительно. Сценарий в шапке меняет лимит c0.${gateHelp(d)}`;
 
   const body = {
     overview() {
-      const helpHero = `Показанный портфель: FINAL — решение гейта из <b>config/portfolio.json</b>, или произвольный портфель из конструктора. Четыре лота, у каждого режим доступа (буква в чипе; public core — режим с общественным ядром). В карточке лота — название из карточки сервиса, регион и архетип, стартовые затраты c0 лота с учётом режима. Место — среди ${t.ranked} комбинаций, допустимых в STRESS${d.meta.gates_filter ? ' и прошедших проверку команды S2' : ''}, по баллу модели выбора (0–1; веса: ${weightsTxt}); модель — советник, выбор портфеля управленческий.`;
+      const helpHero = `Показанный портфель: FINAL — решение гейта, выбранное командой, или произвольный портфель из конструктора. Четыре лота, у каждого режим доступа (буква в чипе; public core — режим с общественным ядром). В карточке лота — название из карточки сервиса, регион и архетип, стартовые затраты c0 лота с учётом режима. Место — среди ${t.ranked} комбинаций, допустимых в STRESS${d.meta.gates_filter ? ' и прошедших проверку команды S2' : ''}, по баллу модели выбора (0–1; веса: ${weightsTxt}); модель — советник, выбор портфеля управленческий.`;
       const lotCards = s.per_lot.map((r) => {
         const L = d.lots[r.lot];
         return `<div class="hl-lot"><div class="hl-h"><span class="hl-code">${esc(r.lot)}</span><span class="mode">${esc(r.mode)}${r.public_core ? ', public core' : ''}</span></div><div class="hl-name">${esc(L.name)}</div><div class="hl-sub">${esc(L.region)}</div><div class="hl-c0">${fmt(r.c0)}<small>c0, млн руб.</small></div></div>`;
@@ -264,7 +265,7 @@ ${tiles}
 <div class="bld-info"><span class="bld-where">${esc(L.region)}, ${esc(L.groups.join(', '))}${L.federal ? ', федеральный' : ''}</span><span class="bld-eff">режим ${esc(r.mode)}: ${eff}${M.public_core ? ', public core' : ''}</span></div></div>`;
       }).join('');
       const same = st.id === state.selected;
-      const helpB = `Эксперт собирает любой портфель без правки JSON: четыре разных лота из <b>lots.csv</b> и режим доступа A/B/C каждого (коэффициенты из <b>access_modes.csv</b>; A и режимы с public core отмечены). Порядок строк не важен — комбинация приводится к порядку лотов кейса. Счёт делает сервер (<b>app/backend</b>, формулы case_core); интерфейс только показывает результат. Сценарий BASE/STRESS выбирается в шапке и меняет лимит c0. Кнопка «Вернуть FINAL» возвращает решение гейта.`;
+      const helpB = `Эксперт собирает любой портфель вручную: четыре разных лота из набора данных и режим доступа A/B/C каждого (коэффициенты режимов — из того же набора; A и режимы с public core отмечены). Порядок строк не важен — комбинация приводится к порядку лотов кейса. Счёт делает расчётный движок по формулам кейса; интерфейс только показывает результат. Сценарий BASE/STRESS выбирается в шапке и меняет лимит c0. Кнопка «Вернуть FINAL» возвращает решение гейта.`;
       const form = `<div class="card"><h2>Собрать портфель${help(helpB)}</h2><div class="bld">${rows}</div>
 ${st.error ? `<div class="bld-err">${esc(st.error)}</div>` : ''}
 <div class="acts2"><span class="btn${st.error || same ? ' off' : ''}" tabindex="0" role="button" id="bld-calc">Рассчитать</span><span class="btn ghost${isFinal() && same ? ' off' : ''}" tabindex="0" role="button" data-final="1">Вернуть FINAL</span>${st.error ? '' : `<span class="bld-state${same ? ' ok' : ''}">${same ? 'Показанные экраны соответствуют этому составу' : 'Состав не рассчитан'}</span>`}</div></div>`;
@@ -302,7 +303,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       const cell = (fn) => scn.map((k) => `<td class="num">${fn(k)}</td>`).join('');
       const okN = (k) => checksOf(s, k).filter((r) => r.ok).length;
       const nCk = checksOf(s, scn[0]).length;
-      const side = `<div class="card"><h2>BASE и STRESS рядом${help('Официально при переходе BASE → STRESS меняется только лимит бюджета c0 (case_config.json, scenarios). Стоимость лотов, OPEX, ценность и поступления не меняются, поэтому все проверки, кроме c0, в обоих сценариях одинаковы. Отрицательный запас — лимит превышен.')}</h2>
+      const side = `<div class="card"><h2>BASE и STRESS рядом${help('Официально при переходе BASE → STRESS меняется только лимит бюджета c0, заданный сценариями кейса. Стоимость лотов, OPEX, ценность и поступления не меняются, поэтому все проверки, кроме c0, в обоих сценариях одинаковы. Отрицательный запас — лимит превышен.')}</h2>
 <div class="tw"><table class="bs"><tr><th>Показатель</th>${scn.map((k) => `<th class="num">${k}</th>`).join('')}</tr>
 <tr><td>Лимит c0, млн руб.</td>${cell((k) => fmt(d.meta.scenarios[k].c0_max, 0))}</tr>
 <tr><td>c0 портфеля, млн руб.</td>${cell(() => fmt(m.c0))}</tr>
@@ -313,7 +314,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       return `<div class="row2 chk2">${table}${side}</div>`;
     },
     combos() {
-      const helpSug = `Инструмент перебирает все ${fmt(t.combinations, 0)} комбинаций «4 лота × режимы» через канонический <b>case_core.py</b>, оставляет ${t.stress_feasible} допустимых в STRESS${d.meta.gates_filter ? `, из них ${t.ranked} проходят проверку команды S2,` : ''} и ранжирует их моделью выбора команды: min–max нормализация по ${t.ranked} допустимым вариантам, веса — ${weightsTxt}. Здесь предложены лучшие по баллу наборы лотов относительно показанного портфеля (клик по строке выбирает), отличия показаны относительно него: жёлтый лот — замена, жёлтая буква — другой режим. Серая строка — максимум ценности среди проходящих BASE, но она не проходит STRESS и не предлагается. Варианты, стоящие выше FINAL по баллу, не скрываются — см. «Почему FINAL».${gateHelp(d)}`;
+      const helpSug = `Инструмент перебирает все ${fmt(t.combinations, 0)} комбинаций «4 лота × режимы» расчётным движком по каноническим формулам кейса, оставляет ${t.stress_feasible} допустимых в STRESS${d.meta.gates_filter ? `, из них ${t.ranked} проходят проверку команды S2,` : ''} и ранжирует их моделью выбора команды: min–max нормализация по ${t.ranked} допустимым вариантам, веса — ${weightsTxt}. Здесь предложены лучшие по баллу наборы лотов относительно показанного портфеля (клик по строке выбирает), отличия показаны относительно него: жёлтый лот — замена, жёлтая буква — другой режим. Серая строка — максимум ценности среди проходящих BASE, но она не проходит STRESS и не предлагается. Варианты, стоящие выше FINAL по баллу, не скрываются — см. «Почему FINAL».${gateHelp(d)}`;
       const rows = [...d.suggestions, ...d.rejected.filter((id) => !d.suggestions.includes(id))].map((id) => {
         const c = combo(id), isSel = id === state.selected, dim = !(c.admitted ?? c.ok.STRESS), nm = isFinalId(id) ? finBadge() : '';
         const why = isSel ? 'показана' : describeChange(s, c) + (!c.ok.STRESS ? ', не проходит STRESS' : dim ? ', не проходит S2' : '');
@@ -329,7 +330,7 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
         return `<tr><td><div class="name"><span class="code">${esc(r.lot)}</span>, ${esc(L.name)}</div><div class="sub">${esc(L.archetype)} архетип, ${esc(L.groups.join(', '))}</div></td><td><span class="mode">${esc(r.mode)}${r.public_core ? ', public core' : ''}</span></td><td class="num">${fmt(r.c0)}</td><td class="num">${fmt(r.opex, 2)}</td><td class="num">${fmt(r.vpub)}</td><td class="num">${fmt(r.cash, 2)}</td><td class="num">${fmt(r.t_rep, 2)}</td><td class="num">${fmt(r.readiness, 1)}</td><td class="num">${fmt(r.resilience, 1)}</td><td class="num">${fmt(r.scale, 1)}</td></tr>`;
       };
       const modesTxt = Object.entries(d.modes).map(([k, v]) => `<b>Режим ${k}:</b> k_c0 ${v.k_c0}, k_opex ${v.k_opex}, ценность ×${v.k_vpub}, якорные ×${v.k_anchor}, коммерческие ×${v.k_commercial}${v.public_core ? ', public core' : ''}`).join('. ');
-      const helpLots = `c0, OPEX и cash — млн руб.; ценность — усл. млн руб./год; готовность, устойчивость и тираж — индексы 1–5 из <b>lots.csv</b>. Значения после применения режима: c0 и OPEX умножены на k_c0 и k_opex, ценность — на k_vpub, поступления = якорные × k_anchor + коммерческие × k_commercial. ${modesTxt}. t_rep — показатель воспроизводимости лота (коэффициент масштабируемости решения). В строке «Портфель» — суммы; для t_rep и индексов — средние.`;
+      const helpLots = `c0, OPEX и cash — млн руб.; ценность — усл. млн руб./год; готовность, устойчивость и тираж — индексы 1–5 из данных кейса. Значения после применения режима: c0 и OPEX умножены на k_c0 и k_opex, ценность — на k_vpub, поступления = якорные × k_anchor + коммерческие × k_commercial. ${modesTxt}. t_rep — показатель воспроизводимости лота (коэффициент масштабируемости решения). В строке «Портфель» — суммы; для t_rep и индексов — средние.`;
       // карточки сервисов: название для интерфейса и тексты из app/config/lots_ui.csv (файл участника записки)
       const svcCard = (r) => {
         const L = d.lots[r.lot], c = L.card;
@@ -340,10 +341,10 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
         const access = sameMode ? row('Базовый доступ', c.access_base) + row('Дополнительно', c.access_extra) : `<dt>Доступ</dt><dd class="muted">описан для режима ${esc(c.mode)}, в комбинации — ${r.mode}</dd>`;
         return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}${c.user ? ', ' + esc(c.user) : ''}</div>${c.problem ? `<div class="sv-p"><b>Проблема:</b> ${esc(c.problem)}</div>` : ''}<p>${esc(c.description)}</p><dl>${access}${row('KPI', c.kpi)}${row('Эффект', c.effect)}${c.payer ? `<dt>Плательщик</dt><dd>${esc(c.payer)} <span class="hyp">предположение</span></dd>` : ''}${row('Ключевой риск', c.risk)}${row('При сбое', c.on_failure)}</dl></div>`;
       };
-      const helpSvc = `Что получает пользователь каждого лота. Карточки сервисов из <b>app/config/lots_ui.csv</b> — файла участника записки: проблема, короткое описание, основной пользователь, базовый и дополнительный доступ, главный KPI, общественный эффект (что меняется в решениях пользователя; ущерб отдельно не заявляется), предполагаемый плательщик, ключевой риск, что показать при сбое. Плательщики — гипотезы по консультации трекера 12.09, не подтверждённые назначения. Название лота берётся отсюда же, поэтому в интерфейсе и записке оно одно. Правила доступа описаны для режима из карточки; если в комбинации режим другой, строки доступа не показываются. Оператор, приёмка и полный текст рисков — в записке.`;
+      const helpSvc = `Что получает пользователь каждого лота: проблема, короткое описание, основной пользователь, базовый и дополнительный доступ, главный KPI, общественный эффект (что меняется в решениях пользователя; ущерб отдельно не заявляется), предполагаемый плательщик, ключевой риск, что показать при сбое. Плательщики — гипотезы команды, а не подтверждённые назначения. Правила доступа описаны для режима из карточки; если в комбинации режим другой, строки доступа не показываются.`;
       // тиражирование (П8): что переносится между регионами без изменений и что настраивается на месте —
       // столбцы «Повторно используемая часть» и «Местная адаптация» тех же карточек
-      const helpRep = `Тиражирование между регионами: для каждого лота — что переносится в следующий регион без изменений (ядро) и что настраивается на месте. Формулировки — из карточек сервисов (<b>app/config/lots_ui.csv</b>, столбцы «Повторно используемая часть» и «Местная адаптация»; полные карточки — <b>docs/team/participant-2/service_cards_full.csv</b>). Общее ядро портфеля и правила адаптации — в карточке решения <b>config/team.json</b> (replicable_core, local_adaptation) и в разделе записки о тиражировании; оператор и приёмка в инструмент не выносятся.`;
+      const helpRep = `Тиражирование между регионами: для каждого лота — что переносится в следующий регион без изменений (ядро) и что настраивается на месте. Ядро — общая часть платформы: модель события, конвейер обработки, API, роли, SLA и журналы; адаптация — границы, пороги, интеграции и регламенты конкретного региона. Оператор, приёмка и полный текст рисков в инструмент не выносятся.`;
       const repRow = (r) => {
         const L = d.lots[r.lot], c = L.card;
         const name = `<td><div class="name"><span class="code">${esc(r.lot)}</span>, ${esc(L.name)}</div><div class="sub">${esc(L.region)}</div></td>`;
@@ -351,10 +352,16 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       };
       const rep = `<div class="card"><h2>Тиражирование: ядро и адаптация${help(helpRep)}</h2>
 <div class="tw"><table class="rep"><tr><th>Лот</th><th>Переносится без изменений</th><th>Настраивается в регионе</th></tr>${s.per_lot.map(repRow).join('')}</table></div></div>`;
-      return `<div class="card"><h2>Лоты портфеля ${portfolioTag()}${help(helpLots)}</h2>
+      // Таблица из десяти столбцов занимала весь экран: по умолчанию свёрнута до строки
+      // «лот · режим · c0» и итога, разворачивается по кнопке (класс на карточке, без перерисовки).
+      const sumLots = `<div class="fold-sum">${s.per_lot.map((r) => `<span class="fl"><b>${esc(r.lot)}</b><i>${esc(r.mode)}</i>${fmt(r.c0)}<small>c0</small></span>`).join('')}
+<span class="fl tt">Портфель${[['c0', fmt(m.c0)], ['OPEX', fmt(m.opex, 2)], ['ценность', fmt(m.vpub)], ['cash', fmt(m.cash, 2)]].map(([k, v]) => `<em>${k}</em><b>${v}</b>`).join('')}</span></div>`;
+      return `<div class="card fold${state.foldLots ? ' open' : ''}"><h2>Лоты портфеля ${portfolioTag()}<span class="fold-t more" role="button" tabindex="0" aria-expanded="${!!state.foldLots}" aria-controls="lots-full">${state.foldLots ? 'Свернуть' : 'Все показатели'} ${ICON.chev}</span>${help(helpLots)}</h2>
+${sumLots}
+<div class="fold-b" id="lots-full"><div class="fold-in">
 <div class="tw wide"><table><tr><th>Лот</th><th>Режим</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">t_rep</th><th class="num">Готовность</th><th class="num">Устойчивость</th><th class="num">Тираж</th></tr>
 ${s.per_lot.map(lotRow).join('')}
-<tr class="total"><td>Портфель</td><td></td><td class="num">${fmt(m.c0)}</td><td class="num">${fmt(m.opex, 2)}</td><td class="num">${fmt(m.vpub)}</td><td class="num">${fmt(m.cash, 2)}</td><td class="num">${fmt(m.t_rep, 3)}</td><td class="num">${fmt(m.readiness, 2)}</td><td class="num">${fmt(m.resilience, 2)}</td><td class="num">${fmt(m.scale, 2)}</td></tr></table></div></div>
+<tr class="total"><td>Портфель</td><td></td><td class="num">${fmt(m.c0)}</td><td class="num">${fmt(m.opex, 2)}</td><td class="num">${fmt(m.vpub)}</td><td class="num">${fmt(m.cash, 2)}</td><td class="num">${fmt(m.t_rep, 3)}</td><td class="num">${fmt(m.readiness, 2)}</td><td class="num">${fmt(m.resilience, 2)}</td><td class="num">${fmt(m.scale, 2)}</td></tr></table></div></div></div></div>
 <div class="card"><h2>Сервисы портфеля${help(helpSvc)}</h2><div class="svc">${s.per_lot.map(svcCard).join('')}</div></div>${rep}`;
     },
   };
@@ -392,8 +399,63 @@ function builderStatus() {
   if (rows.some((r) => !(r.mode in d.modes))) return { error: `У каждого лота должен быть режим ${Object.keys(d.modes).join(', ')}` };
   const order = Object.keys(d.lots);
   const id = rows.slice().sort((a, b) => order.indexOf(a.lot) - order.indexOf(b.lot)).map((r) => `${r.lot}:${r.mode}`).join('|');
-  if (!state.api && !d.combinations[id]) return { id, error: 'Без сервера доступны только комбинации из собранного файла. Запустите python app/server.py — тогда считается любой портфель.' };
+  if (!state.api && !d.combinations[id]) return { id, error: 'Без сервера доступны только заранее посчитанные комбинации. Откройте интерфейс с сервером расчёта — тогда считается любой портфель.' };
   return { id };
+}
+
+// ---------- графики экрана «Почему FINAL» ----------
+// Шаг сетки, кратный 1, 2, 2.5 или 5: подписи осей читаются, а не показывают «1123.5».
+const niceTicks = (lo, hi, n = 4) => {
+  const raw = (hi - lo) / Math.max(1, n), mag = 10 ** Math.floor(Math.log10(raw || 1));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((v) => v >= raw) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6));
+  return out;
+};
+// Ценность против затрат: каждая точка — ранжируемая комбинация, зелёные — недоминируемые
+// (фронт Парето считает движок и присылает флагом), крупные — FINAL и вариант сравнения.
+function frontierChart(points, finalId, cmpId, cmpName) {
+  if (!points.length) return '';
+  const W = 620, x0 = 56, x1 = 606, top = 34, base = 250;
+  const xs = points.map((p) => p.c0), ys = points.map((p) => p.vpub);
+  const padX = (Math.max(...xs) - Math.min(...xs)) * 0.07 || 1, padY = (Math.max(...ys) - Math.min(...ys)) * 0.09 || 1;
+  const xlo = Math.min(...xs) - padX, xhi = Math.max(...xs) + padX, ylo = Math.min(...ys) - padY, yhi = Math.max(...ys) + padY;
+  const X = (v) => x0 + ((v - xlo) / (xhi - xlo)) * (x1 - x0), Y = (v) => base - ((v - ylo) / (yhi - ylo)) * (base - top);
+  let g = '';
+  for (const v of niceTicks(ylo, yhi, 4)) g += `<line class="grid" x1="${x0}" x2="${x1}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"></line><text class="n" x="${x0 - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end">${fmt(v, 0)}</text>`;
+  for (const v of niceTicks(xlo, xhi, 5)) g += `<text class="n" x="${X(v).toFixed(1)}" y="${base + 18}" text-anchor="middle">${fmt(v, 0)}</text>`;
+  const label = (p, text, cls) => {
+    const right = X(p.c0) + 76 <= x1;
+    return `<text class="n t ${cls}" x="${(X(p.c0) + (right ? 12 : -12)).toFixed(1)}" y="${(Y(p.vpub) + 4).toFixed(1)}" text-anchor="${right ? 'start' : 'end'}">${esc(text)}</text>`;
+  };
+  const tip = (p) => esc(`${p.id.split('|').map((s) => s.replace(':', '-')).join(' · ')} — ценность ${fmt(p.vpub, 0)}, c0 ${fmt(p.c0)}, cash / OPEX ${fmt(p.kcash, 2)}, ${p.rank}-е место`);
+  const marked = [];
+  for (const p of points) {
+    if (p.id === finalId || p.id === cmpId) { marked.push(p); continue; }
+    g += `<g class="cb"><title>${tip(p)}</title><circle class="pt ${p.pareto ? 'front' : 'dom'}" cx="${X(p.c0).toFixed(1)}" cy="${Y(p.vpub).toFixed(1)}" r="${p.pareto ? 4 : 3}"></circle></g>`;
+  }
+  for (const p of marked) {
+    const fin = p.id === finalId;
+    g += `<g class="cb"><title>${tip(p)}</title><circle class="pt ${fin ? 'final' : 'cmp'}" cx="${X(p.c0).toFixed(1)}" cy="${Y(p.vpub).toFixed(1)}" r="7"></circle></g>` + label(p, fin ? 'FINAL' : cmpName, fin ? 'lb-fin' : 'lb-cmp');
+  }
+  const front = points.filter((p) => p.pareto).length;
+  return `<div class="chart fr"><svg viewBox="0 0 ${W} ${base + 42}" width="100%" role="img" aria-label="Общественная ценность против стартовых затрат по всем ранжируемым комбинациям">
+<text class="ax" x="2" y="13" text-anchor="start">общественная ценность, усл. млн руб./год</text><text class="ax" x="${x1}" y="${base + 36}" text-anchor="end">стартовые затраты c0, млн руб.</text>
+<line class="axis" x1="${x0}" x2="${x1}" y1="${base}" y2="${base}"></line><line class="axis" x1="${x0}" x2="${x0}" y1="${top}" y2="${base}"></line>${g}</svg>
+<div class="legend"><span class="lg"><i class="d front"></i>недоминируемые, ${front} из ${points.length}</span><span class="lg"><i class="d dom"></i>доминируемые</span><span class="lg"><i class="d final"></i>FINAL</span><span class="lg"><i class="d cmp"></i>сравнение: ${esc(cmpName)}</span></div></div>`;
+}
+// FINAL против выбранной альтернативы: по паре полос на показатель, шкала своя в каждой строке.
+function cmpBars(rows, cmpName) {
+  const row = (r) => {
+    const max = Math.max(Math.abs(r.a), Math.abs(r.b)) || 1, delta = r.a - r.b;
+    const cls = Math.abs(delta) < 1e-9 ? 'even' : delta * r.dir > 0 ? 'win' : 'lose';
+    const w = (v) => ((Math.abs(v) / max) * 100).toFixed(1);
+    return `<div class="cb-row ${cls}"><div class="cb-n">${r.label}<span>${r.dir > 0 ? 'больше — лучше' : 'меньше — лучше'}${r.unit ? ', ' + r.unit : ''}</span></div>
+<div class="cb-bars"><div class="cb-l f"><i style="width:${w(r.a)}%"></i><b>${fmt(r.a, r.dec)}</b></div><div class="cb-l c"><i style="width:${w(r.b)}%"></i><b>${fmt(r.b, r.dec)}</b></div></div>
+<div class="cb-d">${signed(delta, r.dec)}</div></div>`;
+  };
+  return `<div class="cmpb">${rows.map(row).join('')}</div>
+<div class="legend"><span class="lg"><i class="d bar f"></i>верхняя полоса — FINAL</span><span class="lg"><i class="d bar c"></i>нижняя — ${esc(cmpName)}</span></div>`;
 }
 
 // ---------- страница «Почему FINAL» ----------
@@ -417,28 +479,24 @@ function renderWhy() {
   const val = (c, k) => (k === 'margin' ? d.meta.scenarios.STRESS.c0_max - c.metrics.c0 : c.metrics[k]);
   const body = {
     decision() {
-      const hero = `<div class="card"><h2>Выбранный командой вариант ${tag('FINAL')}${help(`Формулировки — из записки участника 3 (<b>docs/note/02-selection.md</b>), тексты хранятся в <b>app/config/why_final.json</b>. Балл и место посчитаны на полном множестве ${t.ranked} STRESS-допустимых комбинаций; веса утверждены до просмотра результата.${why.source ? ' Источник: ' + esc(why.source) + '.' : ''}`)}</h2>
-<div class="why-hero"><div class="why-txt"><div class="why-st">${esc(why.status || 'Выбранный командой вариант после управленческого отбора.')}</div>${why.headline ? `<p>${esc(why.headline)}</p>` : ''}${why.pareto ? `<p class="why-pareto">${esc(why.pareto)}</p>` : ''}</div>
+      const hero = `<div class="card"><h2>Выбранный командой вариант ${tag('FINAL')}${help(`Балл и место посчитаны на полном множестве ${t.ranked} комбинаций, допустимых в STRESS; веса модели выбора утверждены до просмотра результата. Модель — советник: сам портфель выбирает команда, и экран показывает, чем этот выбор оплачен.`)}</h2>
+<div class="why-hero"><div class="why-txt"><div class="why-st">${esc(why.status || 'Выбранный командой вариант после управленческого отбора.')}</div>${why.headline ? `<p>${esc(why.headline)}</p>` : ''}</div>
 <div class="why-stats"><div class="ws"><span>Состав</span>${chips(f)}</div><div class="ws"><span>Место по баллу</span><b>${f.rank ?? '—'}<small>из ${t.ranked}</small></b></div><div class="ws"><span>Запас STRESS по c0</span><b>${signed(mS)}<small>млн руб.</small></b></div><div class="ws"><span>Операционный баланс</span><b>${signed(-f.metrics.opex_gap)}<small>млн руб./год</small></b></div></div></div></div>`;
       const alt = (d.alternatives || []).map((a) => combo(a.id) && { ...a, c: combo(a.id) }).filter(Boolean).sort((a, b) => (a.id === d.final ? -1 : b.id === d.final ? 1 : (b.c.rank ?? 1e9) === (a.c.rank ?? 1e9) ? 0 : (a.c.rank ?? 1e9) - (b.c.rank ?? 1e9)));
       const rows = alt.map(({ name, id, note, c }) => `<tr class="${id === d.final ? 'hl' : ''}"><td><div class="alt-h"><span class="alt-code">${esc(name)}</span>${chips(c, f)}${id === d.final ? finBadge() : ''}</div><div class="sub">${esc(note)}</div></td><td class="num">${fmt(c.metrics.c0)}</td><td class="num">${fmt(c.metrics.opex, 2)}</td><td class="num">${fmt(c.metrics.vpub)}</td><td class="num">${fmt(c.metrics.cash)}</td><td class="num">${fmt(c.metrics.kcash, 3)}</td><td class="num ${c.ok.STRESS ? '' : 'neg'}">${signed(val(c, 'margin'))}</td><td>${stChip(c.ok.BASE, c.ok.BASE ? 'PASS' : 'FAIL')} ${stChip(c.ok.STRESS, c.ok.STRESS ? 'PASS' : 'FAIL')}</td><td class="num">${c.rank ? `<b>${c.score.toFixed(3)}</b><span class="rk">${c.rank}-е</span>` : '<span class="muted">без места</span>'}</td></tr>`).join('');
-      const table = `<div class="card"><h2>Ближайшие альтернативы${help(`Сопоставимые варианты записки из <b>config/alternatives.json</b>, подписанные составом и режимами, все посчитаны по одним правилам. Жёлтый лот — отличие от FINAL по составу, жёлтая буква — по режиму. Место — среди ${t.ranked} STRESS-допустимых комбинаций; вариант, не проходящий STRESS, места не получает. Варианты выше FINAL по баллу показаны, а не скрыты.`)}</h2>
-<div class="tw wide"><table class="alts"><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">K_cash</th><th class="num">Запас STRESS</th><th>BASE, STRESS</th><th class="num">Балл, место</th></tr>${rows}</table></div></div>${why.base_only ? `<div class="card"><h2>Почему BASE-only вариант отведён до расширения${help('Отвергнутый по бюджету вариант с максимальной общественной ценностью показан серым на вкладке «Комбинации» и в сравнении. Объяснение — формулировка записки (участник 3).')}</h2><p>${esc(why.base_only)}</p></div>` : ''}`;
+      const table = `<div class="card"><h2>Ближайшие альтернативы${help(`Сопоставимые варианты, подписанные составом и режимами, все посчитаны по одним правилам. Жёлтый лот — отличие от FINAL по составу, жёлтая буква — по режиму. Место — среди ${t.ranked} комбинаций, допустимых в STRESS; вариант, не проходящий STRESS, места не получает. Варианты выше FINAL по баллу показаны, а не скрыты.`)}</h2>
+<div class="tw wide"><table class="alts"><tr><th>Состав и режимы</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">K_cash</th><th class="num">Запас STRESS</th><th>BASE, STRESS</th><th class="num">Балл, место</th></tr>${rows}</table></div></div>`;
+      const picks = alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}" tabindex="0" role="button"><b>${esc(a.name)}</b> ${esc(cmpLabel(a))}</span>`).join('');
+      const front = `<div class="card"><h2>Ценность против затрат ${tag(`${t.pareto ?? 0} недоминируемых из ${t.ranked}`)}${help(`Каждая точка — комбинация, допустимая в STRESS: по горизонтали стартовые затраты c0 (млн руб.), по вертикали общественная ценность (усл. млн руб./год). Зелёные — недоминируемые: ни одна другая комбинация не лучше их одновременно по ценности, затратам и покрытию OPEX. Фронт считается по трём показателям сразу, поэтому на плоскости часть зелёных точек лежит внутри облака. FINAL на фронте: дешевле при той же ценности взять нечего.`)}</h2>
+${frontierChart(d.frontier || [], d.final, cmp ? cmp.id : null, cmpA ? cmpA.name : '')}</div>`;
       let wl = '';
       if (cmp) {
-        const win = [], lose = [], even = [];
-        for (const [k, label, unit, dec, dir] of metricsRow) {
-          const a = val(f, k), b = val(cmp, k), dlt = a - b;
-          const item = `<li><span>${label}</span><em><b>${fmt(a, dec)}</b> против ${fmt(b, dec)}</em><i>${signed(dlt, dec)}${unit ? ' ' + unit : ''}</i></li>`;
-          if (Math.abs(dlt) < 1e-9) even.push(item); else if (dlt * dir > 0) win.push(item); else lose.push(item);
-        }
-        wl = `<div class="card"><h2>Что выигрываем и что теряем <span class="cmp-pick">${alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}" tabindex="0" role="button"><b>${esc(a.name)}</b> ${esc(cmpLabel(a))}</span>`).join('')}</span>${help('FINAL против выбранной альтернативы: каждый показатель попадает в «выигрываем» или «теряем» по направлению критерия (ценность, cash, K_cash, запас и public core — больше лучше; c0 и OPEX — меньше лучше). Разницы считаются из показателей обеих комбинаций. Текст «цена решения» — формулировка записки.')}</h2>
-<div class="wl"><div class="wl-col win"><div class="wl-h">${ICON.tick} FINAL выигрывает у варианта «${esc(cmpLabel(cmpA))}»</div><ul>${win.join('') || '<li class="none">ничего</li>'}</ul></div><div class="wl-col lose"><div class="wl-h">FINAL теряет против варианта «${esc(cmpLabel(cmpA))}»</div><ul>${lose.join('') || '<li class="none">ничего</li>'}</ul>${even.length ? `<div class="wl-even">Одинаково: ${even.length} показ.</div>` : ''}</div></div>
-<div class="cmp-note">${chips(cmp, f)} — ${esc(cmpA.note)}</div>
-${why.price ? `<div class="callout">${esc(why.price)}</div>` : ''}</div>`;
+        const rows2 = metricsRow.map(([k, label, unit, dec, dir]) => ({ label, unit, dec, dir, a: val(f, k), b: val(cmp, k) }));
+        wl = `<div class="card"><h2>FINAL против варианта «${esc(cmpLabel(cmpA))}» <span class="cmp-pick">${picks}</span>${help('Каждая строка — один показатель: верхняя полоса FINAL, нижняя — выбранная альтернатива, длина в пределах строки своя. Зелёная полоса — FINAL лучше, красная — хуже по направлению критерия (ценность, cash, K_cash, запас и public core — больше лучше; c0 и OPEX — меньше лучше). Справа — разница в единицах показателя.')}</h2>
+${cmpBars(rows2, cmpLabel(cmpA))}
+<div class="cmp-note">${chips(cmp, f)} — ${esc(cmpA.note)}</div></div>`;
       }
-      const rob = why.robustness ? `<div class="card"><h2>Устойчивость выбора${help('Sensitivity по полному множеству 143 STRESS-допустимых комбинаций (results/sensitivity_full.csv, tools/case02_robustness.py): изменение каждого веса на ±20 %, случайные векторы весов, запас по c0 и OPEX. Вывод записки: выбор не устойчив как математический лидер, но остаётся осознанным управленческим решением на фронте Парето.')}</h2><p class="why-rob">${esc(why.robustness)}</p></div>` : '';
-      return notFinal + hero + table + wl + rob;
+      return notFinal + hero + front + wl + table;
     },
     breakdown() {
       const bf = f.breakdown || [], bc = cmp?.breakdown || [];
@@ -449,14 +507,14 @@ ${why.price ? `<div class="callout">${esc(why.price)}</div>` : ''}</div>`;
         return `<tr><td><div class="name">${CRIT[b.key] || b.key}</div><div class="sub">${b.direction === 'max' ? 'больше — лучше' : 'меньше — лучше'}, min ${fmt(b.lo, CRIT_DEC[b.key])}, max ${fmt(b.hi, CRIT_DEC[b.key])}</div></td><td class="num">${b.weight.toFixed(2)}</td><td class="num">${fmt(b.raw, CRIT_DEC[b.key])}</td><td class="num">${b.z.toFixed(2)}</td><td>${bar(b)}</td>${c ? `<td class="num">${fmt(c.raw, CRIT_DEC[b.key])}</td><td class="num">${c.z.toFixed(2)}</td><td>${bar(c)}</td>` : ''}</tr>`;
       }).join('');
       const total = `<tr class="total"><td>Балл</td><td class="num">${bf.reduce((a, b) => a + b.weight, 0).toFixed(2)}</td><td></td><td></td><td class="num"><b>${f.score.toFixed(3)}</b>${f.rank ? `<span class="rk">${f.rank}-е</span>` : ''}</td>${cmp ? `<td></td><td></td><td class="num"><b>${cmp.score.toFixed(3)}</b>${cmp.rank ? `<span class="rk">${cmp.rank}-е</span>` : ''}</td>` : ''}</tr>`;
-      return notFinal + `<div class="card"><h2>Из чего сложился балл <span class="cmp-pick">${alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}" tabindex="0" role="button"><b>${esc(a.name)}</b> ${esc(cmpLabel(a))}</span>`).join('')}</span>${help(`Балл = Σ вес × z. Для каждого критерия z — min–max нормализация по ${t.ranked} STRESS-допустимым комбинациям: 0 — худшее значение среди них, 1 — лучшее (для c0 шкала перевёрнута). Вклад = вес × z; сумма вкладов и есть балл. Веса из <b>config/weights.json</b> (участник 3), утверждены до просмотра результата. Комбинация вне STRESS получает z по той же шкале, но места не получает.`)}</h2>
+      return notFinal + `<div class="card"><h2>Из чего сложился балл <span class="cmp-pick">${alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}" tabindex="0" role="button"><b>${esc(a.name)}</b> ${esc(cmpLabel(a))}</span>`).join('')}</span>${help(`Балл = Σ вес × z. Для каждого критерия z — min–max нормализация по ${t.ranked} STRESS-допустимым комбинациям: 0 — худшее значение среди них, 1 — лучшее (для c0 шкала перевёрнута). Вклад = вес × z; сумма вкладов и есть балл. Веса модели выбора утверждены до просмотра результата. Комбинация вне STRESS получает z по той же шкале, но места не получает.`)}</h2>
 <div class="tw wide"><table class="brk"><tr><th>Критерий</th><th class="num">Вес</th><th class="num">FINAL: значение</th><th class="num">z</th><th>Вклад</th>${cmp ? `<th class="num">${esc(cmpLabel(cmpA))}: значение</th><th class="num">z</th><th>Вклад</th>` : ''}</tr>${rows}${total}</table></div></div>`;
     },
     s2() {
       const s2 = f.s2 || {}, m = f.metrics;
       const above = s2.cash - cons.kcash_min * m.opex; // запас над порогом K_cash в деньгах
       const tile = (title, val, unit, note = '', cls = '') => `<div class="tile${cls}"><div class="tl">${title}</div><div class="tv">${val}<small>${unit}</small></div>${note ? `<div class="tc">${note}</div>` : ''}</div>`;
-      return notFinal + `<div class="card s2"><h2>Дополнительный сценарий команды: commercial cash = 0 ${tag('не официальный STRESS', 'warn')}${help('Риск-сценарий команды (участник 3, config/assumptions.json → commercial_zero_sensitivity): коммерческие поступления обнуляются, остаются только якорные. Он не входит в официальные BASE/STRESS кейса, не фильтрует ranking и не заменяет их; показывает риск ликвидности и потребность в резервном финансировании. Официальный STRESS меняет только лимит c0.')}</h2>
+      return notFinal + `<div class="card s2"><h2>Дополнительный сценарий команды: commercial cash = 0 ${tag('не официальный STRESS', 'warn')}${help('Риск-сценарий команды: коммерческие поступления обнуляются, остаются только якорные. Он не входит в официальные BASE/STRESS кейса, не фильтрует ranking и не заменяет их; показывает риск ликвидности и потребность в резервном финансировании. Официальный STRESS меняет только лимит c0.')}</h2>
 <div class="tiles four">
 ${tile('Якорные поступления', fmt(s2.cash), 'млн руб./год', `коммерческие ${fmt(m.commercial_cash)} → 0`)}
 ${tile('OPEX', fmt(m.opex), 'млн руб./год')}
@@ -590,7 +648,7 @@ function renderStress() {
       const rowD = (label, a, b, dec) => `<tr><td>${label}</td><td class="num">${fmt(a, dec)}</td><td class="num">${fmt(b, dec)}</td><td class="num">${signed(b - a, dec)}</td></tr>`;
       const change = describeChange(fail, s);
       return `<div class="row2 w">
-<div class="card"><h2>Что можно сделать${chips(fail)}${help(`Комбинация ${lotsHtml(fail)}, ${modesHtml(fail)} не проходит STRESS. Правило кейса: лимит бюджета не меняет исходную стоимость лотов, c0 снижается только сменой режима или состава. Перевод лота из A в B даёт −5 % его c0 и −18 % ценности, но лот перестаёт быть public core. Каждая строка пересчитана через case_core; в столбце STRESS — запас до лимита c0. Это машинные рекомендации движка, а не вывод аналитика: полный список одношаговых замен для портфеля команды — <b>results/repairs_stress.csv</b> (для BASE — <b>repairs_base.csv</b>).`)}</h2>
+<div class="card"><h2>Что можно сделать${chips(fail)}${help(`Комбинация ${lotsHtml(fail)}, ${modesHtml(fail)} не проходит STRESS. Правило кейса: лимит бюджета не меняет исходную стоимость лотов, c0 снижается только сменой режима или состава. Перевод лота из A в B даёт −5 % его c0 и −18 % ценности, но лот перестаёт быть public core. Каждая строка пересчитана расчётным движком по формулам кейса; в столбце STRESS — запас до лимита c0. Это машинные рекомендации движка, а не вывод аналитика: каждая строка — один шаг, смена режима одного лота или замена одного лота.`)}</h2>
 <div class="tw"><table><tr><th>Действие</th><th class="num">c0</th><th class="num">Ценность</th><th>STRESS</th></tr>${rowsA}</table></div></div>
 <div class="card"><h2>Замена: ${esc(change)}${help('Что меняется — цена управленческого решения при сокращении бюджета: разница между отвергнутой комбинацией с максимальной ценностью и показанным портфелем. Решение принимает межрегиональный заказчик; договоры по исключённому лоту не заключаются до второго этапа.')}</h2>
 <div class="tw"><table><tr><th></th><th class="num">до</th><th class="num">после</th><th class="num">Δ</th></tr>
@@ -622,18 +680,66 @@ function focusKey(el) {
   if (el.dataset.final) return '#main [data-final]';
   return null;
 }
+// ---------- переходы между экранами ----------
+// Смена раздела или вкладки — это смена экрана: уходящее содержимое коротко гаснет,
+// приходящее появляется. Перерисовка на месте (другая комбинация, фильтр S2, другая
+// альтернатива, другой сценарий) содержимого не меняет и не анимируется.
+const SWAP_EASE = 'cubic-bezier(.22,.68,.28,1)';
+// Слой с уходящей разметкой. Она уезжает из потока, поэтому высота страницы сразу
+// становится новой: гаснет только картинка прежнего экрана, layout shift не анимируем.
+function leavingLayer(main) {
+  main.querySelector(':scope > .leaving')?.remove();   // быстрое переключение: прежний слой не доигрываем
+  const g = document.createElement('div');
+  g.className = 'leaving';
+  g.setAttribute('aria-hidden', 'true');
+  g.inert = true;                                      // ни фокуса, ни клика по уходящей копии
+  g.style.height = Math.min(main.offsetHeight, innerHeight) + 'px';   // ниже первого экрана всё равно не видно
+  while (main.firstChild) g.append(main.firstChild);
+  for (const el of g.children) el.getAnimations().forEach((a) => a.cancel());
+  return g;
+}
+// Плавный переезд подсветки: элемент только что создан заново, поэтому анимируем его
+// псевдоэлемент из прежнего положения (сдвиг и растяжение по ширине) в собственное.
+function slideFrom(el, pseudo, dx, dy, sx) {
+  if (!el) return;
+  const from = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scaleX(${sx.toFixed(3)})`;
+  try {
+    el.animate({ transform: [from, 'none'] }, { duration: 200, easing: SWAP_EASE, pseudoElement: pseudo });
+  } catch (e) { /* браузер без анимации псевдоэлементов: подсветка встаёт на место сразу */ }
+}
 function render() {
   const key = focusKey(document.activeElement);
+  const main = $('#main');
+  const view = `${state.page}/${curTab()}`;
+  // анимируем только смену экрана: не первый рендер, вид другой, анимация не запрещена
+  const swap = lastView !== null && view !== lastView && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const newPage = swap && lastView.split('/')[0] !== state.page;
+  // мерки уходящего экрана снимаем до перерисовки: и меню, и вкладки собираются заново
+  const navWas = newPage ? document.querySelector('#nav a.on')?.offsetTop ?? null : null;
+  const tabWas = swap && !newPage ? main.querySelector('.tabs a.on') : null;
+  const tabX = tabWas ? tabWas.offsetLeft : 0, tabW = tabWas ? tabWas.offsetWidth : 0;
+  const leaving = swap ? leavingLayer(main) : null;
   renderChrome();
   const pages = { portfolio: renderPortfolio, why: renderWhy, compare: renderCompare, stress: renderStress, data: () => renderData(ctx) };
-  $('#main').innerHTML = (pages[state.page] || renderPortfolio)();
+  main.innerHTML = (pages[state.page] || renderPortfolio)();
   if (state.page === 'data') mountData(ctx);
   if (key) document.querySelector(key)?.focus({ preventScroll: true });
   fixHash();
   // Наверх — только при переходе на другую страницу или вкладку. Перерисовка на месте
   // (смена варианта сравнения, фильтр S2, выбор комбинации) не должна сбрасывать прокрутку.
-  const view = `${state.page}/${curTab()}`;
   if (view !== lastView) { window.scrollTo(0, 0); lastView = view; }
+  if (!swap) return;
+  // Приходящий экран ждёт, пока уходящий погаснет: два плотных экрана, наложенные
+  // друг на друга, читаются как двоение, поэтому фазы разведены во времени.
+  for (const el of main.children) {
+    if (el.classList.contains('top') || el.classList.contains('tabs')) continue;
+    el.animate({ opacity: [0, 0, 1], transform: ['translateY(9px)', 'translateY(9px)', 'none'] }, { duration: 260, easing: SWAP_EASE });
+  }
+  main.append(leaving);
+  leaving.animate({ opacity: [1, 0], transform: ['none', 'translateY(-8px)'] }, { duration: 90, easing: 'cubic-bezier(.4, 0, .7, .5)' })
+    .finished.then(() => leaving.remove(), () => { /* слой уже снят следующим переходом */ });
+  if (navWas !== null) { const on = document.querySelector('#nav a.on'); slideFrom(on, '::before', 0, navWas - (on?.offsetTop ?? navWas), 1); }
+  if (tabWas) { const on = main.querySelector('.tabs a.on'); if (on?.offsetWidth) slideFrom(on, '::after', tabX - on.offsetLeft, 0, tabW / on.offsetWidth); }
 }
 function go(page, tab) {
   state.page = page;
@@ -741,12 +847,21 @@ document.addEventListener('click', async (e) => {
   if (e.target.closest('#bld-calc')) { const st = builderStatus(); if (!st.error) await select(st.id); return; }
   const th = e.target.closest('#theme button');
   if (th) { setTheme(th.dataset.theme, th); return; }
+  const fold = e.target.closest('.fold-t');
+  if (fold) {
+    const card = fold.closest('.fold'), open = !card.classList.contains('open');
+    card.classList.toggle('open', open);
+    fold.setAttribute('aria-expanded', String(open));
+    fold.firstChild.textContent = open ? 'Свернуть ' : 'Все показатели ';
+    state.foldLots = open; store.set('kp.lots', open ? '1' : '0');
+    return;
+  }
   if (e.target.closest('#collapse')) { state.collapsed = !state.collapsed; store.set('kp.collapsed', state.collapsed ? '1' : '0'); $('#shell').classList.toggle('collapsed', state.collapsed); return; }
   const gt = e.target.closest('#gates-filter');
   // Без сервера пересчитать нечего: не меняем состояние и не запоминаем флаг,
   // иначе следующий запуск с сервером молча поднимется с включённым фильтром S2.
   if (gt) {
-    if (!state.api) { render(); return toast('«S2 как фильтр» доступен только с сервером (python app/server.py)', false); }
+    if (!state.api) { render(); return toast('«S2 как фильтр» доступен только при работе с сервером расчёта', false); }
     state.gatesFilter = gt.checked; store.set('kp.gates', gt.checked ? '1' : '0');
     const seq = ++reqSeq;
     try { const data = await loadDashboard(state.selected); if (seq !== reqSeq) return; state.data = data; } catch (err) { toast('Не пересчитано: ' + err.message, false); }
@@ -769,7 +884,7 @@ document.addEventListener('keydown', async (e) => {
   const hb = t.closest('.help i');
   if (hb) { e.preventDefault(); hb.click(); return; }
   // пункты меню, вкладки, ссылки «подробнее», «Вернуть FINAL», пункты выбора сценария — якоря без href: кликаем сами
-  const act = t.closest('#nav a, .tabs a, a.more, a[data-final], #scenario .dd-it');
+  const act = t.closest('#nav a, .tabs a, a.more, a[data-final], #scenario .dd-it, .fold-t');
   if (act) { e.preventDefault(); act.click(); return; }
   const row = t.closest('tr.pick');
   if (row) { e.preventDefault(); if (row.dataset.id !== state.selected) await select(row.dataset.id); return; }
@@ -788,7 +903,7 @@ window.addEventListener('hashchange', () => { const before = hashOf(); const ok 
     // запомненный id может устареть (другой набор данных) — тогда сервер отвечает 400 и берём портфель по умолчанию
     try { state.data = await loadDashboard(remembered || undefined); } catch (e) { state.data = await loadDashboard(); }
   } catch (e) {
-    $('#main').innerHTML = `<div class="empty">Не удалось загрузить данные: ${esc(e.message)}. Запустите python app/server.py или соберите файл командой python app/build.py.</div>`;
+    $('#main').innerHTML = `<div class="empty">Не удалось загрузить данные: ${esc(e.message)}. Откройте интерфейс с сервером расчёта или подготовьте расчёт заранее.</div>`;
     return;
   }
   if (remembered && !state.data.combinations[remembered]) store.del('kp.selected');

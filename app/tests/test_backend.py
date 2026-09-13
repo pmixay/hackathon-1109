@@ -166,15 +166,32 @@ class Model(unittest.TestCase):
         self.assertEqual(d["meta"]["engine"]["name"], "kosmo")
         self.assertTrue(d["meta"]["engine"]["verified"])
         self.assertEqual(d["meta"]["engine"]["portfolio"], "FINAL")
-        self.assertEqual(d["meta"]["totals"], {"combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "admitted": 143, "ranked": 143})
+        self.assertEqual(d["meta"]["totals"], {"combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "admitted": 143, "ranked": 143, "pareto": 30})
         self.assertEqual(d["meta"]["constraints"]["opex_max_mrub_per_year"], 360.0)
         self.assertEqual(d["meta"]["dataset"]["source"], "организаторы")
         json.dumps(d, ensure_ascii=False)
+
+    def test_frontier_covers_every_ranked_combination(self):
+        d = payload.build_dashboard(SELECTED)
+        frontier = d["frontier"]
+        self.assertEqual(len(frontier), d["meta"]["totals"]["ranked"])
+        self.assertEqual(sorted(p["rank"] for p in frontier), list(range(1, len(frontier) + 1)))
+        self.assertEqual([p["c0"] for p in frontier], sorted(p["c0"] for p in frontier))   # точки идут по возрастанию затрат
+        self.assertEqual(sum(1 for p in frontier if p["pareto"]), d["meta"]["totals"]["pareto"])
+        final = next(p for p in frontier if p["id"] == d["final"])
+        self.assertTrue(final["pareto"])                                                   # FINAL на фронте Парето
+        self.assertEqual((final["c0"], final["vpub"], final["rank"]), (1140.0, 1289.0, 3))
+        for point in frontier:                                                             # те же числа, что у комбинации
+            combo = d["combinations"].get(point["id"])
+            if combo:
+                self.assertEqual((point["c0"], point["vpub"], point["score"], point["rank"]),
+                                 (combo["metrics"]["c0"], combo["metrics"]["vpub"], combo["score"], combo["rank"]))
 
     def test_gates_as_a_filter_is_an_explicit_switch(self):
         d = payload.build_dashboard(SELECTED, gates_filter=True)
         self.assertTrue(d["meta"]["gates_filter"])
         self.assertEqual(d["meta"]["totals"]["admitted"], 18)
+        self.assertEqual(len(d["frontier"]), 18)                       # график показывает то же множество, что и ранжирование
         self.assertEqual(d["combinations"][SELECTED]["rank"], 1)
         self.assertEqual(d["rejected"], ["FIRE:A|AGRI:C|TRANS:C|ENV:A", d["stress"]["failing"]])
         self.assertFalse(d["combinations"]["FIRE:A|AGRI:C|TRANS:C|ENV:A"]["admitted"])

@@ -15,7 +15,7 @@
    "portfolio_id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
    "weights_file": "config/weights.json"
   },
-  "generated_at": "2026-09-12T22:22:09+00:00",
+  "generated_at": "2026-09-13T07:35:38+00:00",
   "scenarios": {
    "BASE": {
     "c0_max": 1300.0
@@ -60,7 +60,7 @@
     "op": ">=",
     "threshold": 0.6,
     "unit": "доля",
-    "rationale": "стресс спроса команды «коммерческая выручка = 0»: якорные (бюджетные) платежи к OPEX; порог 0,6 равен kcash_min кейса и используется только для диагностики; цифра 0,607 подтверждена в config/assumptions.json (commercial_zero_sensitivity) и docs/D-confirmations.md"
+    "rationale": "стресс спроса команды «коммерческая выручка = 0»: якорные (бюджетные) платежи к OPEX; порог 0,6 равен kcash_min кейса и используется только для диагностики; факт 0,607 получен в сценарии с нулевой коммерческой выручкой"
    }
   ],
   "feasible_scenario": "STRESS",
@@ -81,7 +81,8 @@
    "base_feasible": 1031,
    "stress_feasible": 143,
    "admitted": 143,
-   "ranked": 143
+   "ranked": 143,
+   "pareto": 30
   }
  },
  "lots": {
@@ -97,7 +98,7 @@
     "kpi": "Время от сигнала до проверки",
     "on_failure": "Время последнего обновления, номер инцидента, ручной канал",
     "problem": "Большая территория и риск позднего обнаружения пожаров",
-    "payer": "МЧС — предположительно, по консультации трекера 12.09; уровень заказчика уточняется",
+    "payer": "МЧС — предположительно; уровень заказчика уточняется",
     "risk": "Задержка или ложный сигнал; зависимость от одного источника; задержка бюджетных платежей",
     "core": "Модель события, API, роли, уведомления, SLA, журнал качества",
     "adaptation": "Границы лесов, сезонные пороги, каналы диспетчеризации и принимающие службы",
@@ -177,7 +178,7 @@
     "kpi": "Время от сигнала до решения",
     "on_failure": "Последнее обновление, затронутые объекты и ручной порядок работы",
     "problem": "Много маршрутов и объектов, данные разрознены, осмотры нужно приоритизировать",
-    "payer": "Росавтодор только для дорожной части — предположительно, по консультации трекера 12.09; операторы и перевозчики за данные своих объектов",
+    "payer": "Росавтодор только для дорожной части — предположительно; операторы и перевозчики за данные своих объектов",
     "risk": "Пропуск деформации, неверный приоритет, закрытый формат, неправомерный доступ, низкий коммерческий спрос",
     "core": "Модель объекта и события, API, роли, SLA, журнал и контрольный набор",
     "adaptation": "Перечень объектов, маршруты, пороги, интеграции и регламент реакции",
@@ -202,7 +203,7 @@
     "kpi": "Доля подтверждённых сигналов",
     "on_failure": "Время последнего обновления и предупреждение не принимать автоматическое решение",
     "problem": "Большая акватория и территория контроля при ограниченном ресурсе инспекций",
-    "payer": "Минприроды — предположительно, по консультации трекера 12.09; уровень ведомства уточняется",
+    "payer": "Минприроды — предположительно; уровень ведомства уточняется",
     "risk": "Облачность, неверная интерпретация, раскрытие служебных данных, задержка бюджетных платежей",
     "core": "Конвейер EO, модель события, API, роли, SLA и журнал",
     "adaptation": "Контролируемые зоны, типы событий, пороги, наземные источники и правила публикации",
@@ -261,7 +262,7 @@
   {
    "name": "FINAL",
    "id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
-   "note": "итоговый портфель команды (подтверждён участником 3 12.09 11:02): два лота ЧС/экологии в A как public core, два экономических лота в B; cash покрывает OPEX полностью"
+   "note": "итоговый портфель команды: два лота ЧС/экологии в A как public core, два экономических лота в B; cash покрывает OPEX полностью"
   },
   {
    "name": "V1",
@@ -296,24 +297,1308 @@
   {
    "name": "V7",
    "id": "FIRE:A|AGRI:C|TRANS:C|ENV:A",
-   "note": "математический лидер MCDA среди всех 143 STRESS-допустимых комбинаций; режимы C снижают общественную ценность и якорную устойчивость AGRI/TRANS"
+   "note": "оба экономических лота в режиме C: дешевле и больше денег, но ниже общественная ценность и якорная устойчивость AGRI и TRANS"
   },
   {
    "name": "V8",
    "id": "FIRE:A|AGRI:C|TRANS:B|ENV:A",
-   "note": "второе место MCDA среди всех 143 STRESS-допустимых комбинаций; промежуточный компромисс между математическим лидером и FINAL"
+   "note": "AGRI в режиме C, TRANS в B: промежуточный компромисс между дешёвыми режимами и FINAL"
   }
  ],
  "why_final": {
-  "status": "Выбранный командой вариант после управленческого отбора. Не математический лидер MCDA: при финальных весах — 3-е место из 143 STRESS-допустимых комбинаций.",
-  "headline": "Режимы B у AGRI и TRANS сохраняют гибридный доступ «якорный публичный слой + платная детализация» и дают на 46–90 млн руб./год больше общественной ценности, чем математические лидеры, переводящие AGRI и TRANS в режим C. Cash покрывает OPEX полностью, оба лота ЧС и экологии остаются в A как public core.",
-  "pareto": "FINAL входит во фронт Парето по общественной ценности, c0 и K_cash: ни один допустимый вариант не превосходит его по всем трём показателям одновременно.",
-  "price": "Цена решения относительно математического лидера (AGRI и TRANS в режиме C): на 10,2 млн руб. больше c0, на 7,25 млн руб./год больше OPEX, на 27,5 млн руб./год меньше cash и запас STRESS меньше на 10,2 млн руб.; взамен на 90 млн руб./год больше общественной ценности при положительном операционном балансе 57,5 млн руб./год и запасе STRESS 40 млн руб.",
-  "robustness": "При изменении каждого веса по отдельности на ±20 % FINAL занимает места 2–5 и ни разу не становится первым; при 3000 случайных векторах весов — первый в 8,4 % случаев, медианное место 14. Самый опасный параметр исполнения — c0: удорожание портфеля примерно на 3,5 % нарушает лимит STRESS; OPEX выдерживает рост почти на 15 %.",
-  "base_only": "Вариант с максимальной общественной ценностью — FIRE-A + FLOOD-A + TRANS-A + ENV-A (vpub 1740 усл. млн руб./год) — отведён только по бюджету: его c0 = 1249,5 млн руб. выше стресс-лимита 1180, запас отрицательный (−69,5). Стоимость лотов от лимита не зависит, снизить c0 без потери public core нельзя, поэтому до расширения стартового бюджета (второй этап дорожной карты) или появления собственного режима D с k_c0 < 1 этот состав остаётся отвергнутым; рассмотрен детально в «Что можно сделать» на экране «Стресс».",
-  "comparator": "V7",
-  "source": "docs/note/02-selection.md, results/ranking_full.csv, results/sensitivity_full.csv"
+  "status": "Модель выбора — советник: портфель выбирает команда, а экран показывает, чем этот выбор оплачен.",
+  "headline": "Режимы B у AGRI и TRANS сохраняют гибридный доступ «якорный публичный слой + платная детализация» и дают на 46–90 млн руб./год больше общественной ценности, чем варианты, переводящие AGRI и TRANS в режим C. Cash покрывает OPEX полностью, оба лота ЧС и экологии остаются в A как public core.",
+  "comparator": "V7"
  },
+ "frontier": [
+  {
+   "id": "FIRE:C|AGRI:A|TRANS:A|ENV:C",
+   "c0": 1123.5,
+   "vpub": 1020.4,
+   "kcash": 0.9901,
+   "score": 0.5158,
+   "rank": 60,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:C|AGRI:C|TRANS:A|ENV:A",
+   "c0": 1124.9,
+   "vpub": 1069.8,
+   "kcash": 1.1159,
+   "score": 0.5915,
+   "rank": 34,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:C|AGRI:A|TRANS:C|ENV:A",
+   "c0": 1125.6,
+   "vpub": 1073.6,
+   "kcash": 1.0295,
+   "score": 0.5628,
+   "rank": 49,
+   "pareto": true
+  },
+  {
+   "id": "AGRI:B|INFRA:B|TRANS:A|ENV:A",
+   "c0": 1126.5,
+   "vpub": 1014.5999999999999,
+   "kcash": 1.2059,
+   "score": 0.5848,
+   "rank": 36,
+   "pareto": true
+  },
+  {
+   "id": "AGRI:A|INFRA:B|TRANS:B|ENV:A",
+   "c0": 1127.0,
+   "vpub": 1016.4,
+   "kcash": 1.1585,
+   "score": 0.5683,
+   "rank": 46,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:A|AGRI:C|TRANS:A|ENV:C",
+   "c0": 1127.7,
+   "vpub": 1145.8,
+   "kcash": 1.2629,
+   "score": 0.6898,
+   "rank": 7,
+   "pareto": true
+  },
+  {
+   "id": "AGRI:B|INFRA:A|TRANS:A|ENV:B",
+   "c0": 1128.0,
+   "vpub": 1003.8,
+   "kcash": 1.1756,
+   "score": 0.5592,
+   "rank": 50,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:C|ENV:C",
+   "c0": 1128.4,
+   "vpub": 1149.6,
+   "kcash": 1.1766,
+   "score": 0.661,
+   "rank": 15,
+   "pareto": true
+  },
+  {
+   "id": "AGRI:A|INFRA:A|TRANS:B|ENV:B",
+   "c0": 1128.5,
+   "vpub": 1005.5999999999999,
+   "kcash": 1.1284,
+   "score": 0.5427,
+   "rank": 56,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:A|TRANS:A|ENV:B",
+   "c0": 1129.1,
+   "vpub": 1092.4,
+   "kcash": 0.9716,
+   "score": 0.5431,
+   "rank": 55,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:B|INFRA:A|TRANS:B|ENV:A",
+   "c0": 1129.5,
+   "vpub": 1029.0,
+   "kcash": 1.1958,
+   "score": 0.5797,
+   "rank": 40,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:C|TRANS:C|ENV:A",
+   "c0": 1129.8,
+   "vpub": 1199.0,
+   "kcash": 1.3017,
+   "score": 0.7366,
+   "rank": 1,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:B|AGRI:A|TRANS:A|ENV:C",
+   "c0": 1129.9,
+   "vpub": 1132.4,
+   "kcash": 1.0332,
+   "score": 0.5926,
+   "rank": 33,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:B|TRANS:A|ENV:A",
+   "c0": 1130.1,
+   "vpub": 1115.8,
+   "kcash": 1.039,
+   "score": 0.5801,
+   "rank": 39,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:A|TRANS:B|ENV:A",
+   "c0": 1130.6,
+   "vpub": 1117.6,
+   "kcash": 0.9919,
+   "score": 0.5637,
+   "rank": 48,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:C|TRANS:A|ENV:A",
+   "c0": 1131.3,
+   "vpub": 1181.8,
+   "kcash": 1.1572,
+   "score": 0.6678,
+   "rank": 12,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:A|TRANS:C|ENV:A",
+   "c0": 1132.0,
+   "vpub": 1185.6,
+   "kcash": 1.072,
+   "score": 0.6394,
+   "rank": 22,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:B|TRANS:A|ENV:C",
+   "c0": 1132.9,
+   "vpub": 1191.8,
+   "kcash": 1.1845,
+   "score": 0.6779,
+   "rank": 10,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:C|TRANS:A|ENV:B",
+   "c0": 1133.3,
+   "vpub": 1217.8,
+   "kcash": 1.2411,
+   "score": 0.7161,
+   "rank": 5,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:B|ENV:C",
+   "c0": 1133.4,
+   "vpub": 1193.6,
+   "kcash": 1.1374,
+   "score": 0.6614,
+   "rank": 14,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:C|ENV:B",
+   "c0": 1134.0,
+   "vpub": 1221.6,
+   "kcash": 1.1559,
+   "score": 0.6877,
+   "rank": 9,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:A|AGRI:C|TRANS:B|ENV:A",
+   "c0": 1134.8,
+   "vpub": 1243.0,
+   "kcash": 1.2611,
+   "score": 0.7366,
+   "rank": 2,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:A|AGRI:B|TRANS:C|ENV:A",
+   "c0": 1135.0,
+   "vpub": 1245.0,
+   "kcash": 1.2229,
+   "score": 0.7246,
+   "rank": 4,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:B|AGRI:A|TRANS:A|ENV:B",
+   "c0": 1135.5,
+   "vpub": 1204.4,
+   "kcash": 1.0144,
+   "score": 0.6199,
+   "rank": 27,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:B|TRANS:A|ENV:A",
+   "c0": 1136.5,
+   "vpub": 1227.8,
+   "kcash": 1.0809,
+   "score": 0.6566,
+   "rank": 16,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:C|INFRA:A|TRANS:A|ENV:A",
+   "c0": 1136.8,
+   "vpub": 1022.6,
+   "kcash": 1.1504,
+   "score": 0.5268,
+   "rank": 59,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:A|TRANS:B|ENV:A",
+   "c0": 1137.0,
+   "vpub": 1229.6,
+   "kcash": 1.0344,
+   "score": 0.6403,
+   "rank": 21,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|INFRA:A|TRANS:C|ENV:A",
+   "c0": 1137.5,
+   "vpub": 1026.4,
+   "kcash": 1.0649,
+   "score": 0.4983,
+   "rank": 67,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:B|TRANS:A|ENV:B",
+   "c0": 1138.5,
+   "vpub": 1263.8,
+   "kcash": 1.1639,
+   "score": 0.7045,
+   "rank": 6,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:B|ENV:B",
+   "c0": 1139.0,
+   "vpub": 1265.6,
+   "kcash": 1.1174,
+   "score": 0.6883,
+   "rank": 8,
+   "pareto": true
+  },
+  {
+   "id": "AGRI:A|INFRA:B|TRANS:A|ENV:A",
+   "c0": 1139.5,
+   "vpub": 1056.0,
+   "kcash": 1.037,
+   "score": 0.5041,
+   "rank": 64,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:B|TRANS:B|ENV:A",
+   "c0": 1140.0,
+   "vpub": 1289.0,
+   "kcash": 1.1837,
+   "score": 0.7249,
+   "rank": 3,
+   "pareto": true
+  },
+  {
+   "id": "AGRI:A|INFRA:A|TRANS:A|ENV:B",
+   "c0": 1141.0,
+   "vpub": 1045.2,
+   "kcash": 1.0072,
+   "score": 0.4788,
+   "rank": 75,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:C|TRANS:A|ENV:A|SSA:B",
+   "c0": 1141.3,
+   "vpub": 1001.4,
+   "kcash": 1.2386,
+   "score": 0.4439,
+   "rank": 88,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:C|ENV:A|SSA:B",
+   "c0": 1142.0,
+   "vpub": 1005.2,
+   "kcash": 1.156,
+   "score": 0.4163,
+   "rank": 97,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:B|INFRA:A|TRANS:A|ENV:A",
+   "c0": 1142.0,
+   "vpub": 1068.6,
+   "kcash": 1.0739,
+   "score": 0.5155,
+   "rank": 61,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|INFRA:A|TRANS:B|ENV:A",
+   "c0": 1142.5,
+   "vpub": 1070.4,
+   "kcash": 1.0273,
+   "score": 0.4992,
+   "rank": 66,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:A|TRANS:A|ENV:A",
+   "c0": 1143.1,
+   "vpub": 1157.2,
+   "kcash": 0.8725,
+   "score": 0.5003,
+   "rank": 65,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:C|AGRI:A|TRANS:A|ENV:C",
+   "c0": 1143.1,
+   "vpub": 1045.2,
+   "kcash": 1.0202,
+   "score": 0.4223,
+   "rank": 94,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:C|ENV:B|SSA:A",
+   "c0": 1144.5,
+   "vpub": 1001.6,
+   "kcash": 1.1375,
+   "score": 0.3961,
+   "rank": 105,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:C|AGRI:C|TRANS:A|ENV:A",
+   "c0": 1144.5,
+   "vpub": 1094.6,
+   "kcash": 1.144,
+   "score": 0.4975,
+   "rank": 68,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:C|AGRI:A|TRANS:C|ENV:A",
+   "c0": 1145.2,
+   "vpub": 1098.4,
+   "kcash": 1.059,
+   "score": 0.4691,
+   "rank": 81,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:C|TRANS:B|ENV:A|SSA:A",
+   "c0": 1145.3,
+   "vpub": 1023.0,
+   "kcash": 1.2392,
+   "score": 0.4438,
+   "rank": 89,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:A|ENV:B|SSA:B",
+   "c0": 1145.5,
+   "vpub": 1024.0,
+   "kcash": 1.0993,
+   "score": 0.3971,
+   "rank": 104,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:B|TRANS:C|ENV:A|SSA:A",
+   "c0": 1145.5,
+   "vpub": 1025.0,
+   "kcash": 1.2023,
+   "score": 0.4322,
+   "rank": 93,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:A|ENV:C",
+   "c0": 1145.9,
+   "vpub": 1233.2,
+   "kcash": 1.0168,
+   "score": 0.5976,
+   "rank": 31,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:B|TRANS:A|ENV:A|SSA:B",
+   "c0": 1146.5,
+   "vpub": 1047.4,
+   "kcash": 1.1637,
+   "score": 0.4331,
+   "rank": 92,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:B|ENV:A|SSA:B",
+   "c0": 1147.0,
+   "vpub": 1049.2,
+   "kcash": 1.1186,
+   "score": 0.4173,
+   "rank": 96,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:C|TRANS:A|ENV:A",
+   "c0": 1147.3,
+   "vpub": 1282.6,
+   "kcash": 1.1391,
+   "score": 0.6723,
+   "rank": 11,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:C|ENV:A",
+   "c0": 1148.0,
+   "vpub": 1286.4,
+   "kcash": 1.0551,
+   "score": 0.6443,
+   "rank": 20,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:C|TRANS:A|ENV:C",
+   "c0": 1148.7,
+   "vpub": 1185.8,
+   "kcash": 1.2818,
+   "score": 0.5988,
+   "rank": 29,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:C|AGRI:A|TRANS:A|ENV:B",
+   "c0": 1148.7,
+   "vpub": 1117.2,
+   "kcash": 1.0016,
+   "score": 0.4497,
+   "rank": 87,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:B|TRANS:A|ENV:B|SSA:A",
+   "c0": 1149.0,
+   "vpub": 1043.8,
+   "kcash": 1.1454,
+   "score": 0.4129,
+   "rank": 99,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:A|TRANS:C|ENV:C",
+   "c0": 1149.4,
+   "vpub": 1189.6,
+   "kcash": 1.1969,
+   "score": 0.5705,
+   "rank": 45,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:B|ENV:B|SSA:A",
+   "c0": 1149.5,
+   "vpub": 1045.6,
+   "kcash": 1.1005,
+   "score": 0.3972,
+   "rank": 103,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:A|TRANS:A|ENV:A",
+   "c0": 1149.5,
+   "vpub": 1269.2,
+   "kcash": 0.9161,
+   "score": 0.5773,
+   "rank": 42,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:C|AGRI:B|TRANS:A|ENV:A",
+   "c0": 1149.7,
+   "vpub": 1140.6,
+   "kcash": 1.0679,
+   "score": 0.4863,
+   "rank": 71,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:B|AGRI:A|TRANS:A|ENV:C",
+   "c0": 1149.9,
+   "vpub": 1165.1999999999998,
+   "kcash": 1.0646,
+   "score": 0.5043,
+   "rank": 63,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:C|AGRI:A|TRANS:B|ENV:A",
+   "c0": 1150.2,
+   "vpub": 1142.4,
+   "kcash": 1.0216,
+   "score": 0.4701,
+   "rank": 79,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:B|TRANS:B|ENV:A|SSA:A",
+   "c0": 1150.5,
+   "vpub": 1069.0,
+   "kcash": 1.1646,
+   "score": 0.4331,
+   "rank": 91,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:C|TRANS:C|ENV:A",
+   "c0": 1150.8,
+   "vpub": 1239.0,
+   "kcash": 1.3199,
+   "score": 0.6454,
+   "rank": 19,
+   "pareto": true
+  },
+  {
+   "id": "FLOOD:B|AGRI:C|TRANS:A|ENV:A",
+   "c0": 1151.3,
+   "vpub": 1214.6,
+   "kcash": 1.1866,
+   "score": 0.5789,
+   "rank": 41,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:A|ENV:B",
+   "c0": 1151.5,
+   "vpub": 1305.2,
+   "kcash": 0.9984,
+   "score": 0.6251,
+   "rank": 26,
+   "pareto": true
+  },
+  {
+   "id": "FLOOD:B|AGRI:A|TRANS:C|ENV:A",
+   "c0": 1152.0,
+   "vpub": 1218.3999999999999,
+   "kcash": 1.1027,
+   "score": 0.5509,
+   "rank": 54,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:B|TRANS:A|ENV:A",
+   "c0": 1152.5,
+   "vpub": 1328.6,
+   "kcash": 1.064,
+   "score": 0.6615,
+   "rank": 13,
+   "pareto": true
+  },
+  {
+   "id": "AGRI:A|TRANS:A|ENV:A|SSA:C",
+   "c0": 1152.9,
+   "vpub": 1020.8,
+   "kcash": 1.0249,
+   "score": 0.3367,
+   "rank": 120,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:B|ENV:A",
+   "c0": 1153.0,
+   "vpub": 1330.4,
+   "kcash": 1.0182,
+   "score": 0.6454,
+   "rank": 18,
+   "pareto": true
+  },
+  {
+   "id": "FLOOD:A|AGRI:B|TRANS:A|ENV:C",
+   "c0": 1153.9,
+   "vpub": 1231.8,
+   "kcash": 1.2045,
+   "score": 0.5872,
+   "rank": 35,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:C|TRANS:A|ENV:B",
+   "c0": 1154.3,
+   "vpub": 1257.8,
+   "kcash": 1.2601,
+   "score": 0.6251,
+   "rank": 25,
+   "pareto": true
+  },
+  {
+   "id": "FLOOD:A|AGRI:A|TRANS:B|ENV:C",
+   "c0": 1154.4,
+   "vpub": 1233.6,
+   "kcash": 1.1582,
+   "score": 0.571,
+   "rank": 44,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|INFRA:A|TRANS:A|ENV:A",
+   "c0": 1155.0,
+   "vpub": 1110.0,
+   "kcash": 0.9087,
+   "score": 0.4361,
+   "rank": 90,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:A|TRANS:C|ENV:B",
+   "c0": 1155.0,
+   "vpub": 1261.6,
+   "kcash": 1.1763,
+   "score": 0.5971,
+   "rank": 32,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:B|AGRI:A|TRANS:A|ENV:B",
+   "c0": 1155.5,
+   "vpub": 1237.1999999999998,
+   "kcash": 1.0457,
+   "score": 0.5316,
+   "rank": 58,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:C|TRANS:B|ENV:A",
+   "c0": 1155.8,
+   "vpub": 1283.0,
+   "kcash": 1.2798,
+   "score": 0.6454,
+   "rank": 17,
+   "pareto": true
+  },
+  {
+   "id": "FLOOD:A|AGRI:B|TRANS:C|ENV:A",
+   "c0": 1156.0,
+   "vpub": 1285.0,
+   "kcash": 1.2423,
+   "score": 0.6337,
+   "rank": 24,
+   "pareto": true
+  },
+  {
+   "id": "AGRI:A|TRANS:A|ENV:C|SSA:A",
+   "c0": 1156.4,
+   "vpub": 1013.2,
+   "kcash": 1.0031,
+   "score": 0.3076,
+   "rank": 128,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:C|INFRA:A|TRANS:A",
+   "c0": 1156.4,
+   "vpub": 1009.8,
+   "kcash": 1.1131,
+   "score": 0.3401,
+   "rank": 119,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:B|AGRI:B|TRANS:A|ENV:A",
+   "c0": 1156.5,
+   "vpub": 1260.6,
+   "kcash": 1.1111,
+   "score": 0.5679,
+   "rank": 47,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:B|AGRI:A|TRANS:B|ENV:A",
+   "c0": 1157.0,
+   "vpub": 1262.3999999999999,
+   "kcash": 1.0654,
+   "score": 0.5519,
+   "rank": 53,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:C|INFRA:C|TRANS:A",
+   "c0": 1157.1,
+   "vpub": 1108.6,
+   "kcash": 1.3048,
+   "score": 0.4812,
+   "rank": 74,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:A|INFRA:A|TRANS:C",
+   "c0": 1157.1,
+   "vpub": 1013.6,
+   "kcash": 1.0282,
+   "score": 0.3118,
+   "rank": 126,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:C|TRANS:A|ENV:A|SSA:A",
+   "c0": 1157.8,
+   "vpub": 1062.6,
+   "kcash": 1.1214,
+   "score": 0.3809,
+   "rank": 113,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|INFRA:C|TRANS:C",
+   "c0": 1157.8,
+   "vpub": 1112.4,
+   "kcash": 1.2198,
+   "score": 0.4528,
+   "rank": 85,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:C|ENV:A|SSA:A",
+   "c0": 1158.5,
+   "vpub": 1066.4,
+   "kcash": 1.0402,
+   "score": 0.3538,
+   "rank": 118,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:A|INFRA:B|TRANS:A",
+   "c0": 1159.1,
+   "vpub": 1043.2,
+   "kcash": 1.0008,
+   "score": 0.3178,
+   "rank": 124,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:A|INFRA:C|TRANS:A",
+   "c0": 1159.3,
+   "vpub": 1095.2,
+   "kcash": 1.0782,
+   "score": 0.385,
+   "rank": 112,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:A|ENV:A|SSA:B",
+   "c0": 1159.5,
+   "vpub": 1088.8,
+   "kcash": 1.0031,
+   "score": 0.3552,
+   "rank": 117,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:B|TRANS:A|ENV:B",
+   "c0": 1159.5,
+   "vpub": 1303.8,
+   "kcash": 1.184,
+   "score": 0.6139,
+   "rank": 28,
+   "pareto": true
+  },
+  {
+   "id": "FLOOD:A|AGRI:A|TRANS:B|ENV:B",
+   "c0": 1160.0,
+   "vpub": 1305.6,
+   "kcash": 1.1383,
+   "score": 0.5979,
+   "rank": 30,
+   "pareto": true
+  },
+  {
+   "id": "FLOOD:A|AGRI:B|TRANS:B|ENV:A",
+   "c0": 1161.0,
+   "vpub": 1329.0,
+   "kcash": 1.2035,
+   "score": 0.6342,
+   "rank": 23,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:A|AGRI:C|INFRA:A|TRANS:C",
+   "c0": 1161.3,
+   "vpub": 1139.0,
+   "kcash": 1.2958,
+   "score": 0.4841,
+   "rank": 73,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:B|INFRA:A|TRANS:A",
+   "c0": 1161.6,
+   "vpub": 1055.8,
+   "kcash": 1.0375,
+   "score": 0.3291,
+   "rank": 122,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:A|ENV:B|SSA:A",
+   "c0": 1162.0,
+   "vpub": 1085.2,
+   "kcash": 0.9855,
+   "score": 0.3353,
+   "rank": 121,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:A|INFRA:A|TRANS:B",
+   "c0": 1162.1,
+   "vpub": 1057.6,
+   "kcash": 0.9912,
+   "score": 0.3129,
+   "rank": 125,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:B|INFRA:C|TRANS:A",
+   "c0": 1162.3,
+   "vpub": 1154.6,
+   "kcash": 1.2271,
+   "score": 0.4695,
+   "rank": 80,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:C|AGRI:A|TRANS:A|ENV:A",
+   "c0": 1162.7,
+   "vpub": 1182.0,
+   "kcash": 0.9036,
+   "score": 0.4072,
+   "rank": 100,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|INFRA:C|TRANS:B",
+   "c0": 1162.8,
+   "vpub": 1156.4,
+   "kcash": 1.1807,
+   "score": 0.4533,
+   "rank": 84,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:C|INFRA:A|TRANS:A",
+   "c0": 1162.8,
+   "vpub": 1121.8,
+   "kcash": 1.1538,
+   "score": 0.4161,
+   "rank": 98,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:B|TRANS:A|ENV:A|SSA:A",
+   "c0": 1163.0,
+   "vpub": 1108.6,
+   "kcash": 1.0489,
+   "score": 0.371,
+   "rank": 114,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:C|INFRA:B|TRANS:A",
+   "c0": 1163.3,
+   "vpub": 1168.6,
+   "kcash": 1.2659,
+   "score": 0.4893,
+   "rank": 70,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:B|ENV:A|SSA:A",
+   "c0": 1163.5,
+   "vpub": 1110.4,
+   "kcash": 1.0046,
+   "score": 0.3554,
+   "rank": 116,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:A|INFRA:A|TRANS:C",
+   "c0": 1163.5,
+   "vpub": 1125.6,
+   "kcash": 1.07,
+   "score": 0.3882,
+   "rank": 111,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|INFRA:B|TRANS:C",
+   "c0": 1164.0,
+   "vpub": 1172.4,
+   "kcash": 1.182,
+   "score": 0.4613,
+   "rank": 83,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:A|ENV:A",
+   "c0": 1165.5,
+   "vpub": 1370.0,
+   "kcash": 0.9016,
+   "score": 0.583,
+   "rank": 37,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:B|AGRI:A|INFRA:B|TRANS:A",
+   "c0": 1165.5,
+   "vpub": 1155.2,
+   "kcash": 1.0426,
+   "score": 0.3942,
+   "rank": 106,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:C|INFRA:A|TRANS:B",
+   "c0": 1166.3,
+   "vpub": 1183.0,
+   "kcash": 1.256,
+   "score": 0.4843,
+   "rank": 72,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:B|INFRA:A|TRANS:C",
+   "c0": 1166.5,
+   "vpub": 1185.0,
+   "kcash": 1.2184,
+   "score": 0.4725,
+   "rank": 78,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:A|TRANS:A|ENV:C",
+   "c0": 1166.9,
+   "vpub": 1273.2,
+   "kcash": 1.0393,
+   "score": 0.5078,
+   "rank": 62,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:B|INFRA:A|TRANS:A",
+   "c0": 1168.0,
+   "vpub": 1167.8,
+   "kcash": 1.0787,
+   "score": 0.4053,
+   "rank": 101,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:C|TRANS:A|ENV:A",
+   "c0": 1168.3,
+   "vpub": 1322.6,
+   "kcash": 1.1596,
+   "score": 0.5818,
+   "rank": 38,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:B|INFRA:B|TRANS:A",
+   "c0": 1168.5,
+   "vpub": 1214.6,
+   "kcash": 1.1896,
+   "score": 0.4781,
+   "rank": 76,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:A|INFRA:A|TRANS:B",
+   "c0": 1168.5,
+   "vpub": 1169.6,
+   "kcash": 1.033,
+   "score": 0.3893,
+   "rank": 110,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|INFRA:B|TRANS:B",
+   "c0": 1169.0,
+   "vpub": 1216.3999999999999,
+   "kcash": 1.1439,
+   "score": 0.4621,
+   "rank": 82,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:A|TRANS:C|ENV:A",
+   "c0": 1169.0,
+   "vpub": 1326.4,
+   "kcash": 1.0769,
+   "score": 0.5542,
+   "rank": 52,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:B|AGRI:A|TRANS:A|ENV:A",
+   "c0": 1169.5,
+   "vpub": 1302.0,
+   "kcash": 0.9486,
+   "score": 0.4894,
+   "rank": 69,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:B|INFRA:A|TRANS:B",
+   "c0": 1171.5,
+   "vpub": 1229.0,
+   "kcash": 1.1799,
+   "score": 0.4732,
+   "rank": 77,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:A|TRANS:A|SSA:C",
+   "c0": 1172.5,
+   "vpub": 1008.0,
+   "kcash": 0.9899,
+   "score": 0.1507,
+   "rank": 143,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:A|TRANS:A|ENV:B",
+   "c0": 1172.5,
+   "vpub": 1345.2,
+   "kcash": 1.021,
+   "score": 0.5352,
+   "rank": 57,
+   "pareto": true
+  },
+  {
+   "id": "FLOOD:C|AGRI:A|INFRA:C|TRANS:A",
+   "c0": 1172.5,
+   "vpub": 1008.0,
+   "kcash": 1.0653,
+   "score": 0.2147,
+   "rank": 139,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:B|TRANS:A|ENV:A",
+   "c0": 1173.5,
+   "vpub": 1368.6,
+   "kcash": 1.0855,
+   "score": 0.5713,
+   "rank": 43,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:C|INFRA:C|TRANS:A|ENV:A",
+   "c0": 1173.9,
+   "vpub": 1113.2,
+   "kcash": 1.089,
+   "score": 0.3061,
+   "rank": 129,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:A|TRANS:B|ENV:A",
+   "c0": 1174.0,
+   "vpub": 1370.4,
+   "kcash": 1.0404,
+   "score": 0.5555,
+   "rank": 51,
+   "pareto": true
+  },
+  {
+   "id": "FIRE:C|AGRI:A|INFRA:A|TRANS:A",
+   "c0": 1174.6,
+   "vpub": 1097.2,
+   "kcash": 0.8738,
+   "score": 0.2502,
+   "rank": 134,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|INFRA:C|TRANS:A",
+   "c0": 1175.3,
+   "vpub": 1196.0,
+   "kcash": 1.0614,
+   "score": 0.3899,
+   "rank": 108,
+   "pareto": false
+  },
+  {
+   "id": "AGRI:A|TRANS:A|ENV:A|SSA:A",
+   "c0": 1176.0,
+   "vpub": 1150.0,
+   "kcash": 0.8919,
+   "score": 0.2943,
+   "rank": 131,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|INFRA:A|TRANS:A|ENV:C",
+   "c0": 1176.0,
+   "vpub": 1090.4,
+   "kcash": 1.042,
+   "score": 0.2625,
+   "rank": 133,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:C|AGRI:C|INFRA:A|TRANS:A",
+   "c0": 1176.0,
+   "vpub": 1034.6,
+   "kcash": 1.1408,
+   "score": 0.2459,
+   "rank": 135,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:C|TRANS:A|SSA:C",
+   "c0": 1176.7,
+   "vpub": 1133.4,
+   "kcash": 1.2467,
+   "score": 0.3195,
+   "rank": 123,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|INFRA:C|TRANS:A|ENV:C",
+   "c0": 1176.7,
+   "vpub": 1189.2,
+   "kcash": 1.2339,
+   "score": 0.4036,
+   "rank": 102,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:C|AGRI:A|INFRA:A|TRANS:C",
+   "c0": 1176.7,
+   "vpub": 1038.4,
+   "kcash": 1.0572,
+   "score": 0.218,
+   "rank": 138,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|TRANS:C|SSA:C",
+   "c0": 1177.4,
+   "vpub": 1137.2,
+   "kcash": 1.1655,
+   "score": 0.2924,
+   "rank": 132,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:C|TRANS:A|SSA:A",
+   "c0": 1177.4,
+   "vpub": 1049.8,
+   "kcash": 1.0861,
+   "score": 0.1949,
+   "rank": 140,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:A|TRANS:C|SSA:A",
+   "c0": 1178.1,
+   "vpub": 1053.6,
+   "kcash": 1.0054,
+   "score": 0.168,
+   "rank": 142,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|INFRA:A|TRANS:C|ENV:A",
+   "c0": 1178.1,
+   "vpub": 1143.6,
+   "kcash": 1.0806,
+   "score": 0.3093,
+   "rank": 127,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:C|INFRA:C|TRANS:A",
+   "c0": 1178.1,
+   "vpub": 1148.6,
+   "kcash": 1.3228,
+   "score": 0.3898,
+   "rank": 109,
+   "pareto": true
+  },
+  {
+   "id": "FLOOD:C|AGRI:A|INFRA:B|TRANS:A",
+   "c0": 1178.7,
+   "vpub": 1068.0,
+   "kcash": 1.0299,
+   "score": 0.224,
+   "rank": 137,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:C|INFRA:A|TRANS:A",
+   "c0": 1178.8,
+   "vpub": 1222.6,
+   "kcash": 1.136,
+   "score": 0.4207,
+   "rank": 95,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|INFRA:C|TRANS:C|ENV:A",
+   "c0": 1178.8,
+   "vpub": 1242.4,
+   "kcash": 1.2721,
+   "score": 0.4503,
+   "rank": 86,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:A|AGRI:A|INFRA:C|TRANS:C",
+   "c0": 1178.8,
+   "vpub": 1152.4,
+   "kcash": 1.2391,
+   "score": 0.3619,
+   "rank": 115,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:B|AGRI:A|TRANS:A|SSA:C",
+   "c0": 1178.9,
+   "vpub": 1120.0,
+   "kcash": 1.0305,
+   "score": 0.2268,
+   "rank": 136,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:C|AGRI:A|TRANS:A|SSA:B",
+   "c0": 1179.1,
+   "vpub": 1076.0,
+   "kcash": 0.9688,
+   "score": 0.1695,
+   "rank": 141,
+   "pareto": false
+  },
+  {
+   "id": "FLOOD:B|AGRI:A|INFRA:C|TRANS:A",
+   "c0": 1179.3,
+   "vpub": 1128.0,
+   "kcash": 1.1084,
+   "score": 0.2963,
+   "rank": 130,
+   "pareto": false
+  },
+  {
+   "id": "FIRE:A|AGRI:A|INFRA:A|TRANS:C",
+   "c0": 1179.5,
+   "vpub": 1226.4,
+   "kcash": 1.0534,
+   "score": 0.3932,
+   "rank": 107,
+   "pareto": false
+  }
+ ],
  "suggestions": [
   "FIRE:A|AGRI:C|TRANS:C|ENV:A",
   "FIRE:A|AGRI:B|TRANS:B|ENV:A",

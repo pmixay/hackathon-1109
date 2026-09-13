@@ -95,8 +95,8 @@ export function renderData(ctx) {
     const s = f.summary || {};
     const what = n === 'lots.csv' ? `${s.rows ?? '?'} лотов, ${s.columns ?? '?'} полей` : n === 'access_modes.csv' ? `режимы ${(s.modes || []).join(', ')}` : `версия ${s.case_version ?? '—'}, сценарии ${(s.scenarios || []).join(', ')}, ${s.constraints ?? '?'} ограничений`;
     return `<tr><td><span class="code">${n}</span></td><td>${f.missing ? '<span class="st fail">нет файла</span>' : esc(what)}</td><td class="mono">${f.sha || '—'}</td><td class="num">${f.bytes ?? '—'}</td></tr>`;
-  }).join('')}</table></div><div class="note">${esc(ds.source === 'организаторы' ? 'Файлы организаторов (копия cases/case02 в data/ и config/, сверена движком по контрольным суммам). Расчёт идёт по ним через src/kosmo.' : `Загруженный набор, активирован ${ds.activated_at || ''}. Папка: ${ds.root}`)}</div>`
-    : `<div class="empty">${state.api ? 'Загрузка…' : 'Сведения о наборе доступны только с сервером (python app/server.py). Проверка файлов ниже работает и без него.'}</div>`;
+  }).join('')}</table></div><div class="note">${esc(ds.source === 'организаторы' ? 'Исходные файлы организаторов, сверенные расчётным движком по контрольным суммам. Все экраны считаются по ним.' : `Загруженный набор, активирован ${ds.activated_at || ''}.`)}</div>`
+    : `<div class="empty">${state.api ? 'Загрузка…' : 'Сведения о наборе доступны только при работе с сервером. Проверка файлов ниже работает и без него.'}</div>`;
   const pill = ds ? `<div class="pill"><span class="dot">${ctx.icon.check}</span>${ds.source === 'организаторы' ? 'файлы организаторов' : 'загруженный набор'}, v${ds.case_version ?? '—'}</div>` : '';
 
   const slot = (n) => {
@@ -112,7 +112,7 @@ export function renderData(ctx) {
   const anyLoaded = FILES.some((n) => upload.files[n] !== undefined);
   const allOk = anyLoaded && FILES.every((n) => !upload.report[n] || upload.report[n].ok);
   const previews = FILES.filter((n) => upload.report[n]?.ok).map((n) => previewOf(n, ctx)).join('');
-  const helpUpload = 'Три файла в формате организаторов, можно загружать по одному: lots.csv (14 полей на лот), access_modes.csv (коэффициенты режимов и public_core), case_config.json (constraints_common и scenarios с c0_max_mrub). Файлы проверяются здесь на структуру и типы, затем на сервере, сохраняются в app/data/uploads и становятся активным набором; все экраны пересчитываются. Непереданные файлы берутся из текущего набора. «Вернуть файлы организаторов» возвращает исходный набор (копия cases/case02).';
+  const helpUpload = 'Три файла в формате организаторов, можно загружать по одному: lots.csv (14 полей на лот), access_modes.csv (коэффициенты режимов и public_core), case_config.json (constraints_common и scenarios с c0_max_mrub). Файлы проверяются здесь на структуру и типы, затем на сервере, сохраняются там и становятся активным набором; все экраны пересчитываются. Непереданные файлы берутся из текущего набора. «Вернуть файлы организаторов» возвращает исходный набор организаторов.';
   const fmtCard = `<div class="card"><h2>Формат организаторов${help('Обязательные столбцы и типы. Лишние столбцы игнорируются, порядок не важен. Разделитель — запятая, кодировка UTF-8. capability_groups — список через точку с запятой (EO; PNT/InSAR; SATCOM; SSA), federal и public_core — true/false. В scenarios обязательны BASE и STRESS (на них построены расчёт и экраны), другие сценарии допускаются.')}</h2>
 <div class="fmt"><div><b>lots.csv</b><div class="cols">${LOT_COLUMNS.map((c) => `<span class="lot${LOT_NUMERIC.includes(c) ? '' : ' txt'}">${c}</span>`).join('')}</div></div>
 <div><b>access_modes.csv</b><div class="cols">${MODE_COLUMNS.map((c) => `<span class="lot${c === 'mode_id' || c === 'public_core' ? ' txt' : ''}">${c}</span>`).join('')}</div></div>

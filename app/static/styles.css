@@ -40,12 +40,17 @@ button{font-family:inherit}
 .side .brand{display:flex;align-items:center;gap:10px;padding:4px 6px 18px;color:#fff;font-family:var(--f-display);font-size:15px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
 .side .brand i{width:34px;height:34px;border-radius:10px;background:#eef4ee;display:grid;place-items:center;flex:none}
 .side .brand img{width:26px;height:26px;object-fit:contain}
-.nav{display:flex;flex-direction:column;gap:3px}
+.nav{display:flex;flex-direction:column;gap:3px;isolation:isolate}
 .nav .grp{padding:16px 12px 6px;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--side-dim);white-space:nowrap}
 .nav .grp:first-child{padding-top:2px}
-.nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:var(--side-ink);font-weight:500;font-size:14.5px;white-space:nowrap;cursor:pointer;user-select:none}
+.nav a{position:relative;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:var(--side-ink);font-weight:500;font-size:14.5px;white-space:nowrap;cursor:pointer;user-select:none}
 .nav a:hover{background:var(--side-hover);color:#fff}
-.nav a.on,.nav a.on:hover{background:linear-gradient(100deg,var(--side-on-1),var(--side-on-2));color:#fff;font-weight:600}
+/* подсветку активного пункта рисует отдельный слой ::before: пункты меню создаются заново
+   при каждой перерисовке, а анимировать переезд подсветки можно только у псевдоэлемента
+   (render() в app.js запускает его из прежнего положения) */
+.nav a::before{content:"";position:absolute;inset:0;border-radius:10px;background:linear-gradient(100deg,var(--side-on-1),var(--side-on-2));opacity:0;z-index:-1}
+.nav a.on::before{opacity:1}
+.nav a.on,.nav a.on:hover{background:none;color:#fff;font-weight:600}
 .nav svg{width:18px;height:18px;flex:none}
 .collapse{margin-top:auto;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;color:#a9cbb4;cursor:pointer}
 .collapse:hover{background:var(--side-hover);color:#fff}
@@ -97,7 +102,7 @@ html.theming,html.theming *:not(svg *){transition:background-color .24s ease,bor
 .tsw svg{width:17px;height:17px}
 
 /* ---- страница ---- */
-.main{padding:26px 32px 40px;display:flex;flex-direction:column;gap:22px}
+.main{position:relative;padding:26px 32px 40px;display:flex;flex-direction:column;gap:22px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:44px}
 h1{font-family:var(--f-display);font-size:30px;font-weight:700;letter-spacing:-.02em;margin:0;line-height:1.1}
 .pill{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:14px;padding:8px 14px 8px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--rule);color:var(--ink);font-variant-numeric:tabular-nums}
@@ -109,7 +114,12 @@ h1{font-family:var(--f-display);font-size:30px;font-weight:700;letter-spacing:-.
 .tabs a{position:relative;padding:8px 2px 14px;font-size:15px;font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap;user-select:none}
 .tabs a:hover{color:var(--ink)}
 .tabs a.on{color:var(--brand)}
-.tabs a.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:var(--brand)}
+.tabs a.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:var(--brand);transform-origin:left center}
+/* смена экрана: прежняя разметка переезжает в слой вне потока и гаснет, поэтому высота
+   страницы становится новой сразу (layout shift не анимируем). Шапка и вкладки остаются
+   на месте — их копии в слое только держат отступы. Сам переход запускает render(). */
+.main>.leaving{position:absolute;left:0;right:0;top:0;padding:inherit;display:flex;flex-direction:column;gap:inherit;overflow:hidden;pointer-events:none}
+.main>.leaving>.top,.main>.leaving>.tabs{visibility:hidden}
 .card{background:var(--surface);border-radius:18px;padding:22px 24px;box-shadow:var(--shadow-sm)}
 .card h2{font-family:var(--f-display);font-size:17px;font-weight:700;letter-spacing:-.01em;margin:0 0 16px;display:flex;align-items:center;gap:12px}
 .card h2 .tog{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-family:var(--f-ui);font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap}
@@ -355,18 +365,62 @@ table.bs b.neg{color:var(--crit)}
 .ws .lots{margin-top:4px}
 table.alts td .sub{max-width:520px}
 .alt-h{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.wl{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.wl-col{border-radius:16px;padding:16px 18px}
-.wl-col.win{background:var(--good-soft)}.wl-col.lose{background:var(--crit-soft)}
-.wl-h{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;margin-bottom:10px}
-.wl-h svg{width:16px;height:16px}
-.wl ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.wl li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;font-size:14px;font-variant-numeric:tabular-nums}
-.wl li em{font-style:normal;white-space:nowrap}
-.wl li span{font-weight:600}.wl li b{font-family:var(--f-num);font-weight:700}
-.wl li i{font-style:normal;font-weight:700;padding:3px 8px;border-radius:7px;background:var(--surface);font-size:13px}
-.wl li.none{color:var(--ink-2)}
-.wl-even{margin-top:10px;font-size:13px;color:var(--ink-2)}
+/* складная карточка: компактная строка вместо большой таблицы, разворот по кнопке */
+.card.fold h2 .fold-t{margin-left:auto;cursor:pointer;user-select:none}
+.card.fold h2 .fold-t+.help{margin-left:0}
+.card.fold h2 .fold-t svg{transition:transform .2s ease}
+.card.fold.open h2 .fold-t svg{transform:rotate(180deg)}
+.fold-sum{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.card.fold.open .fold-sum{display:none}
+.fl{display:inline-flex;align-items:baseline;gap:6px;padding:8px 12px;border-radius:12px;background:var(--bg);font-size:13px;font-variant-numeric:tabular-nums}
+.fl b{font-family:var(--f-code);letter-spacing:var(--code-tracking);font-weight:700;font-size:13px;color:var(--ink)}
+.fl i{font-style:normal;font-weight:700;font-size:11.5px;padding:1px 6px;border-radius:6px;background:var(--brand-soft);color:var(--brand)}
+.fl small{font-size:11.5px;color:var(--muted)}
+.fl.tt{background:var(--brand-soft);font-weight:600;color:var(--ink)}
+.fl.tt em{font-style:normal;font-size:11.5px;color:var(--ink-2);margin-left:6px}
+.fl.tt b{font-family:var(--f-num);font-size:13.5px}
+/* разворот: grid-template-rows 0fr → 1fr анимируется без фиксированной высоты */
+.fold-b{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1)}
+.card.fold.open .fold-b{grid-template-rows:1fr}
+.fold-in{overflow:hidden;min-height:0}
+@media (prefers-reduced-motion: reduce){.fold-b{transition:none}.card.fold h2 .fold-t svg{transition:none}}
+
+/* FINAL против альтернативы: по паре полос на показатель, шкала своя в каждой строке */
+.cmpb{display:flex;flex-direction:column;gap:12px}
+.cb-row{display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,2.3fr) auto;gap:16px;align-items:center}
+.cb-n{font-size:13.5px;font-weight:600;line-height:1.3}
+.cb-n span{display:block;font-size:11.5px;font-weight:500;color:var(--muted)}
+.cb-bars{display:flex;flex-direction:column;gap:4px;min-width:0}
+.cb-l{position:relative;height:19px;border-radius:6px;background:var(--rule-2);overflow:hidden}
+.cb-l i{position:absolute;left:0;top:0;height:100%;border-radius:6px;background:var(--seg-b)}
+.cb-l b{position:absolute;right:9px;top:0;line-height:19px;font-family:var(--f-num);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.cb-l.c i{background:var(--seg-b);opacity:.7}
+.cb-row.win .cb-l.f i{background:var(--good)}
+.cb-row.lose .cb-l.f i{background:var(--crit)}
+.cb-row.even .cb-l.f i{background:var(--muted)}
+.cb-d{font-family:var(--f-num);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;padding:4px 10px;border-radius:8px;background:var(--bg);color:var(--ink-2);min-width:86px;text-align:right}
+.cb-row.win .cb-d{background:var(--good-soft);color:var(--good-ink)}
+.cb-row.lose .cb-d{background:var(--crit-soft);color:var(--crit-ink)}
+/* ценность против затрат: облако допустимых комбинаций и фронт Парето */
+.fr .pt.dom{fill:var(--muted);opacity:.4}
+.fr .pt.front{fill:var(--good);opacity:.92}
+.fr .pt.final{fill:var(--brand);stroke:var(--surface);stroke-width:2.5}
+.fr .pt.cmp{fill:var(--warn);stroke:var(--surface);stroke-width:2.5}
+.fr text.lb-fin{fill:var(--brand)}
+.fr text.lb-cmp{fill:var(--warn-ink)}
+svg text.ax{font-size:10px;fill:var(--muted)}
+.legend i.d{border-radius:50%}
+.legend i.d.dom{background:var(--muted);opacity:.4}
+.legend i.d.front{background:var(--good)}
+.legend i.d.final{background:var(--brand)}
+.legend i.d.cmp{background:var(--warn)}
+.legend i.d.bar{border-radius:3px;width:14px;height:8px}
+.legend i.d.bar.f{background:var(--seg-a)}
+.legend i.d.bar.c{background:var(--seg-b)}
+@media (max-width:720px){
+  .cb-row{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
+  .cb-bars{grid-column:1/-1}
+}
 .cmp-note{margin-top:14px;font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .why-rob{margin:0;font-size:14.5px;line-height:1.55}
 .mini{position:relative;height:22px;min-width:160px;background:var(--rule-2);border-radius:6px;overflow:hidden}
@@ -377,7 +431,7 @@ table.brk td .sub{font-size:12px}
 .tile.thin{border-color:var(--warn);background:var(--warn-soft)}.tile.bad{border-color:var(--crit);background:var(--crit-soft)}
 .tile .tc{font-size:12.5px;font-weight:500;color:var(--ink-2);margin-top:2px}
 .sv-p{font-size:13px;color:var(--ink-2)}.sv-p b{color:var(--ink);font-weight:600}
-@media (max-width:1280px){.why-hero,.wl,.res2,.chk2{grid-template-columns:minmax(0,1fr)}.bld-row{grid-template-columns:32px minmax(0,1fr) auto;grid-auto-rows:auto}.bld-info{grid-column:2/-1}}
+@media (max-width:1280px){.why-hero,.res2,.chk2{grid-template-columns:minmax(0,1fr)}.bld-row{grid-template-columns:32px minmax(0,1fr) auto;grid-auto-rows:auto}.bld-info{grid-column:2/-1}}
 
 /* ---- адаптив ниже 1280px ---- */
 /* На узком экране боковая панель всегда узкая: 224px отнимают ширину у таблиц.
@@ -403,7 +457,7 @@ table.brk td .sub{font-size:12px}
   .card{padding:18px 16px}
   .tabs{gap:20px;overflow-x:auto;margin-bottom:0}
   .tiles,.hero,.tiles.four,.svc,.sum,.row2,.row2.w{grid-template-columns:minmax(0,1fr)}
-  .card,.row2>*,.sum>*,.res2>*,.chk2>*,.why-hero>*,.wl>*,.tiles>*,.hero>*,.svc>*{min-width:0}
+  .card,.row2>*,.sum>*,.res2>*,.chk2>*,.why-hero>*,.tiles>*,.hero>*,.svc>*{min-width:0}
   .card h2{flex-wrap:wrap;row-gap:6px}
   .card h2 .help,.card h2 .u,.card h2 .more,.card h2 .tog{margin-left:auto}
   .sum-l span,.chips{max-width:100%}

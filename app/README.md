@@ -218,7 +218,9 @@ notebook организаторов (`payer_opex`, `operator_model`, `supplier_s
 `<страница>-dark.png` — первая вкладка в тёмной теме, `scenario-menu.png` —
 открытый выбор сценария, `portfolio-builder-fail.png` и
 `portfolio-checks-fail.png` — произвольный портфель с нарушением STRESS
-(конструктор и таблица проверок). Нужен playwright с Chromium; без доступа
+(конструктор и таблица проверок), `portfolio-lots-open.png` — развёрнутая
+таблица «Лоты портфеля» (на экране она по умолчанию свёрнута до строки
+«лот · режим · c0» и итога). Нужен playwright с Chromium; без доступа
 к Google Fonts задать `FONT_DIR`, см. `docs/mockup/README.md`. Снимки в
 репозитории сняты с `FONT_DIR` (кэш woff2 Montserrat): headless Chromium в
 песочнице до Google Fonts не достаёт и без кэша подставляет системный шрифт.

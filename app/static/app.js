@@ -512,18 +512,52 @@ ${cmpBars(rows2, cmpLabel(cmpA))}
       return notFinal + `<div class="card"><h2>Из чего сложился балл <span class="cmp-pick">${alts.map((a) => `<span class="chip${a.name === state.comparator ? ' on' : ''}" data-cmp="${esc(a.name)}" tabindex="0" role="button"><b>${esc(a.name)}</b> ${esc(cmpLabel(a))}</span>`).join('')}</span>${help(`Балл = Σ вес × z. Для каждого критерия z — min–max нормализация по ${t.ranked} STRESS-допустимым комбинациям: 0 — худшее значение среди них, 1 — лучшее (для c0 шкала перевёрнута). Вклад = вес × z; сумма вкладов и есть балл. Веса модели выбора утверждены до просмотра результата. Комбинация вне STRESS получает z по той же шкале, но места не получает.`)}</h2>
 <div class="tw wide"><table class="brk"><tr><th>Критерий</th><th class="num">Вес</th><th class="num">FINAL: значение</th><th class="num">z</th><th>Вклад</th>${cmp ? `<th class="num">${esc(cmpLabel(cmpA))}: значение</th><th class="num">z</th><th>Вклад</th>` : ''}</tr>${rows}${total}</table></div></div>`;
     },
+    // Экран S2 отвечает на три вопроса: сколько OPEX остаётся без покрытия, чем
+    // это отличается от BASE и в каких лотах возникает дыра. Порог K_cash
+    // держится якорными поступлениями с запасом в единицы миллионов, поэтому
+    // главная фигура экрана — полоса покрытия с засечкой порога.
     s2() {
-      const s2 = f.s2 || {}, m = f.metrics;
-      const above = s2.cash - cons.kcash_min * m.opex; // запас над порогом K_cash в деньгах
+      const s2 = f.s2 || {}, m = f.metrics, kmin = cons.kcash_min, thin = d.meta.thin_margin_pct;
+      const need = kmin * m.opex;                                        // поступления, которых требует формальный порог K_cash
+      const above = s2.cash - need;                                      // запас над порогом в деньгах
+      const share = m.opex ? s2.cash / m.opex : 0;                       // доля OPEX, покрытая якорными поступлениями
+      const relS2 = (s2.kcash - kmin) / kmin;                            // запас по K_cash в долях порога — та же шкала, что в стресс-матрице
+      const w = (v) => (m.opex ? Math.max(0, Math.min(100, (v / m.opex) * 100)).toFixed(1) : '0');
+      const pc = (x) => fmt(x * 100, 1) + ' %';                          // доли на этом экране — с одним знаком, заодно с K_cash 0.607
       const tile = (title, val, unit, note = '', cls = '') => `<div class="tile${cls}"><div class="tl">${title}</div><div class="tv">${val}<small>${unit}</small></div>${note ? `<div class="tc">${note}</div>` : ''}</div>`;
-      return notFinal + `<div class="card s2"><h2>Дополнительный сценарий команды: commercial cash = 0 ${tag('не официальный STRESS', 'warn')}${help('Риск-сценарий команды: коммерческие поступления обнуляются, остаются только якорные. Он не входит в официальные BASE/STRESS кейса, не фильтрует ranking и не заменяет их; показывает риск ликвидности и потребность в резервном финансировании. Официальный STRESS меняет только лимит c0.')}</h2>
+      const helpS2 = 'Риск-сценарий команды: коммерческие поступления обнуляются, остаются только якорные. Он не входит в официальные BASE/STRESS кейса, не фильтрует ranking и не заменяет их; показывает риск ликвидности и потребность в резервном финансировании. Официальный STRESS меняет только лимит c0. Формальный порог K_cash здесь выполняется за счёт одних якорных поступлений, но эксплуатация требует ежегодного покрытия непокрытого OPEX.';
+      const helpBar = `Полоса — годовой OPEX портфеля ${fmt(m.opex)} млн руб. Тёмная часть покрыта якорными поступлениями, светлая остаётся непокрытой при commercial cash = 0. Засечка — формальный порог K_cash ${kmin.toFixed(2)}, то есть ${fmt(need)} млн руб. поступлений в год; расстояние от засечки до края тёмной части и есть запас ${signed(above)} млн руб./год.`;
+      const head = `<div class="card"><h2>Дополнительный сценарий команды: commercial cash = 0 ${tag('не официальный STRESS', 'warn')}${help(helpS2)}</h2>
 <div class="tiles four">
 ${tile('Якорные поступления', fmt(s2.cash), 'млн руб./год', `коммерческие ${fmt(m.commercial_cash)} → 0`)}
-${tile('OPEX', fmt(m.opex), 'млн руб./год')}
-${tile('K_cash в S2', fmt(s2.kcash, 3), 'anchor / OPEX', `порог ${cons.kcash_min.toFixed(2)}, ${s2.kcash_ok ? 'выполнен, запас ' + fmt(above) + ' млн руб./год' : 'нарушен'}`, s2.kcash_ok ? ' thin' : ' bad')}
+${tile('OPEX', fmt(m.opex), 'млн руб./год', `покрыт якорными на ${pc(share)}`)}
+${tile('K_cash в S2', fmt(s2.kcash, 3), 'anchor / OPEX', `порог ${kmin.toFixed(2)}, ${s2.kcash_ok ? 'выполнен, запас ' + fmt(above) + ' млн руб./год' : 'нарушен на ' + fmt(-above) + ' млн руб./год'}`, s2.kcash_ok ? ' thin' : ' bad')}
 ${tile('Непокрытый OPEX', fmt(s2.opex_gap), 'млн руб./год', 'требует ежегодного покрытия', ' bad')}
 </div>
-<div class="callout warn">Формальный порог K_cash ≥ ${cons.kcash_min.toFixed(2)} ${s2.kcash_ok ? 'сохраняется только за счёт якорных поступлений' : 'не выполняется'}; для эксплуатации потребуется покрытие ${fmt(s2.opex_gap)} млн руб./год. Это анализ чувствительности команды, а не требование организаторов.</div></div>`;
+<div class="s2b"><div class="s2b-h"><span>Покрытие годового OPEX якорными поступлениями</span><span>${fmt(s2.cash)} из ${fmt(m.opex)} млн руб.${help(helpBar)}</span></div>
+<div class="s2b-bar">${s2.cash > 0 ? `<i class="cov" style="width:${w(s2.cash)}%"></i>` : ''}${s2.opex_gap > 0 ? `<i class="gap" style="width:${w(s2.opex_gap)}%"></i>` : ''}<b class="thr" style="left:${w(need)}%"></b></div>
+<div class="legend"><span><i class="cov"></i>покрыто якорными ${fmt(s2.cash)}</span><span><i class="gap"></i>не покрыто ${fmt(s2.opex_gap)}</span><span><i class="tick"></i>порог K_cash ${kmin.toFixed(2)} — ${fmt(need)} млн руб., запас ${signed(above)}</span></div></div></div>`;
+      const dlt = (v, dec = 1) => `<td class="num${v < 0 ? ' neg' : ''}">${signed(v, dec)}</td>`;
+      const stS2 = !s2.kcash_ok ? stChip(false, 'FAIL') : relS2 < thin ? '<span class="st thin">PASS, тонкий запас</span>' : stChip(true, 'PASS');
+      const cmpTable = `<div class="card"><h2>Что теряется относительно BASE${help(`Слева — тот же портфель в официальном BASE, справа — он же при обнулённых коммерческих поступлениях. Меняются только поступления: c0, OPEX и общественная ценность в S2 те же. Операционный баланс — поступления минус OPEX за год; отрицательный означает, что эксплуатацию нужно дофинансировать. Порог K_cash ≥ ${kmin.toFixed(2)} — каноническая проверка кейса, «тонкий запас» — меньше ${Math.round(thin * 100)} % от порога.`)}</h2>
+<div class="tw"><table class="bs"><tr><th>Показатель</th><th class="num">BASE</th><th class="num">S2, commercial cash = 0</th><th class="num">Δ</th></tr>
+<tr><td>Поступления cash, млн руб./год</td><td class="num">${fmt(m.cash)}</td><td class="num">${fmt(s2.cash)}</td>${dlt(s2.cash - m.cash)}</tr>
+<tr><td>в том числе коммерческие</td><td class="num">${fmt(m.commercial_cash)}</td><td class="num">${fmt(0)}</td>${dlt(-m.commercial_cash)}</tr>
+<tr class="big"><td>Покрытие OPEX, cash / OPEX</td><td class="num"><b>${fmt(m.kcash, 3)}</b></td><td class="num"><b${s2.kcash_ok ? '' : ' class="neg"'}>${fmt(s2.kcash, 3)}</b></td>${dlt(s2.kcash - m.kcash, 3)}</tr>
+<tr class="big"><td>Операционный баланс, млн руб./год</td><td class="num"><b${m.opex_gap > 0 ? ' class="neg"' : ''}>${signed(-m.opex_gap)}</b></td><td class="num"><b${s2.opex_gap > 0 ? ' class="neg"' : ''}>${signed(-s2.opex_gap)}</b></td>${dlt(m.opex_gap - s2.opex_gap)}</tr>
+<tr><td>Порог K_cash ≥ ${kmin.toFixed(2)}</td><td class="num">${stChip(m.kcash >= kmin, m.kcash >= kmin ? 'PASS' : 'FAIL')}</td><td class="num">${stS2}</td><td></td></tr></table></div></div>`;
+      const lotRow = (r) => {
+        const L = d.lots[r.lot] || {}, gap = r.opex - r.anchor_cash, cv = r.opex ? Math.max(0, Math.min(1, r.anchor_cash / r.opex)) : 0;
+        return `<tr><td><div class="name"><span class="code">${esc(r.lot)}</span>, ${esc(L.name || '')}</div><div class="sub">режим ${esc(r.mode)}${r.public_core ? ', public core' : ''}${L.region ? ', ' + esc(L.region) : ''}</div></td>
+<td class="num">${fmt(r.opex, 2)}</td><td class="num">${fmt(r.anchor_cash, 2)}</td><td class="num">${fmt(r.commercial_cash, 2)}</td><td class="num${gap > 0 ? ' neg' : ''}">${gap > 0 ? fmt(gap, 2) : signed(gap, 2)}</td>
+<td><div class="s2cov"><div class="mini${cv < kmin ? ' warn' : ''}"><i style="width:${(cv * 100).toFixed(1)}%"></i></div><b>${pc(cv)}</b></div></td></tr>`;
+      };
+      const perLot = (f.per_lot || []).map(lotRow).join('');
+      const totalRow = `<tr class="total"><td>Портфель</td><td class="num">${fmt(m.opex, 2)}</td><td class="num">${fmt(m.anchor_cash, 2)}</td><td class="num">${fmt(m.commercial_cash, 2)}</td><td class="num neg">${fmt(s2.opex_gap, 2)}</td><td><div class="s2cov"><div class="mini${share < kmin ? ' warn' : ''}"><i style="width:${(share * 100).toFixed(1)}%"></i></div><b>${pc(share)}</b></div></td></tr>`;
+      const lots = `<div class="card"><h2>Где возникает разрыв: по лотам${help(`Разложение непокрытого OPEX по лотам портфеля: якорные и коммерческие поступления лота против его годового OPEX. «Не покрыто в S2» — OPEX лота минус его якорные поступления; сумма по лотам и есть непокрытый OPEX портфеля ${fmt(s2.opex_gap)} млн руб./год. Полоса справа — доля OPEX лота, закрытая якорными поступлениями; жёлтая, если она ниже порога K_cash ${kmin.toFixed(2)}. Значения — после применения режима доступа лота. Разрыв концентрируется в лотах, живущих на коммерческих поступлениях: именно они первыми требуют резервного финансирования.`)}</h2>
+<div class="tw wide"><table class="s2l"><tr><th>Лот и режим</th><th class="num">OPEX</th><th class="num">Якорные</th><th class="num">Коммерческие</th><th class="num">Не покрыто в S2</th><th>Покрытие якорными</th></tr>${perLot}${totalRow}</table></div>
+<div class="note">Все суммы — млн руб./год.</div></div>`;
+      return notFinal + head + cmpTable + lots;
     },
   };
   return pageHead('Почему FINAL', pill) + body[curTab('why')]();

@@ -15,8 +15,11 @@ import { buildScript } from './script.mjs';
 import { SCRIPT_CONTEXT } from './data.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SC = buildScript(SCRIPT_CONTEXT);
+const ALL = buildScript(SCRIPT_CONTEXT);
+const SC = ALL.filter((x) => !x.backup);
+const BACKUP = ALL.filter((x) => x.backup);
 const total = SC.reduce((a, s) => a + s.seconds, 0);
+const DEMO = 90;
 
 const INK = '13251C';
 const MUTED = '5C7267';
@@ -53,9 +56,9 @@ body.push(new Paragraph({
   spacing: { after: 80 },
   children: [new TextRun({ text: 'Космос как инфраструктура', font: 'Calibri', size: 44, bold: true, color: INK })],
 }));
-const mm = Math.floor(total / 60);
-const ss = total % 60;
-body.push(p(`Текст защиты к презентации kosmo-deck.pptx. Двенадцать слайдов, ${mm} минут ${ss} секунд без демонстрации инструмента.`, { color: MUTED, size: 21 }));
+const fmt = (v) => `${Math.floor(v / 60)}:${String(v % 60).padStart(2, '0')}`;
+body.push(p(`Текст защиты к презентации kosmo-deck.pptx. Регламент четыре минуты на всё: ${SC.length} слайдов за ${fmt(total)} и живая демонстрация примерно на ${fmt(DEMO)}.`, { color: MUTED, size: 21 }));
+body.push(p(`Ещё ${BACKUP.length} слайда спрятаны в файле и открываются только по вопросу жюри.`, { color: MUTED, size: 21 }));
 body.push(p('Команда «Молоток». Голубев Павел, Петр Кузнецов, Тимофей Максимов, Лихатин Андрей, Потапенко Филипп.', { color: MUTED, size: 21, after: 240 }));
 
 // Хронометраж
@@ -85,7 +88,7 @@ body.push(new Table({
       })),
     })),
     new TableRow({
-      children: ['', 'Вместе', `${total}`].map((t, i) => new TableCell({
+      children: ['', 'Слайды', `${total}`].map((t, i) => new TableCell({
         width: { size: W[i], type: WidthType.DXA },
         margins: { top: 70, bottom: 70, left: 120, right: 120 },
         children: [new Paragraph({ children: [new TextRun({ text: t, font: 'Calibri', size: 20, bold: true, color: INK })] })],
@@ -93,6 +96,8 @@ body.push(new Table({
     }),
   ],
 }));
+
+body.push(p(`Демонстрация инструмента: ещё около ${DEMO} секунд. Всего ${fmt(total + DEMO)} из четырёх минут.`, { color: MUTED, size: 20, after: 40 }));
 
 // Слайды
 for (const s of SC) {
@@ -124,6 +129,28 @@ for (const s of SC) {
   if (s.n < SC.length) body.push(rule());
 }
 
+// Запасные слайды
+body.push(new Paragraph({
+  heading: HeadingLevel.HEADING_1,
+  spacing: { before: 360, after: 60 },
+  children: [new TextRun({ text: 'Запасные слайды', font: 'Calibri', size: 28, bold: true, color: INK })],
+}));
+body.push(p('В показ не входят, в файле спрятаны. Открываем, если жюри спросит.', { color: MUTED, size: 20, after: 140 }));
+for (const s of BACKUP) {
+  body.push(new Paragraph({
+    spacing: { before: 160, after: 40 },
+    children: [new TextRun({ text: `Слайд ${s.n}. ${s.title}`, font: 'Calibri', size: 23, bold: true, color: INK })],
+  }));
+  for (const line of s.say) body.push(p(line, { size: 21 }));
+  for (const qa of s.questions) {
+    body.push(new Paragraph({
+      spacing: { after: 40, line: 300 },
+      children: [new TextRun({ text: qa.q, font: 'Calibri', size: 21, italics: true, color: GREEN })],
+    }));
+    body.push(p(qa.a, { size: 21, after: 120 }));
+  }
+}
+
 // Общие правила показа
 body.push(new Paragraph({
   heading: HeadingLevel.HEADING_1,
@@ -131,6 +158,7 @@ body.push(new Paragraph({
   children: [new TextRun({ text: 'Перед выступлением', font: 'Calibri', size: 28, bold: true, color: INK })],
 }));
 body.push(...bullets([
+  'Регламент четыре минуты: слайды примерно две с половиной минуты, остальное — демонстрация.',
   'Инструмент открыт заранее, сценарий в шапке — обычный бюджет, на экране наш портфель.',
   'Если сеть недоступна, показываем снимки экранов из app/screenshots.',
   'Числа на слайдах и в инструменте совпадают: и то и другое берётся из results.',
@@ -158,4 +186,4 @@ const doc = new Document({
 
 const out = path.join(HERE, 'speaker-notes.docx');
 fs.writeFileSync(out, await Packer.toBuffer(doc));
-console.log('готово:', out, `· слайдов ${SC.length}, ${total} секунд`);
+console.log('готово:', out, `· слайдов ${SC.length} на ${total} с, запасных ${BACKUP.length}`);

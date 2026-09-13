@@ -1,16 +1,24 @@
 # Презентация защиты
 
-Двенадцать слайдов для защиты Кейса 02 и отдельный текст выступления.
-Последний слайд — только QR на инструмент.
+Защита Кейса 02: семь слайдов на показ и отдельный текст выступления.
+Регламент четыре минуты на всё, поэтому слайды занимают около 2:30, остальное —
+живая демонстрация инструмента. Последний слайд объявляет демонстрацию и держит
+крупный QR.
+
+Ещё четыре слайда лежат в файле спрятанными (`show="0"`): инструмент, девять
+условий кейса, договорная схема с рисками и тиражирование. В показ они не
+входят и открываются только в ответ на вопрос жюри.
 
 ## Файлы
 
 - `kosmo-deck.pptx` — презентация, 16:9, светлая тема с зелёными градиентами, заметки докладчика
   вшиты в слайды.
-- `kosmo-deck.pdf` — та же презентация для показа без PowerPoint.
-- `renders/slide-01.png` … `slide-12.png` — снимки слайдов.
-- `speaker-notes.docx` — текст защиты: хронометраж, что говорить на каждом
-  слайде, цифры под рукой и ответы на вероятные вопросы.
+- `kosmo-deck.pdf` — только семь слайдов показа, для проектора без PowerPoint.
+- `renders/slide-01.png` … `slide-07.png` — снимки показа,
+  `renders/backup-08.png` … `backup-11.png` — запасные слайды.
+- `speaker-notes.docx` — текст защиты: хронометраж на четыре минуты, что
+  говорить на каждом слайде, цифры под рукой, ответы на вероятные вопросы и
+  отдельный раздел по запасным слайдам.
 - `build.mjs`, `theme.mjs`, `gradients.mjs`, `assets.mjs`, `data.mjs`,
   `script.mjs`, `notes.mjs`, `render.mjs` — сборка всего перечисленного.
 - `templates.mjs` и `drafts/` — черновики вариантов шаблона.
@@ -51,19 +59,20 @@
 ## Как пересобрать
 
 ```
-npm i pptxgenjs sharp react react-dom react-icons qrcode docx
+npm i pptxgenjs sharp react react-dom react-icons qrcode docx adm-zip
 node docs/presentation/build.mjs     # kosmo-deck.pptx
 node docs/presentation/notes.mjs     # speaker-notes.docx
 node docs/presentation/render.mjs    # kosmo-deck.pdf и renders/*.png
 ```
 
-Для `render.mjs` нужны LibreOffice и Python с `pymupdf`. Шрифт Montserrat
+Для `render.mjs` нужны LibreOffice, `adm-zip` и Python с `pymupdf`. Шрифт Montserrat
 должен стоять в системе, иначе LibreOffice подставит свой и ширина строк в
 PNG будет отличаться от настоящей.
 
 ## Правки
 
-- Текст выступления и вопросы жюри — `script.mjs`.
+- Текст выступления, хронометраж и вопросы жюри — `script.mjs`; слайд с
+  `backup: true` в показ не идёт.
 - Цвета, сетка, типовые элементы — `theme.mjs`; градиенты — `gradients.mjs`.
 - Состав и вёрстка слайдов — `build.mjs`.
 - Иконки (Tabler через `react-icons`) и QR-код — `assets.mjs`.

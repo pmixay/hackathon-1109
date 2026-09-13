@@ -1,7 +1,11 @@
 // Сборка презентации защиты: docs/presentation/kosmo-deck.pptx
 //
-// Цифры на слайдах читаются из results/ — единственного источника чисел проекта,
-// поэтому слайды и инструмент не могут разойтись.
+// Регламент четыре минуты на всё, поэтому в показ идут семь слайдов (около двух
+// с половиной минут), остальное время — живая демонстрация инструмента.
+// Ещё четыре слайда лежат в файле спрятанными: их открывают в ответ на вопрос.
+//
+// Цифры читаются из results/ — единственного источника чисел проекта, поэтому
+// слайды и инструмент не могут разойтись.
 //
 // Запуск:  node docs/presentation/build.mjs
 
@@ -54,6 +58,16 @@ const QR = await qr(SITE, { fg: '0B2A1C', bg: 'FFFFFF', px: 900 });
 const page = () => {
   const s = pres.addSlide();
   s.background = { color: C.page };
+  return s;
+};
+// Запасной слайд: в файле есть, в показе не участвует.
+const backupPage = () => {
+  const s = page();
+  s.hidden = true;
+  T(s, 'Запасной слайд', {
+    x: L.W - L.M - 2.4, y: 6.92, w: 2.4, h: 0.28,
+    fontSize: 10, color: '9BAAA2', align: 'right',
+  });
   return s;
 };
 
@@ -154,40 +168,10 @@ const page = () => {
   s.addNotes(notes(3));
 }
 
-// ─────────────────────────────────────────── 4. Инструмент
+// ─────────────────────────────────────────── 4. Выбор
 {
   const s = page();
-  head(s, { title: 'Портфель собирается за минуту', lead: 'Эксперт меняет состав и сразу видит новый результат.' });
-
-  const bars = [
-    { w: 7.4, g: G.pale, label: nf(ALL_COMBOS), cap: 'столько портфелей вообще можно собрать', color: C.deep },
-    { w: 4.3, g: G.mint, label: String(admitted), cap: 'столько остаётся, если держать условия кейса', color: C.white },
-    { w: 2.3, g: G.deep, label: '1', cap: 'тот, который мы предлагаем региону', color: C.white },
-  ];
-  bars.forEach((b, i) => {
-    const y = 2.16 + i * 1.16;
-    s.addImage({ data: b.g, x: L.M, y, w: b.w, h: 0.88 });
-    T(s, b.label, { x: L.M + 0.32, y, w: 2.6, h: 0.88, fontSize: 28, bold: true, color: b.color, valign: 'middle' });
-    T(s, b.cap, { x: L.M + b.w + 0.3, y, w: 4.6, h: 0.88, fontSize: 12.5, color: C.ink2, valign: 'middle' });
-    if (i < 2) flow(s, { x: L.M + 0.78, y: y + 0.92, d: 0.2, color: C.mint, dir: 'down' });
-  });
-
-  card(s, { x: L.M, y: 5.72, w: 11.893, h: 0.92 });
-  ['открыть портфель', 'переключить бюджет', 'заменить лот', 'увидеть, что сломалось', 'вернуть обратно'].forEach((t, i) => {
-    const x = L.M + 0.34 + i * 2.32;
-    T(s, String(i + 1), { x, y: 5.72, w: 0.26, h: 0.92, fontSize: 13, bold: true, color: C.mint, valign: 'middle' });
-    T(s, t, { x: x + 0.28, y: 5.72, w: 1.78, h: 0.92, fontSize: 11.5, color: C.ink2, valign: 'middle' });
-    if (i < 4) flow(s, { x: x + 2.06, y: 6.09, d: 0.16, color: 'BBD3C6' });
-  });
-
-  foot(s, { n: 4, total: TOTAL });
-  s.addNotes(notes(4));
-}
-
-// ─────────────────────────────────────────── 5. Выбор
-{
-  const s = page();
-  head(s, { title: 'Баланс важнее максимума', lead: 'Каждая точка — портфель, который проходит условия при урезанном бюджете.' });
+  head(s, { title: 'Баланс важнее максимума', lead: `Из ${nf(ALL_COMBOS)} портфелей условия проходят ${admitted}. Каждая точка — один из них.` });
 
   card(s, { x: L.M, y: 2.06, w: 8.1, h: 4.36 });
   const pts = ranking.map((r) => ({ key: r.variant, c0: Number(r.c0), vpub: Number(r.vpub), rank: Number(r.rank) }));
@@ -215,6 +199,7 @@ const page = () => {
     if (p.key === FINAL_KEY || p.rank === 1) continue;
     s.addShape('ellipse', { x: X(p.c0) - 0.045, y: Y(p.vpub) - 0.045, w: 0.09, h: 0.09, fill: { color: C.mint, transparency: 35 }, line: { color: C.mint, width: 0 } });
   }
+
   // Подписи ставим туда, где под ними нет точек: перебираем позиции вокруг
   // маркера и берём ту, что накрывает меньше всего облака.
   // Ширины замерены по Montserrat Bold 9,5 pt.
@@ -270,13 +255,163 @@ const page = () => {
     x: rx + 0.32, y: 5.62, w: 2.9, h: 0.62, fontSize: 11, color: C.ink2,
   });
 
+  foot(s, { n: 4, total: TOTAL });
+  s.addNotes(notes(4));
+}
+
+// ─────────────────────────────────────────── 5. Деньги
+{
+  const s = page();
+  head(s, { title: 'Деньги сходятся', lead: 'Два контура на старте, положительный баланс в год и запас при урезанном бюджете.' });
+
+  // Старт
+  card(s, { x: L.M, y: 2.06, w: 7.0, h: 2.5 });
+  T(s, 'Старт, млн ₽', { x: L.M + 0.38, y: 2.3, w: 5, h: 0.3, fontSize: 12, color: C.ink2 });
+  const sw = 6.24, sy = 2.7, sh = 0.9;
+  const wPub = sw * (publicC0 / m.c0) - 0.04;
+  s.addImage({ data: G.deep, x: L.M + 0.38, y: sy, w: wPub, h: sh });
+  s.addImage({ data: G.mint, x: L.M + 0.38 + wPub + 0.06, y: sy, w: sw - wPub - 0.06, h: sh });
+  T(s, nf(publicC0), { x: L.M + 0.66, y: sy, w: 1.6, h: sh, fontSize: 20, bold: true, color: C.white, valign: 'middle' });
+  T(s, nf(privateC0), { x: L.M + 0.72 + wPub, y: sy, w: 1.6, h: sh, fontSize: 20, bold: true, color: C.white, valign: 'middle' });
+  [['Бюджет за FIRE и ENV', L.M + 0.38], ['Частный партнёр за AGRI и TRANS', L.M + 0.44 + wPub]].forEach(([t, x]) => {
+    T(s, t, { x, y: sy + sh + 0.2, w: 3.4, h: 0.3, fontSize: 12, color: C.ink2 });
+  });
+
+  // Год
+  card(s, { x: 8.06, y: 2.06, w: 4.55, h: 2.5 });
+  T(s, 'Год, млн ₽', { x: 8.44, y: 2.3, w: 3, h: 0.3, fontSize: 12, color: C.ink2 });
+  const bh = 1.14, by = 3.0, maxV = Math.max(m.cash, m.opex);
+  [[m.cash, 'поступления', G.deep], [m.opex, 'содержание', G.mint]].forEach(([v, t, g], i) => {
+    const h = (v / maxV) * bh, x = 8.44 + i * 1.4;
+    s.addImage({ data: g, x, y: by + bh - h, w: 1.14, h });
+    T(s, nf(v, v % 1 ? 1 : 0), { x: x - 0.12, y: by + bh - h - 0.38, w: 1.38, h: 0.34, fontSize: 15, bold: true, color: C.ink, align: 'center' });
+    T(s, t, { x: x - 0.22, y: by + bh + 0.1, w: 1.58, h: 0.3, fontSize: 10.5, color: C.ink2, align: 'center' });
+  });
+  s.addImage({ data: G.tile, x: 11.24, y: 2.94, w: 1.1, h: 1.1 });
+  T(s, plus(m.cash - m.opex, 1), { x: 11.24, y: 3.24, w: 1.1, h: 0.44, fontSize: 15, bold: true, color: C.white, align: 'center' });
+
+  // Запас при урезанном бюджете
+  card(s, { x: L.M, y: 4.78, w: 11.893, h: 1.74 });
+  T(s, 'Если бюджет урежут', { x: L.M + 0.4, y: 4.98, w: 5, h: 0.32, fontSize: 14, bold: true, color: C.ink });
+  const gx = L.M + 0.4, gw = 11.09, gy = 5.44, gh = 0.56;
+  const scale = (v) => (v / Number(c0Base.threshold)) * gw;
+  s.addShape('roundRect', { x: gx, y: gy, w: gw, h: gh, rectRadius: 0.08, fill: { color: 'EDF3EF' }, line: { color: 'E4EDE7', width: 1 } });
+  s.addImage({ data: G.deep, x: gx, y: gy, w: scale(m.c0), h: gh });
+  s.addImage({ data: G.brass, x: gx + scale(m.c0) + 0.02, y: gy, w: scale(c0Stress.margin) - 0.02, h: gh });
+  T(s, `старт ${nf(m.c0)}`, { x: gx + 0.26, y: gy, w: 2.6, h: gh, fontSize: 14, bold: true, color: C.white, valign: 'middle' });
+  // Метки пределов правым краем к своей риске. Ширины замерены по Montserrat
+  // Bold 10 pt, чтобы подписи не наезжали друг на друга: риски всего в дюйме.
+  [
+    [Number(c0Stress.threshold), `урезанный бюджет ${nf(c0Stress.threshold)}`, 1.9, C.crit],
+    [Number(c0Base.threshold), nf(c0Base.threshold), 0.42, '8D9E95'],
+  ].forEach(([v, label, lw, color]) => {
+    s.addShape('rect', { x: gx + scale(v), y: gy - 0.16, w: 0.014, h: gh + 0.32, fill: { color } });
+    T(s, label, { x: gx + scale(v) - lw - 0.04, y: gy - 0.44, w: lw, h: 0.24, fontSize: 10, bold: true, color, align: 'right' });
+  });
+  T(s, `запас ${nf(c0Stress.margin)} млн ₽`, {
+    x: gx, y: gy + gh + 0.14, w: 3, h: 0.26, fontSize: 11, bold: true, color: C.brass,
+  });
+  T(s, 'Без коммерческой выручки не хватит 123 млн ₽ в год, покрывать придётся заказчику.', {
+    x: gx + 3.1, y: gy + gh + 0.14, w: 8, h: 0.26, fontSize: 11, color: C.ink2, align: 'right',
+  });
+
   foot(s, { n: 5, total: TOTAL });
   s.addNotes(notes(5));
 }
 
-// ─────────────────────────────────────────── 6. Условия
+// ─────────────────────────────────────────── 6. План
 {
   const s = page();
+  head(s, { title: 'Пять шагов до 2033 года', lead: 'У каждого шага есть результат, ответственный и признак завершения.' });
+
+  const stages = [
+    { y: '2027, первое полугодие', t: 'Заказчики и договоры', o: 'заказчик', ic: I.flag },
+    { y: '2027–2028', t: 'Пилоты по пожарам и экологии', o: 'оператор', ic: I.target },
+    { y: '2028, второе полугодие', t: 'Разбор пилотов и обновление ядра', o: 'оператор', ic: I.settings },
+    { y: '2029–2030', t: 'Запуск полей и транспорта', o: 'частный партнёр', ic: I.rocket },
+    { y: '2031–2033', t: 'Тираж в новые регионы', o: 'заказчик', ic: I.copy },
+  ];
+  const cw = 2.26;
+  s.addShape('rect', { x: L.M + 0.4, y: 3.32, w: 11.893 - 0.8, h: 0.012, fill: { color: 'DCE7E0' } });
+  stages.forEach((st, i) => {
+    const x = L.M + i * (cw + 0.19);
+    T(s, st.y, { x, y: 2.36, w: cw, h: 0.52, fontSize: 11, bold: true, color: C.brand, align: 'center' });
+    s.addShape('ellipse', { x: x + cw / 2 - 0.25, y: 3.07, w: 0.5, h: 0.5, fill: { color: C.white }, line: { color: C.mint, width: 1.5 } });
+    T(s, String(i + 1), { x: x + cw / 2 - 0.25, y: 3.07, w: 0.5, h: 0.5, fontSize: 12.5, bold: true, color: C.brand, align: 'center', valign: 'middle' });
+    card(s, { x, y: 3.84, w: cw, h: 1.96 });
+    s.addImage({ data: st.ic, x: x + cw / 2 - 0.15, y: 4.1, w: 0.3, h: 0.3 });
+    T(s, st.t, { x: x + 0.16, y: 4.56, w: cw - 0.32, h: 0.78, fontSize: 12, bold: true, color: C.ink, align: 'center' });
+    T(s, st.o, { x: x + 0.16, y: 5.38, w: cw - 0.32, h: 0.28, fontSize: 10.5, color: C.ink2, align: 'center' });
+  });
+
+  card(s, { x: L.M, y: 5.98, w: 11.893, h: 0.72 });
+  [
+    ['Оператор один', I.settings],
+    ['Поставщика можно заменить', I.swap],
+    ['Ядро переносится в новый регион', I.copy],
+  ].forEach(([t, ic], i) => {
+    const x = L.M + 0.42 + i * 3.9;
+    s.addImage({ data: ic, x, y: 6.22, w: 0.24, h: 0.24 });
+    T(s, t, { x: x + 0.34, y: 5.98, w: 3.4, h: 0.72, fontSize: 12, color: C.ink2, valign: 'middle' });
+  });
+
+  foot(s, { n: 6, total: TOTAL });
+  s.addNotes(notes(6));
+}
+
+// ─────────────────────────────────────────── 7. Демонстрация
+{
+  const s = page();
+  s.addImage({ data: G.final, x: 0, y: 0, w: L.W, h: L.H });
+  T(s, 'Дальше — живая демонстрация', {
+    x: 0, y: 1.0, w: L.W, h: 0.9, fontSize: 44, bold: true, color: C.ink, align: 'center',
+  });
+  T(s, 'Соберём портфель, сломаем его заменой лота и вернём обратно.', {
+    x: 0, y: 1.92, w: L.W, h: 0.4, fontSize: 16, color: C.ink2, align: 'center',
+  });
+  s.addShape('roundRect', {
+    x: 4.72, y: 2.62, w: 3.9, h: 3.9, rectRadius: 0.26,
+    fill: { color: C.white }, line: { color: C.rule, width: 1 }, shadow: shadow(),
+  });
+  s.addImage({ data: QR, x: 5.03, y: 2.93, w: 3.28, h: 3.28 });
+  T(s, SITE.replace('https://', ''), {
+    x: 0, y: 6.68, w: L.W, h: 0.44, fontSize: 20, bold: true, color: C.brand, align: 'center',
+  });
+  s.addNotes(notes(7));
+}
+
+// ─────────────────────────────────────────── 8. Запасной: инструмент
+{
+  const s = backupPage();
+  head(s, { title: 'Портфель собирается за минуту', lead: 'Эксперт меняет состав и сразу видит новый результат.' });
+
+  const bars = [
+    { w: 7.4, g: G.pale, label: nf(ALL_COMBOS), cap: 'столько портфелей вообще можно собрать', color: C.deep },
+    { w: 4.3, g: G.mint, label: String(admitted), cap: 'столько остаётся, если держать условия кейса', color: C.white },
+    { w: 2.3, g: G.deep, label: '1', cap: 'тот, который мы предлагаем региону', color: C.white },
+  ];
+  bars.forEach((b, i) => {
+    const y = 2.16 + i * 1.16;
+    s.addImage({ data: b.g, x: L.M, y, w: b.w, h: 0.88 });
+    T(s, b.label, { x: L.M + 0.32, y, w: 2.6, h: 0.88, fontSize: 28, bold: true, color: b.color, valign: 'middle' });
+    T(s, b.cap, { x: L.M + b.w + 0.3, y, w: 4.6, h: 0.88, fontSize: 12.5, color: C.ink2, valign: 'middle' });
+    if (i < 2) flow(s, { x: L.M + 0.78, y: y + 0.92, d: 0.2, color: C.mint, dir: 'down' });
+  });
+
+  card(s, { x: L.M, y: 5.72, w: 11.893, h: 0.92 });
+  ['открыть портфель', 'переключить бюджет', 'заменить лот', 'увидеть, что сломалось', 'вернуть обратно'].forEach((t, i) => {
+    const x = L.M + 0.34 + i * 2.32;
+    T(s, String(i + 1), { x, y: 5.72, w: 0.26, h: 0.92, fontSize: 13, bold: true, color: C.mint, valign: 'middle' });
+    T(s, t, { x: x + 0.28, y: 5.72, w: 1.78, h: 0.92, fontSize: 11.5, color: C.ink2, valign: 'middle' });
+    if (i < 4) flow(s, { x: x + 2.06, y: 6.09, d: 0.16, color: 'BBD3C6' });
+  });
+
+  s.addNotes(notes(8));
+}
+
+// ─────────────────────────────────────────── 9. Запасной: условия
+{
+  const s = backupPage();
   head(s, { title: 'Девять условий кейса', lead: 'Инструмент показывает по каждому факт, предел и остаток.' });
 
   const labels = {
@@ -321,98 +456,12 @@ const page = () => {
     x: L.M + 0.28, y: 6.34, w: 6.5, h: 0.54, fontSize: 12, bold: true, color: C.deep, valign: 'middle',
   });
 
-  foot(s, { n: 6, total: TOTAL });
-  s.addNotes(notes(6));
+  s.addNotes(notes(9));
 }
 
-// ─────────────────────────────────────────── 7. Деньги
+// ─────────────────────────────────────────── 10. Запасной: договорная схема
 {
-  const s = page();
-  head(s, { title: 'Кто платит', lead: 'Два контура на старте, положительный баланс в год.' });
-
-  card(s, { x: L.M, y: 2.06, w: 7.0, h: 2.6 });
-  T(s, 'Старт, млн ₽', { x: L.M + 0.38, y: 2.32, w: 5, h: 0.3, fontSize: 12, color: C.ink2 });
-  const sw = 6.24, sy = 2.76, sh = 0.94;
-  const wPub = sw * (publicC0 / m.c0) - 0.04;
-  s.addImage({ data: G.deep, x: L.M + 0.38, y: sy, w: wPub, h: sh });
-  s.addImage({ data: G.mint, x: L.M + 0.38 + wPub + 0.06, y: sy, w: sw - wPub - 0.06, h: sh });
-  T(s, nf(publicC0), { x: L.M + 0.66, y: sy, w: 1.6, h: sh, fontSize: 20, bold: true, color: C.white, valign: 'middle' });
-  T(s, nf(privateC0), { x: L.M + 0.72 + wPub, y: sy, w: 1.6, h: sh, fontSize: 20, bold: true, color: C.white, valign: 'middle' });
-  [['Бюджет за FIRE и ENV', L.M + 0.38], ['Частный партнёр за AGRI и TRANS', L.M + 0.44 + wPub]].forEach(([t, x]) => {
-    T(s, t, { x, y: sy + sh + 0.24, w: 3.4, h: 0.3, fontSize: 12, color: C.ink2 });
-  });
-
-  card(s, { x: 8.06, y: 2.06, w: 4.55, h: 2.6 });
-  T(s, 'Год, млн ₽', { x: 8.44, y: 2.32, w: 3, h: 0.3, fontSize: 12, color: C.ink2 });
-  const bh = 1.2, by = 3.06, maxV = Math.max(m.cash, m.opex);
-  [[m.cash, 'поступления', G.deep], [m.opex, 'содержание', G.mint]].forEach(([v, t, g], i) => {
-    const h = (v / maxV) * bh, x = 8.44 + i * 1.4;
-    s.addImage({ data: g, x, y: by + bh - h, w: 1.14, h });
-    T(s, nf(v, v % 1 ? 1 : 0), { x: x - 0.12, y: by + bh - h - 0.4, w: 1.38, h: 0.36, fontSize: 15, bold: true, color: C.ink, align: 'center' });
-    T(s, t, { x: x - 0.22, y: by + bh + 0.12, w: 1.58, h: 0.3, fontSize: 10.5, color: C.ink2, align: 'center' });
-  });
-  s.addImage({ data: G.tile, x: 11.24, y: 3.0, w: 1.14, h: 1.14 });
-  T(s, plus(m.cash - m.opex, 1), { x: 11.24, y: 3.3, w: 1.14, h: 0.44, fontSize: 15, bold: true, color: C.white, align: 'center' });
-
-  card(s, { x: L.M, y: 4.96, w: 11.893, h: 1.34 });
-  [
-    ['10 лет', 'срок партнёрства'],
-    ['2027–2033', 'горизонт расчёта'],
-    [nf(m.kcash, 2), 'поступления к содержанию'],
-  ].forEach(([v, lab], i) => {
-    const x = L.M + 0.42 + i * 3.9;
-    T(s, v, { x, y: 5.2, w: 3.4, h: 0.44, fontSize: 21, bold: true, color: C.brand });
-    T(s, lab, { x, y: 5.68, w: 3.4, h: 0.3, fontSize: 12, color: C.ink2 });
-  });
-  T(s, 'Коммерческая часть пока гипотеза, её проверяют пилот и тарифный тест.', {
-    x: L.M, y: 6.46, w: 11.893, h: 0.3, fontSize: 11.5, color: C.ink2,
-  });
-
-  foot(s, { n: 7, total: TOTAL });
-  s.addNotes(notes(7));
-}
-
-// ─────────────────────────────────────────── 8. Устойчивость
-{
-  const s = page();
-  head(s, { title: 'Бюджет урезали. Портфель держится.', lead: 'Падает предел затрат, стоимость сервисов остаётся прежней.' });
-
-  card(s, { x: L.M, y: 2.14, w: 11.893, h: 2.1 });
-  const gx = L.M + 0.4, gw = 11.09, gy = 2.86, gh = 0.82;
-  const scale = (v) => (v / Number(c0Base.threshold)) * gw;
-  s.addShape('roundRect', { x: gx, y: gy, w: gw, h: gh, rectRadius: 0.1, fill: { color: 'EDF3EF' }, line: { color: 'E4EDE7', width: 1 } });
-  s.addImage({ data: G.deep, x: gx, y: gy, w: scale(m.c0), h: gh });
-  s.addImage({ data: G.brass, x: gx + scale(m.c0) + 0.02, y: gy, w: scale(c0Stress.margin) - 0.02, h: gh });
-  T(s, `наш старт ${nf(m.c0)}`, { x: gx + 0.3, y: gy, w: 3.4, h: gh, fontSize: 18, bold: true, color: C.white, valign: 'middle' });
-
-  const tick = (v, label, color, labelY) => {
-    s.addShape('rect', { x: gx + scale(v), y: gy - 0.22, w: 0.014, h: gh + 0.44, fill: { color } });
-    T(s, label, { x: gx + scale(v) - 2.82, y: labelY, w: 2.72, h: 0.26, fontSize: 10.5, bold: true, color, align: 'right' });
-  };
-  tick(Number(c0Base.threshold), `обычный бюджет ${nf(c0Base.threshold)}`, '8D9E95', gy - 0.58);
-  tick(Number(c0Stress.threshold), `урезанный бюджет ${nf(c0Stress.threshold)}`, C.crit, gy + gh + 0.26);
-  T(s, `запас ${nf(c0Stress.margin)} млн ₽ до урезанного предела`, {
-    x: gx, y: gy + gh + 0.26, w: 4.2, h: 0.26, fontSize: 10.5, bold: true, color: C.brass,
-  });
-
-  [
-    { ic: I.shield, t: 'Состав сохраняем', b: 'Не нужно заново согласовывать пользователей, доступ и договоры. Портфель остаётся тем же, просто с меньшим запасом.', color: C.brand },
-    { ic: I.alert, t: 'Если спрос не придёт', b: 'Мы посчитали и такой вариант: без коммерческой выручки содержание недофинансировано на 123 млн ₽ в год, покрывать это придётся заказчику.', color: C.brass },
-  ].forEach((cd, i) => {
-    const x = L.M + i * 6.05;
-    card(s, { x, y: 4.52, w: 5.84, h: 1.86 });
-    badge(s, { x: x + 0.32, y: 4.8, d: 0.66, img: cd.ic, pad: 0.16, line: i ? 'E3CFA6' : 'C8E5D5' });
-    T(s, cd.t, { x: x + 1.12, y: 4.84, w: 4.4, h: 0.32, fontSize: 14, bold: true, color: cd.color });
-    T(s, cd.b, { x: x + 1.12, y: 5.2, w: 4.5, h: 1.0, fontSize: 11.5, color: C.ink2 });
-  });
-
-  foot(s, { n: 8, total: TOTAL });
-  s.addNotes(notes(8));
-}
-
-// ─────────────────────────────────────────── 9. Организация
-{
-  const s = page();
+  const s = backupPage();
   head(s, { title: 'Кто за что отвечает', lead: 'Заказчик держит стандарты и данные, конкуренция сохраняется.' });
 
   const chain = [
@@ -447,13 +496,12 @@ const page = () => {
     });
   });
 
-  foot(s, { n: 9, total: TOTAL });
-  s.addNotes(notes(9));
+  s.addNotes(notes(10));
 }
 
-// ─────────────────────────────────────────── 10. Тиражирование
+// ─────────────────────────────────────────── 11. Запасной: тиражирование
 {
-  const s = page();
+  const s = backupPage();
   head(s, { title: 'Тираж без переделки', lead: 'Следующий регион получает готовую основу.' });
 
   [
@@ -477,63 +525,12 @@ const page = () => {
     if (i < 2) flow(s, { x: x + 3.74, y: 5.88, d: 0.2 });
   });
 
-  foot(s, { n: 10, total: TOTAL });
-  s.addNotes(notes(10));
-}
-
-// ─────────────────────────────────────────── 11. План
-{
-  const s = page();
-  head(s, { title: 'Пять шагов до 2033 года', lead: 'У каждого шага есть результат, ответственный и признак завершения.' });
-
-  const stages = [
-    { y: '2027, первое полугодие', t: 'Заказчики и договоры', o: 'заказчик', ic: I.flag },
-    { y: '2027–2028', t: 'Пилоты по пожарам и экологии', o: 'оператор', ic: I.target },
-    { y: '2028, второе полугодие', t: 'Разбор пилотов и обновление ядра', o: 'оператор', ic: I.settings },
-    { y: '2029–2030', t: 'Запуск полей и транспорта', o: 'частный партнёр', ic: I.rocket },
-    { y: '2031–2033', t: 'Тираж в новые регионы', o: 'заказчик', ic: I.copy },
-  ];
-  const cw = 2.26;
-  s.addShape('rect', { x: L.M + 0.4, y: 3.32, w: 11.893 - 0.8, h: 0.012, fill: { color: 'DCE7E0' } });
-  stages.forEach((st, i) => {
-    const x = L.M + i * (cw + 0.19);
-    T(s, st.y, { x, y: 2.36, w: cw, h: 0.52, fontSize: 11, bold: true, color: C.brand, align: 'center' });
-    s.addShape('ellipse', { x: x + cw / 2 - 0.25, y: 3.07, w: 0.5, h: 0.5, fill: { color: C.white }, line: { color: C.mint, width: 1.5 } });
-    T(s, String(i + 1), { x: x + cw / 2 - 0.25, y: 3.07, w: 0.5, h: 0.5, fontSize: 12.5, bold: true, color: C.brand, align: 'center', valign: 'middle' });
-    card(s, { x, y: 3.84, w: cw, h: 1.96 });
-    s.addImage({ data: st.ic, x: x + cw / 2 - 0.15, y: 4.1, w: 0.3, h: 0.3 });
-    T(s, st.t, { x: x + 0.16, y: 4.56, w: cw - 0.32, h: 0.78, fontSize: 12, bold: true, color: C.ink, align: 'center' });
-    T(s, st.o, { x: x + 0.16, y: 5.38, w: cw - 0.32, h: 0.28, fontSize: 10.5, color: C.ink2, align: 'center' });
-  });
-
-  s.addImage({ data: G.mark, x: L.M, y: 6.06, w: 7.6, h: 0.56 });
-  T(s, 'Шаг закрывается принятыми KPI и подписанной приёмкой', {
-    x: L.M + 0.28, y: 6.06, w: 7.2, h: 0.56, fontSize: 12.5, bold: true, color: C.deep, valign: 'middle',
-  });
-
-  foot(s, { n: 11, total: TOTAL });
   s.addNotes(notes(11));
-}
-
-// ─────────────────────────────────────────── 12. QR
-{
-  const s = page();
-  s.addImage({ data: G.final, x: 0, y: 0, w: L.W, h: L.H });
-  T(s, 'Попробуйте сами', {
-    x: 0, y: 0.92, w: L.W, h: 0.9, fontSize: 46, bold: true, color: C.ink, align: 'center',
-  });
-  s.addShape('roundRect', {
-    x: 4.52, y: 2.16, w: 4.3, h: 4.3, rectRadius: 0.26,
-    fill: { color: C.white }, line: { color: C.rule, width: 1 }, shadow: shadow(),
-  });
-  s.addImage({ data: QR, x: 4.87, y: 2.51, w: 3.6, h: 3.6 });
-  T(s, SITE.replace('https://', ''), {
-    x: 0, y: 6.68, w: L.W, h: 0.44, fontSize: 22, bold: true, color: C.brand, align: 'center',
-  });
-  s.addNotes(notes(12));
 }
 
 const out = path.join(HERE, 'kosmo-deck.pptx');
 await pres.writeFile({ fileName: out });
+const shown = SC.filter((x) => !x.backup);
+const secs = shown.reduce((a, x) => a + x.seconds, 0);
 console.log('готово:', out);
-console.log(`слайдов ${TOTAL}, старт ${m.c0}, польза ${m.vpub}, поступления ${m.cash}, запас ${c0Stress.margin}, допустимых ${admitted}, место ${rankRow.rank}`);
+console.log(`показываем ${shown.length} слайдов (${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}), запасных ${SC.length - shown.length}`);

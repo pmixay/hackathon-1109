@@ -77,7 +77,7 @@ const tag = (t, cls = '') => `<span class="tag${cls ? ' ' + cls : ''}">${esc(t)}
 const finBadge = () => `<span class="fin">${ICON.tick}FINAL</span>`;
 const isFinalId = (id) => id === state.data?.final;
 const foldOpen = (name) => !!state.fold[name];
-const foldT = (name, what) => `<span class="fold-t" role="button" tabindex="0" data-fold="${name}" aria-expanded="${foldOpen(name)}" aria-controls="fold-${name}" aria-label="${foldOpen(name) ? 'Свернуть' : 'Развернуть'}: ${esc(what)}">${foldOpen(name) ? 'Свернуть' : 'Развернуть'} ${ICON.chev}</span>`;
+const foldT = (name, what, open = 'Свернуть', closed = 'Развернуть') => `<span class="fold-t" role="button" tabindex="0" data-fold="${name}" data-open="${esc(open)}" data-closed="${esc(closed)}" aria-expanded="${foldOpen(name)}" aria-controls="fold-${name}" aria-label="${foldOpen(name) ? esc(open) : esc(closed)}: ${esc(what)}">${foldOpen(name) ? esc(open) : esc(closed)} ${ICON.chev}</span>`;
 const more = (tab, label, page = null) => `<a class="more" role="link" tabindex="0" data-tab="${tab}"${page ? ` data-page="${page}"` : ''}>${label} ${ICON.arrow}</a>`;
 
 // localStorage может быть недоступен (приватный режим, запрет cookies) — интерфейс работает и без памяти между сессиями
@@ -101,8 +101,8 @@ const state = {
   theme: document.documentElement.dataset.theme || 'light',
   dataset: null,
   gatesFilter: store.get('kp.gates') === '1',   // проверки команды S2 как фильтр ранжирования (только для исследования)
-  // складные блоки: карточки лотов на обзоре и таблица показателей; по умолчанию свёрнуты
-  fold: { hero: store.get('kp.fold.hero') === '1', lots: store.get('kp.fold.lots') === '1' },
+  // складные карточки сервисов: ключ на лот, по умолчанию все свёрнуты
+  fold: Object.fromEntries((store.get('kp.fold') || '').split(',').filter(Boolean).map((k) => [k, true])),
 };
 const curTab = (page = state.page) => state.tab[page] || TABS[page][0][0];
 function parseHash() {
@@ -250,13 +250,7 @@ ${tile('Покрытие OPEX', fmt(m.kcash, 2), 'cash / OPEX', Math.min(1, cons
         const all = gatesBad.length === 0;
         return `<div class="sum-it"><div class="sum-h"><span class="circ${all ? '' : ' bad'}">${all ? ICON.check : ICON.x}</span><span class="t">Проверка команды S2 <span class="tag warn">диагностика</span></span><span class="n">${gates.length - gatesBad.length} из ${gates.length}</span></div><div class="sum-l">${gates.map((g) => `<span class="${g.ok ? '' : 'bad'}"><i></i>${esc(gateName(g))}${g.ok ? '' : ', ' + esc(gateFailText(g))}</span>`).join('')}</div></div>`;
       };
-      // Пять крупных карточек занимали половину первого экрана: по умолчанию они свёрнуты
-      // до строки «лот · режим · c0» с местом по баллу, разворачиваются кнопкой.
-      const heroSum = `<div class="fold-sum">${s.per_lot.map((r) => `<span class="fl"><b>${esc(r.lot)}</b><i>${esc(r.mode)}</i>${fmt(r.c0)}<small>c0</small></span>`).join('')}
-<span class="fl tt">Место<b>${s.rank ?? '—'}</b><em>из ${t.ranked}</em><b>${s.score.toFixed(2)}</b><em>балл</em></span>${more('decision', 'Почему FINAL', 'why')}</div>`;
-      return `<div class="card fold${foldOpen('hero') ? ' open' : ''}"><h2>${isFinal() ? 'Итоговый портфель' : 'Показанный портфель'} ${portfolioTag()}${foldT('hero', 'карточки лотов')}${help(helpHero)}</h2>
-${heroSum}
-<div class="fold-b" id="fold-hero"><div class="fold-in"><div class="hero">${lotCards}${score}</div></div></div></div>
+      return `<div class="card"><h2>${isFinal() ? 'Итоговый портфель' : 'Показанный портфель'} ${portfolioTag()}${help(helpHero)}</h2><div class="hero">${lotCards}${score}</div></div>
 ${tiles}
 <div class="card"><h2>Ограничения ${tag(sc)}${more('checks', 'Факт и пороги')}${help(helpChecks)}</h2><div class="sum">${grp('Состав портфеля', COMPOSITION)}${grp('Финансовые и качественные пороги', THRESHOLDS)}${grpGates()}</div></div>`;
     },
@@ -341,14 +335,19 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       const modesTxt = Object.entries(d.modes).map(([k, v]) => `<b>Режим ${k}:</b> k_c0 ${v.k_c0}, k_opex ${v.k_opex}, ценность ×${v.k_vpub}, якорные ×${v.k_anchor}, коммерческие ×${v.k_commercial}${v.public_core ? ', public core' : ''}`).join('. ');
       const helpLots = `c0, OPEX и cash — млн руб.; ценность — усл. млн руб./год; готовность, устойчивость и тираж — индексы 1–5 из данных кейса. Значения после применения режима: c0 и OPEX умножены на k_c0 и k_opex, ценность — на k_vpub, поступления = якорные × k_anchor + коммерческие × k_commercial. ${modesTxt}. t_rep — показатель воспроизводимости лота (коэффициент масштабируемости решения). В строке «Портфель» — суммы; для t_rep и индексов — средние.`;
       // карточки сервисов: название для интерфейса и тексты из app/config/lots_ui.csv (файл участника записки)
+      // Карточка сервиса складывается отдельно от соседей: свёрнутая показывает лот,
+      // режим, регион и пользователя, остальное открывается кнопкой «Подробнее».
       const svcCard = (r) => {
-        const L = d.lots[r.lot], c = L.card;
+        const L = d.lots[r.lot], c = L.card, key = `sv-${r.lot}`;
         const head = `<div class="sv-h"><div class="name"><span class="code">${esc(r.lot)}</span>, ${esc(L.name)}</div><span class="mode">${esc(r.mode)}${r.public_core ? ', public core' : ''}</span></div>`;
         if (!c) return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}</div><p class="muted">Карточка сервиса не подготовлена</p></div>`;
         const sameMode = !c.mode || c.mode === r.mode;
         const row = (k, v) => (v ? `<dt>${k}</dt><dd>${esc(v)}</dd>` : '');
         const access = sameMode ? row('Базовый доступ', c.access_base) + row('Дополнительно', c.access_extra) : `<dt>Доступ</dt><dd class="muted">описан для режима ${esc(c.mode)}, в комбинации — ${r.mode}</dd>`;
-        return `<div class="sv">${head}<div class="sv-r">${esc(L.region)}${c.user ? ', ' + esc(c.user) : ''}</div>${c.problem ? `<div class="sv-p"><b>Проблема:</b> ${esc(c.problem)}</div>` : ''}<p>${esc(c.description)}</p><dl>${access}${row('KPI', c.kpi)}${row('Эффект', c.effect)}${c.payer ? `<dt>Плательщик</dt><dd>${esc(c.payer)} <span class="hyp">предположение</span></dd>` : ''}${row('Ключевой риск', c.risk)}${row('При сбое', c.on_failure)}</dl></div>`;
+        const body = `${c.problem ? `<div class="sv-p"><b>Проблема:</b> ${esc(c.problem)}</div>` : ''}<p>${esc(c.description)}</p><dl>${access}${row('KPI', c.kpi)}${row('Эффект', c.effect)}${c.payer ? `<dt>Плательщик</dt><dd>${esc(c.payer)} <span class="hyp">предположение</span></dd>` : ''}${row('Ключевой риск', c.risk)}${row('При сбое', c.on_failure)}</dl>`;
+        return `<div class="sv fold${foldOpen(key) ? ' open' : ''}">${head}<div class="sv-r">${esc(L.region)}${c.user ? ', ' + esc(c.user) : ''}</div>
+<div class="fold-b" id="fold-${key}"><div class="fold-in"><div class="sv-body">${body}</div></div></div>
+${foldT(key, `карточка сервиса ${r.lot}`, 'Свернуть', 'Подробнее')}</div>`;
       };
       const helpSvc = `Что получает пользователь каждого лота: проблема, короткое описание, основной пользователь, базовый и дополнительный доступ, главный KPI, общественный эффект (что меняется в решениях пользователя; ущерб отдельно не заявляется), предполагаемый плательщик, ключевой риск, что показать при сбое. Плательщики — гипотезы команды, а не подтверждённые назначения. Правила доступа описаны для режима из карточки; если в комбинации режим другой, строки доступа не показываются.`;
       // тиражирование (П8): что переносится между регионами без изменений и что настраивается на месте —
@@ -361,16 +360,10 @@ ${bad.length ? `<ul class="res-f">${bad.map((r) => `<li>${esc(failText(r))}</li>
       };
       const rep = `<div class="card"><h2>Тиражирование: ядро и адаптация${help(helpRep)}</h2>
 <div class="tw"><table class="rep"><tr><th>Лот</th><th>Переносится без изменений</th><th>Настраивается в регионе</th></tr>${s.per_lot.map(repRow).join('')}</table></div></div>`;
-      // Таблица из десяти столбцов занимала весь экран: по умолчанию свёрнута до строки
-      // «лот · режим · c0» и итога, разворачивается по кнопке (класс на карточке, без перерисовки).
-      const sumLots = `<div class="fold-sum">${s.per_lot.map((r) => `<span class="fl"><b>${esc(r.lot)}</b><i>${esc(r.mode)}</i>${fmt(r.c0)}<small>c0</small></span>`).join('')}
-<span class="fl tt">Портфель${[['c0', fmt(m.c0)], ['OPEX', fmt(m.opex, 2)], ['ценность', fmt(m.vpub)], ['cash', fmt(m.cash, 2)]].map(([k, v]) => `<em>${k}</em><b>${v}</b>`).join('')}</span></div>`;
-      return `<div class="card fold${foldOpen('lots') ? ' open' : ''}"><h2>Лоты портфеля ${portfolioTag()}${foldT('lots', 'таблица всех показателей')}${help(helpLots)}</h2>
-${sumLots}
-<div class="fold-b" id="fold-lots"><div class="fold-in">
+      return `<div class="card"><h2>Лоты портфеля ${portfolioTag()}${help(helpLots)}</h2>
 <div class="tw wide"><table><tr><th>Лот</th><th>Режим</th><th class="num">c0</th><th class="num">OPEX</th><th class="num">Ценность</th><th class="num">Cash</th><th class="num">t_rep</th><th class="num">Готовность</th><th class="num">Устойчивость</th><th class="num">Тираж</th></tr>
 ${s.per_lot.map(lotRow).join('')}
-<tr class="total"><td>Портфель</td><td></td><td class="num">${fmt(m.c0)}</td><td class="num">${fmt(m.opex, 2)}</td><td class="num">${fmt(m.vpub)}</td><td class="num">${fmt(m.cash, 2)}</td><td class="num">${fmt(m.t_rep, 3)}</td><td class="num">${fmt(m.readiness, 2)}</td><td class="num">${fmt(m.resilience, 2)}</td><td class="num">${fmt(m.scale, 2)}</td></tr></table></div></div></div></div>
+<tr class="total"><td>Портфель</td><td></td><td class="num">${fmt(m.c0)}</td><td class="num">${fmt(m.opex, 2)}</td><td class="num">${fmt(m.vpub)}</td><td class="num">${fmt(m.cash, 2)}</td><td class="num">${fmt(m.t_rep, 3)}</td><td class="num">${fmt(m.readiness, 2)}</td><td class="num">${fmt(m.resilience, 2)}</td><td class="num">${fmt(m.scale, 2)}</td></tr></table></div></div>
 <div class="card"><h2>Сервисы портфеля${help(helpSvc)}</h2><div class="svc">${s.per_lot.map(svcCard).join('')}</div></div>${rep}`;
     },
   };
@@ -862,9 +855,10 @@ document.addEventListener('click', async (e) => {
     const name = fold.dataset.fold, card = fold.closest('.fold'), open = !card.classList.contains('open');
     card.classList.toggle('open', open);
     fold.setAttribute('aria-expanded', String(open));
-    fold.setAttribute('aria-label', `${open ? 'Свернуть' : 'Развернуть'}: ${fold.getAttribute('aria-label').split(': ').slice(1).join(': ')}`);
-    fold.firstChild.textContent = open ? 'Свернуть ' : 'Развернуть ';
-    state.fold[name] = open; store.set(`kp.fold.${name}`, open ? '1' : '0');
+    fold.setAttribute('aria-label', `${open ? fold.dataset.open : fold.dataset.closed}: ${fold.getAttribute('aria-label').split(': ').slice(1).join(': ')}`);
+    fold.firstChild.textContent = `${open ? fold.dataset.open : fold.dataset.closed} `;
+    state.fold[name] = open;
+    store.set('kp.fold', Object.keys(state.fold).filter((k) => state.fold[k]).join(','));
     return;
   }
   if (e.target.closest('#collapse')) { state.collapsed = !state.collapsed; store.set('kp.collapsed', state.collapsed ? '1' : '0'); $('#shell').classList.toggle('collapsed', state.collapsed); return; }

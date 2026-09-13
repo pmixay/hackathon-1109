@@ -16,6 +16,7 @@ import datetime as dt
 import hashlib
 import io
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -44,6 +45,8 @@ CONFIG_COMMON = [
     "opex_max_mrub_per_year", "vpub_min_mrub_per_year", "kcash_min", "t_rep_min",
 ]
 BOOL = {"true", "false"}
+# lot_id и mode_id попадают в id комбинации «LOT:MODE|…», в адреса и в разметку: только латиница, цифры, _ и -
+ID_RE = re.compile(r"[A-Za-z0-9_-]+")
 
 
 def sha(text: str) -> str:
@@ -59,9 +62,16 @@ def _is_number(s: str) -> bool:
 
 
 def _csv_rows(text: str):
+    text = text.lstrip("\ufeff")   # BOM из Excel/Блокнота — иначе первый столбец читается как «\ufefflot_id»
     rows = list(csv.DictReader(io.StringIO(text)))
     header = list(rows[0].keys()) if rows else next(csv.reader(io.StringIO(text)), [])
-    return header, rows
+    # лишние поля в строке DictReader кладёт под ключ None — это не столбец
+    return [h for h in header if h is not None], rows
+
+
+def _bad_ids(ids, what: str) -> list[str]:
+    bad = sorted({str(i) for i in ids if not ID_RE.fullmatch(str(i or ""))})
+    return [f"недопустимые {what}: {', '.join(repr(b) for b in bad)} — только латиница, цифры, _ и -"] if bad else []
 
 
 def validate_lots(text: str) -> dict:
@@ -79,6 +89,7 @@ def validate_lots(text: str) -> dict:
     dup = sorted({i for i in ids if ids.count(i) > 1})
     if dup:
         errors.append(f"повторяющиеся lot_id: {', '.join(dup)}")
+    errors += _bad_ids(ids, "lot_id")
     for r in rows:
         for c in LOT_NUMERIC:
             if c in header and not _is_number(r.get(c)):
@@ -98,6 +109,7 @@ def validate_modes(text: str) -> dict:
         errors.append(f"нет столбцов: {', '.join(missing)}")
     if not rows:
         errors.append("нет строк с режимами")
+    errors += _bad_ids([r.get("mode_id", "") for r in rows], "mode_id")
     for r in rows:
         for c in MODE_NUMERIC:
             if c in header and not _is_number(r.get(c)):
@@ -115,6 +127,8 @@ def validate_config(text: str) -> dict:
         cfg = json.loads(text)
     except json.JSONDecodeError as e:
         return {"ok": False, "errors": [f"не JSON: {e.msg} (строка {e.lineno})"], "warnings": [], "summary": {}}
+    if not isinstance(cfg, dict):
+        return {"ok": False, "errors": ["корень case_config.json должен быть объектом"], "warnings": [], "summary": {}}
     common = cfg.get("constraints_common")
     if not isinstance(common, dict):
         errors.append("нет объекта constraints_common")
@@ -156,7 +170,7 @@ def validate(files: dict[str, str]) -> dict:
 def store(files: dict[str, str], base_root: Path | None = None) -> Path:
     """Сохранить набор в раскладке организаторов; непереданные файлы взять из текущего активного набора."""
     base_root = base_root or active_root()
-    root = UPLOADS / dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    root = UPLOADS / dt.datetime.now().strftime("%Y%m%d-%H%M%S-%f")   # микросекунды: два набора в одну секунду не затирают друг друга
     for name, rel in FILES.items():
         target = root / rel
         target.parent.mkdir(parents=True, exist_ok=True)

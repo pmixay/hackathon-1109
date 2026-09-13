@@ -9,11 +9,12 @@ from kosmo import (
     load_selection_model,
     load_variants,
     parameter_sensitivity,
+    pareto_front,
     parse_selection_model,
     score_variants,
     weight_sensitivity,
 )
-from kosmo.selection import criterion_value, normalize, ranking_of
+from kosmo.selection import criterion_value, dominates, normalize, ranking_of
 
 
 @pytest.fixture(scope="module")
@@ -288,3 +289,40 @@ def test_gate_defaults_and_unknown_metric(evaluated):
     broken = parse_selection_model({"criteria": [{"key": "vpub", "direction": "max", "weight": 1}], "gates": [{"code": "x", "metric": "nope", "operator": "<=", "threshold": 1}]})
     with pytest.raises(AttributeError):
         score_variants(evaluated, broken)
+
+
+class _M:
+    """Минимальные метрики для проверки доминирования: важны только vpub, c0 и kcash."""
+
+    def __init__(self, vpub, c0, kcash):
+        self.vpub, self.c0, self.kcash = float(vpub), float(c0), float(kcash)
+
+
+def test_dominates_needs_no_worse_and_one_strictly_better():
+    base = _M(1000, 1100, 1.0)
+    assert dominates(_M(1100, 1100, 1.0), base) is True          # дороже не стало, ценность выше
+    assert dominates(_M(1000, 1050, 1.0), base) is True          # то же самое дешевле
+    assert dominates(_M(1000, 1100, 1.0), base) is False         # полностью совпадает — не доминирует
+    assert dominates(_M(1100, 1050, 0.9), base) is False         # выиграл по двум, проиграл по третьему
+    assert dominates(base, _M(1100, 1050, 1.2)) is False
+
+
+def test_pareto_front_keeps_only_undominated():
+    metrics = {
+        "лучший по ценности": _M(1300, 1150, 1.0),
+        "самый дешёвый": _M(1000, 1100, 1.0),
+        "хуже всех": _M(1000, 1150, 0.9),
+        "копия дешёвого": _M(1000, 1100, 1.0),
+    }
+    assert pareto_front(metrics) == ("копия дешёвого", "лучший по ценности", "самый дешёвый")
+    assert pareto_front({}) == ()
+    single = {"один": _M(1, 2, 3)}
+    assert pareto_front(single) == ("один",)
+
+
+def test_pareto_front_of_the_case_holds_final(case, evaluated, model):
+    feasible = {name: results[model.feasibility_scenario].metrics for name, results in evaluated.items() if admitted(results, model)}
+    front = pareto_front(feasible)
+    assert "FINAL" in front
+    for name in front:                                            # ни один вариант фронта не доминируется другим
+        assert not any(dominates(feasible[other], feasible[name]) for other in front if other != name)

@@ -7,7 +7,7 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
-from kosmo import Variant, export_bundle, load_portfolio, load_selection_model, load_team_card, load_variants
+from kosmo import Variant, export_bundle, load_portfolio, load_selection_model, load_team_card, load_variants, pareto_front
 from kosmo.variants import slug
 
 from . import evaluate as ev
@@ -30,6 +30,9 @@ UI_COLUMNS = {
     "Проблема": "problem",
     "Предполагаемый плательщик": "payer",
     "Ключевой риск": "risk",
+    "Повторно используемая часть": "core",
+    "Местная адаптация": "adaptation",
+    "Общественный эффект": "effect",
 }
 
 CONSTRAINT_KEYS = {
@@ -221,6 +224,22 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None, ga
     wanted = set(comparison) | {selected_id, default_id} | {a["id"] for a in actions} | {a["id"] for a in alternatives}
     combos = {cid: _combo_payload(records[cid], score, rank, float(case.constraints.kcash_min)) for cid in sorted(wanted)}
 
+    # Точки для графика «ценность против затрат»: все ранжируемые комбинации и отметка фронта Парето
+    # (недоминируемые по ценности, c0 и покрытию OPEX; отбор считает движок, интерфейс только рисует).
+    front = set(pareto_front({rec["id"]: rec["metrics"] for rec in admitted}))
+    frontier = [
+        {
+            "id": rec["id"],
+            "c0": rec["metrics"].c0,
+            "vpub": rec["metrics"].vpub,
+            "kcash": round(rec["metrics"].kcash, 4),
+            "score": round(score(rec), 4),
+            "rank": rank.get(rec["id"]),
+            "pareto": rec["id"] in front,
+        }
+        for rec in sorted(admitted, key=lambda rec: (rec["metrics"].c0, rec["id"]))
+    ]
+
     return {
         "meta": {
             "case_id": case.case_id,
@@ -250,6 +269,7 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None, ga
                 "stress_feasible": sum(1 for r in enumerated.values() if r["ok"]["STRESS"]),
                 "admitted": len(admitted),
                 "ranked": len(admitted),
+                "pareto": len(front),
             },
         },
         "lots": {
@@ -279,7 +299,8 @@ def build_dashboard(selected_id: str | None = None, root: Path | None = None, ga
         "final": default_id,                       # решение гейта (config/portfolio.json); selected может быть произвольным портфелем из конструктора
         "final_name": portfolio.name,
         "alternatives": alternatives,              # именованные варианты записки для экрана «Почему FINAL»
-        "why_final": _why_final(),                 # формулировки участника 3 из app/config/why_final.json
+        "why_final": _why_final(),                 # формулировки экрана «Почему FINAL» из app/config/why_final.json
+        "frontier": frontier,                      # точки графика «ценность против затрат» по всем ранжируемым комбинациям
         "suggestions": suggestions,
         "rejected": rejected_ids,
         "comparison": comparison,

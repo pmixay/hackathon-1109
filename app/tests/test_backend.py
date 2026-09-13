@@ -166,15 +166,32 @@ class Model(unittest.TestCase):
         self.assertEqual(d["meta"]["engine"]["name"], "kosmo")
         self.assertTrue(d["meta"]["engine"]["verified"])
         self.assertEqual(d["meta"]["engine"]["portfolio"], "FINAL")
-        self.assertEqual(d["meta"]["totals"], {"combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "admitted": 143, "ranked": 143})
+        self.assertEqual(d["meta"]["totals"], {"combinations": 5670, "base_feasible": 1031, "stress_feasible": 143, "admitted": 143, "ranked": 143, "pareto": 30})
         self.assertEqual(d["meta"]["constraints"]["opex_max_mrub_per_year"], 360.0)
         self.assertEqual(d["meta"]["dataset"]["source"], "организаторы")
         json.dumps(d, ensure_ascii=False)
+
+    def test_frontier_covers_every_ranked_combination(self):
+        d = payload.build_dashboard(SELECTED)
+        frontier = d["frontier"]
+        self.assertEqual(len(frontier), d["meta"]["totals"]["ranked"])
+        self.assertEqual(sorted(p["rank"] for p in frontier), list(range(1, len(frontier) + 1)))
+        self.assertEqual([p["c0"] for p in frontier], sorted(p["c0"] for p in frontier))   # точки идут по возрастанию затрат
+        self.assertEqual(sum(1 for p in frontier if p["pareto"]), d["meta"]["totals"]["pareto"])
+        final = next(p for p in frontier if p["id"] == d["final"])
+        self.assertTrue(final["pareto"])                                                   # FINAL на фронте Парето
+        self.assertEqual((final["c0"], final["vpub"], final["rank"]), (1140.0, 1289.0, 3))
+        for point in frontier:                                                             # те же числа, что у комбинации
+            combo = d["combinations"].get(point["id"])
+            if combo:
+                self.assertEqual((point["c0"], point["vpub"], point["score"], point["rank"]),
+                                 (combo["metrics"]["c0"], combo["metrics"]["vpub"], combo["score"], combo["rank"]))
 
     def test_gates_as_a_filter_is_an_explicit_switch(self):
         d = payload.build_dashboard(SELECTED, gates_filter=True)
         self.assertTrue(d["meta"]["gates_filter"])
         self.assertEqual(d["meta"]["totals"]["admitted"], 18)
+        self.assertEqual(len(d["frontier"]), 18)                       # график показывает то же множество, что и ранжирование
         self.assertEqual(d["combinations"][SELECTED]["rank"], 1)
         self.assertEqual(d["rejected"], ["FIRE:A|AGRI:C|TRANS:C|ENV:A", d["stress"]["failing"]])
         self.assertFalse(d["combinations"]["FIRE:A|AGRI:C|TRANS:C|ENV:A"]["admitted"])
@@ -385,6 +402,8 @@ class Payload2(unittest.TestCase):
         for lid in ("FIRE", "ENV", "AGRI", "TRANS"):
             card = self.d["lots"][lid]["card"]
             self.assertTrue(card["payer"] and card["risk"] and card["problem"], lid)
+            self.assertTrue(card["core"] and card["adaptation"], lid)   # блок «Тиражирование» (П8)
+            self.assertTrue(card["effect"], lid)                          # цепочка «проблема → KPI → эффект» (П1, П9)
 
 
 class EdgeCases(unittest.TestCase):
@@ -455,6 +474,37 @@ class EdgeCases(unittest.TestCase):
         self.assertTrue(any("STRESS" in e for e in rep["errors"]))
         cfg["scenarios"]["STRESS"] = {"c0_max_mrub": 1180}
         self.assertTrue(ingest.validate_config(json.dumps(cfg))["ok"])
+
+    # проверки загрузки не должны падать исключением ни на одном «структурно странном» файле (аудит 12.09)
+    def test_upload_validation_never_raises(self):
+        lots = (REPO / "data" / "lots.csv").read_text(encoding="utf-8")
+        header, first, *rest = lots.splitlines()
+        rep = ingest.validate_lots("\n".join([header, first + ",лишнее,поле", *rest]))   # строка длиннее заголовка
+        self.assertTrue(rep["ok"], rep)
+        rep = ingest.validate_lots("\ufeff" + lots)                                       # BOM из Excel
+        self.assertTrue(rep["ok"], rep)
+        for text in ("[]", "null", "1", '"x"'):
+            rep = ingest.validate_config(text)
+            self.assertFalse(rep["ok"])
+            self.assertIn("объектом", rep["errors"][0])
+
+    def test_upload_rejects_ids_that_break_combination_ids(self):
+        lots = (REPO / "data" / "lots.csv").read_text(encoding="utf-8")
+        for bad in ("FL|OOD", "FL:OOD", "FL<b>OOD", "FL OOD"):
+            rep = ingest.validate_lots(lots.replace("FLOOD", bad, 1))
+            self.assertFalse(rep["ok"], bad)
+            self.assertTrue(any("lot_id" in e and "латиница" in e for e in rep["errors"]), rep["errors"])
+        modes = (REPO / "data" / "access_modes.csv").read_text(encoding="utf-8")
+        rep = ingest.validate_modes(modes.replace("\nC,", "\nC:D,", 1))
+        self.assertFalse(rep["ok"])
+        self.assertTrue(any("mode_id" in e for e in rep["errors"]), rep["errors"])
+        self.assertTrue(ingest.validate_modes(modes)["ok"])
+
+    def test_parse_id_rejects_malformed_ids(self):
+        self.assertEqual(model.parse_id("FIRE:A|ENV:A"), [("FIRE", "A"), ("ENV", "A")])
+        for cid in ("bogus", "FIRE:A|ENV:A|", "FIRE:A:B|ENV:A", ":A|ENV:A", ""):
+            with self.assertRaisesRegex(ValueError, "неверный id комбинации"):
+                model.parse_id(cid)
 
 
 if __name__ == "__main__":

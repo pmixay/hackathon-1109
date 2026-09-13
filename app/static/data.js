@@ -15,7 +15,7 @@ const upload = { files: {}, report: {}, parsed: {}, busy: false };
 function parseCsv(text) {
   const rows = [];
   let row = [], field = '', q = false;
-  const s = text.replace(/\r\n?/g, '\n');
+  const s = text.replace(/^\ufeff/, '').replace(/\r\n?/g, '\n');   // BOM из Excel — не часть первого столбца
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (q) {
@@ -31,6 +31,9 @@ function parseCsv(text) {
   return { header, rows: recs };
 }
 const isNum = (v) => v !== '' && v !== undefined && !Number.isNaN(Number(v));
+// lot_id и mode_id входят в id комбинации «LOT:MODE|…» и в разметку: только латиница, цифры, _ и - (зеркало backend/ingest.py)
+const ID_RE = /^[A-Za-z0-9_-]+$/;
+const badIds = (ids, what) => { const bad = [...new Set(ids.filter((v) => !ID_RE.test(String(v ?? ''))))]; return bad.length ? [`недопустимые ${what}: ${bad.map((b) => `'${b}'`).join(', ')} — только латиница, цифры, _ и -`] : []; };
 const isBool = (v) => ['true', 'false'].includes(String(v).toLowerCase());
 
 function validateLots(text) {
@@ -43,6 +46,7 @@ function validateLots(text) {
   const ids = rows.map((r) => r.lot_id);
   const dup = [...new Set(ids.filter((v, i) => ids.indexOf(v) !== i))];
   if (dup.length) errors.push('повторяющиеся lot_id: ' + dup.join(', '));
+  errors.push(...badIds(ids, 'lot_id'));
   for (const r of rows) {
     for (const c of LOT_NUMERIC) if (header.includes(c) && !isNum(r[c])) errors.push(`${r.lot_id || '?'}: ${c} не число (${r[c]})`);
     if (header.includes('federal') && !isBool(r.federal)) errors.push(`${r.lot_id || '?'}: federal должен быть true/false`);
@@ -57,6 +61,7 @@ function validateModes(text) {
   if (!rows.length) errors.push('нет строк с режимами');
   for (const r of rows) {
     for (const c of MODE_COLUMNS.slice(1, 6)) if (header.includes(c) && !isNum(r[c])) errors.push(`режим ${r.mode_id || '?'}: ${c} не число`);
+    errors.push(...badIds([r.mode_id], 'mode_id'));
     if (header.includes('public_core') && !isBool(r.public_core)) errors.push(`режим ${r.mode_id || '?'}: public_core должен быть true/false`);
   }
   if (rows.length && !rows.some((r) => String(r.public_core).toLowerCase() === 'true')) warnings.push('ни один режим не даёт public core');
@@ -66,6 +71,7 @@ function validateConfig(text) {
   const errors = [], warnings = [];
   let cfg;
   try { cfg = JSON.parse(text); } catch (e) { return { ok: false, errors: ['не JSON: ' + e.message], warnings, summary: {} }; }
+  if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) return { ok: false, errors: ['корень файла должен быть объектом'], warnings, summary: {} };
   const common = cfg.constraints_common;
   if (!common || typeof common !== 'object') errors.push('нет объекта constraints_common');
   else for (const k of CONFIG_COMMON) { if (!(k in common)) errors.push('constraints_common: нет ' + k); else if (!isNum(common[k])) errors.push(`constraints_common.${k} не число`); }
@@ -89,8 +95,8 @@ export function renderData(ctx) {
     const s = f.summary || {};
     const what = n === 'lots.csv' ? `${s.rows ?? '?'} лотов, ${s.columns ?? '?'} полей` : n === 'access_modes.csv' ? `режимы ${(s.modes || []).join(', ')}` : `версия ${s.case_version ?? '—'}, сценарии ${(s.scenarios || []).join(', ')}, ${s.constraints ?? '?'} ограничений`;
     return `<tr><td><span class="code">${n}</span></td><td>${f.missing ? '<span class="st fail">нет файла</span>' : esc(what)}</td><td class="mono">${f.sha || '—'}</td><td class="num">${f.bytes ?? '—'}</td></tr>`;
-  }).join('')}</table></div><div class="note">${esc(ds.source === 'организаторы' ? 'Файлы организаторов (копия cases/case02 в data/ и config/, сверена движком по контрольным суммам). Расчёт идёт по ним через src/kosmo.' : `Загруженный набор, активирован ${ds.activated_at || ''}. Папка: ${ds.root}`)}</div>`
-    : `<div class="empty">${state.api ? 'Загрузка…' : 'Сведения о наборе доступны только с сервером (python app/server.py). Проверка файлов ниже работает и без него.'}</div>`;
+  }).join('')}</table></div><div class="note">${esc(ds.source === 'организаторы' ? 'Исходные файлы организаторов, сверенные расчётным движком по контрольным суммам. Все экраны считаются по ним.' : `Загруженный набор, активирован ${ds.activated_at || ''}.`)}</div>`
+    : `<div class="empty">${state.api ? 'Загрузка…' : 'Сведения о наборе доступны только при работе с сервером. Проверка файлов ниже работает и без него.'}</div>`;
   const pill = ds ? `<div class="pill"><span class="dot">${ctx.icon.check}</span>${ds.source === 'организаторы' ? 'файлы организаторов' : 'загруженный набор'}, v${ds.case_version ?? '—'}</div>` : '';
 
   const slot = (n) => {
@@ -106,7 +112,7 @@ export function renderData(ctx) {
   const anyLoaded = FILES.some((n) => upload.files[n] !== undefined);
   const allOk = anyLoaded && FILES.every((n) => !upload.report[n] || upload.report[n].ok);
   const previews = FILES.filter((n) => upload.report[n]?.ok).map((n) => previewOf(n, ctx)).join('');
-  const helpUpload = 'Три файла в формате организаторов, можно загружать по одному: lots.csv (14 полей на лот), access_modes.csv (коэффициенты режимов и public_core), case_config.json (constraints_common и scenarios с c0_max_mrub). Файлы проверяются здесь на структуру и типы, затем на сервере, сохраняются в app/data/uploads и становятся активным набором; все экраны пересчитываются. Непереданные файлы берутся из текущего набора. «Вернуть файлы организаторов» возвращает исходный набор (копия cases/case02).';
+  const helpUpload = 'Три файла в формате организаторов, можно загружать по одному: lots.csv (14 полей на лот), access_modes.csv (коэффициенты режимов и public_core), case_config.json (constraints_common и scenarios с c0_max_mrub). Файлы проверяются здесь на структуру и типы, затем на сервере, сохраняются там и становятся активным набором; все экраны пересчитываются. Непереданные файлы берутся из текущего набора. «Вернуть файлы организаторов» возвращает исходный набор организаторов.';
   const fmtCard = `<div class="card"><h2>Формат организаторов${help('Обязательные столбцы и типы. Лишние столбцы игнорируются, порядок не важен. Разделитель — запятая, кодировка UTF-8. capability_groups — список через точку с запятой (EO; PNT/InSAR; SATCOM; SSA), federal и public_core — true/false. В scenarios обязательны BASE и STRESS (на них построены расчёт и экраны), другие сценарии допускаются.')}</h2>
 <div class="fmt"><div><b>lots.csv</b><div class="cols">${LOT_COLUMNS.map((c) => `<span class="lot${LOT_NUMERIC.includes(c) ? '' : ' txt'}">${c}</span>`).join('')}</div></div>
 <div><b>access_modes.csv</b><div class="cols">${MODE_COLUMNS.map((c) => `<span class="lot${c === 'mode_id' || c === 'public_core' ? ' txt' : ''}">${c}</span>`).join('')}</div></div>
@@ -148,7 +154,8 @@ export async function mountData(ctx) {
   const takeFile = async (name, file) => {
     const text = await file.text();
     upload.files[name] = text;
-    upload.report[name] = VALIDATE[name](text);
+    // проверка не должна молча падать: файл остаётся в слоте с текстом ошибки
+    try { upload.report[name] = VALIDATE[name](text); } catch (e) { upload.report[name] = { ok: false, errors: ['проверка не удалась: ' + e.message], warnings: [], summary: {} }; }
     ctx.render();
   };
   main.querySelectorAll('input[type=file]').forEach((inp) => inp.addEventListener('change', () => { if (inp.files[0]) takeFile(inp.dataset.file, inp.files[0]); }));

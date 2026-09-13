@@ -202,6 +202,33 @@ def normalize(values: dict, direction: str) -> dict:
     return normalized
 
 
+# Фронт Парето: недоминируемые комбинации по (ценность выше, c0 ниже, покрытие OPEX выше).
+# Это отбор, а не новая формула: сравниваются метрики, уже посчитанные calculate().
+PARETO_CRITERIA = (("vpub", "max"), ("c0", "min"), ("kcash", "max"))
+
+
+def dominates(better, worse, criteria=PARETO_CRITERIA) -> bool:
+    """better доминирует worse: не хуже ни по одному показателю и строго лучше хотя бы по одному."""
+    strict = False
+    for key, direction in criteria:
+        a, b = float(getattr(better, key)), float(getattr(worse, key))
+        if direction == "min":
+            a, b = -a, -b
+        if a < b and not math.isclose(a, b):
+            return False
+        if a > b and not math.isclose(a, b):
+            strict = True
+    return strict
+
+
+def pareto_front(metrics: dict, criteria=PARETO_CRITERIA) -> tuple:
+    """Имена комбинаций на фронте Парето. На вход — {имя: PortfolioMetrics} только допустимых вариантов."""
+    return tuple(sorted(
+        name for name, value in metrics.items()
+        if not any(dominates(other, value, criteria) for other_name, other in metrics.items() if other_name != name)
+    ))
+
+
 def team_checks(results: dict, model: SelectionModel) -> tuple:
     return run_team_checks(results[model.feasibility_scenario].metrics, model.gates)
 

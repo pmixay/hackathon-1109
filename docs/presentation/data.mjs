@@ -9,7 +9,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..');
 const R = (p) => path.join(ROOT, p);
 export const SITE = 'https://cosmo.arbuz.lol';
-export const TOTAL = 7;   // показываем семь слайдов, остальные спрятаны как запасные
+export const TOTAL = 6;
 
 const readJSON = (p) => JSON.parse(fs.readFileSync(R(p), 'utf8'));
 function splitCSV(line) {

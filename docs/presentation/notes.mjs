@@ -15,9 +15,7 @@ import { buildScript } from './script.mjs';
 import { SCRIPT_CONTEXT } from './data.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ALL = buildScript(SCRIPT_CONTEXT);
-const SC = ALL.filter((x) => !x.backup);
-const BACKUP = ALL.filter((x) => x.backup);
+const SC = buildScript(SCRIPT_CONTEXT);
 const total = SC.reduce((a, s) => a + s.seconds, 0);
 const DEMO = 90;
 
@@ -58,7 +56,6 @@ body.push(new Paragraph({
 }));
 const fmt = (v) => `${Math.floor(v / 60)}:${String(v % 60).padStart(2, '0')}`;
 body.push(p(`Текст защиты к презентации kosmo-deck.pptx. Регламент четыре минуты на всё: ${SC.length} слайдов за ${fmt(total)} и живая демонстрация примерно на ${fmt(DEMO)}.`, { color: MUTED, size: 21 }));
-body.push(p(`Ещё ${BACKUP.length} слайда спрятаны в файле и открываются только по вопросу жюри.`, { color: MUTED, size: 21 }));
 body.push(p('Команда «Молоток». Голубев Павел, Петр Кузнецов, Тимофей Максимов, Лихатин Андрей, Потапенко Филипп.', { color: MUTED, size: 21, after: 240 }));
 
 // Хронометраж
@@ -129,28 +126,6 @@ for (const s of SC) {
   if (s.n < SC.length) body.push(rule());
 }
 
-// Запасные слайды
-body.push(new Paragraph({
-  heading: HeadingLevel.HEADING_1,
-  spacing: { before: 360, after: 60 },
-  children: [new TextRun({ text: 'Запасные слайды', font: 'Calibri', size: 28, bold: true, color: INK })],
-}));
-body.push(p('В показ не входят, в файле спрятаны. Открываем, если жюри спросит.', { color: MUTED, size: 20, after: 140 }));
-for (const s of BACKUP) {
-  body.push(new Paragraph({
-    spacing: { before: 160, after: 40 },
-    children: [new TextRun({ text: `Слайд ${s.n}. ${s.title}`, font: 'Calibri', size: 23, bold: true, color: INK })],
-  }));
-  for (const line of s.say) body.push(p(line, { size: 21 }));
-  for (const qa of s.questions) {
-    body.push(new Paragraph({
-      spacing: { after: 40, line: 300 },
-      children: [new TextRun({ text: qa.q, font: 'Calibri', size: 21, italics: true, color: GREEN })],
-    }));
-    body.push(p(qa.a, { size: 21, after: 120 }));
-  }
-}
-
 // Общие правила показа
 body.push(new Paragraph({
   heading: HeadingLevel.HEADING_1,
@@ -186,4 +161,4 @@ const doc = new Document({
 
 const out = path.join(HERE, 'speaker-notes.docx');
 fs.writeFileSync(out, await Packer.toBuffer(doc));
-console.log('готово:', out, `· слайдов ${SC.length} на ${total} с, запасных ${BACKUP.length}`);
+console.log('готово:', out, `· слайдов ${SC.length} на ${total} с`);

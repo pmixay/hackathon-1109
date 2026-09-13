@@ -1,8 +1,7 @@
 // Сборка презентации защиты: docs/presentation/kosmo-deck.pptx
 //
-// Регламент четыре минуты на всё, поэтому в показ идут семь слайдов (около двух
-// с половиной минут), остальное время — живая демонстрация инструмента.
-// Ещё четыре слайда лежат в файле спрятанными: их открывают в ответ на вопрос.
+// Регламент четыре минуты на всё, поэтому в показ идут шесть слайдов (около двух
+// минут), остальное время — живая демонстрация инструмента.
 //
 // Цифры читаются из results/ — единственного источника чисел проекта, поэтому
 // слайды и инструмент не могут разойтись.
@@ -12,12 +11,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import PptxGenJS from 'pptxgenjs';
-import { C, L, defineLayout, head, foot, card, chip, badge, meter, flow, shadow, text as T } from './theme.mjs';
+import { C, L, defineLayout, head, foot, card, chip, badge, shadow, text as T } from './theme.mjs';
 import { icon, qr } from './assets.mjs';
 import { radial, pill } from './gradients.mjs';
 import { buildScript } from './script.mjs';
 import {
-  SITE, TOTAL, base, stress, ranking, m, checkOf, c0Base, c0Stress,
+  SITE, TOTAL, ranking, m, c0Base, c0Stress,
   FINAL_KEY, rankRow, leader, admitted, ALL_COMBOS,
   publicC0, privateC0, dVpub, nf, plus, SCRIPT_CONTEXT,
 } from './data.mjs';
@@ -60,17 +59,6 @@ const page = () => {
   s.background = { color: C.page };
   return s;
 };
-// Запасной слайд: в файле есть, в показе не участвует.
-const backupPage = () => {
-  const s = page();
-  s.hidden = true;
-  T(s, 'Запасной слайд', {
-    x: L.W - L.M - 2.4, y: 6.92, w: 2.4, h: 0.28,
-    fontSize: 10, color: '9BAAA2', align: 'right',
-  });
-  return s;
-};
-
 // ─────────────────────────────────────────── 1. Обложка
 {
   const s = page();
@@ -98,36 +86,7 @@ const backupPage = () => {
   s.addNotes(notes(1));
 }
 
-// ─────────────────────────────────────────── 2. Идея
-{
-  const s = page();
-  head(s, { title: 'Регион покупает результат' });
-
-  const cards = [
-    { ic: I.target, t: 'Готовый ответ', b: 'Короткий ответ вместо снимков: где событие, насколько ему верить и что делать дальше.' },
-    { ic: I.users, t: 'Портфель целиком', b: 'Четыре сервиса в разных регионах. Общественные держат смысл, прикладные приносят деньги.' },
-    { ic: I.key, t: 'Общие правила', b: 'Единый оператор, открытые форматы, права на историю данных остаются у заказчика.' },
-  ];
-  const cw = 3.816;
-  cards.forEach((c, i) => {
-    const x = L.M + i * (cw + 0.22);
-    card(s, { x, y: 2.1, w: cw, h: 2.5 });
-    badge(s, { x: x + 0.34, y: 2.4, d: 0.76, img: c.ic });
-    T(s, c.t, { x: x + 0.34, y: 3.32, w: cw - 0.68, h: 0.34, fontSize: 16, bold: true, color: C.ink });
-    T(s, c.b, { x: x + 0.34, y: 3.72, w: cw - 0.68, h: 0.76, fontSize: 12, color: C.ink2 });
-  });
-
-  card(s, { x: L.M, y: 4.9, w: 11.893, h: 1.5 });
-  T(s, 'Заказчик сохраняет контроль', { x: L.M + 0.42, y: 5.14, w: 11, h: 0.38, fontSize: 17, bold: true, color: C.brand });
-  T(s, 'Стандарты, права на историю данных и правила доступа остаются у него. Поставщики конкурируют за отдельные части услуги и заменяются без остановки сервиса. Следующий регион получает то же ядро и настраивает его под себя.', {
-    x: L.M + 0.42, y: 5.6, w: 11, h: 0.7, fontSize: 12.5, color: C.ink2,
-  });
-
-  foot(s, { n: 2, total: TOTAL });
-  s.addNotes(notes(2));
-}
-
-// ─────────────────────────────────────────── 3. Портфель
+// ─────────────────────────────────────────── 2. Портфель
 {
   const s = page();
   head(s, { title: 'Четыре сервиса. Четыре региона.' });
@@ -161,11 +120,11 @@ const backupPage = () => {
     T(s, st.t, { x: x + 0.32, y: 5.78, w: 5.3, h: 0.66, fontSize: 12.5, bold: true, color: C.white, valign: 'middle' });
   });
 
-  foot(s, { n: 3, total: TOTAL });
-  s.addNotes(notes(3));
+  foot(s, { n: 2, total: TOTAL });
+  s.addNotes(notes(2));
 }
 
-// ─────────────────────────────────────────── 4. Выбор
+// ─────────────────────────────────────────── 3. Выбор
 {
   const s = page();
   head(s, { title: 'Баланс важнее максимума' });
@@ -252,11 +211,11 @@ const backupPage = () => {
     x: rx + 0.32, y: 5.62, w: 2.9, h: 0.62, fontSize: 11, color: C.ink2,
   });
 
-  foot(s, { n: 4, total: TOTAL });
-  s.addNotes(notes(4));
+  foot(s, { n: 3, total: TOTAL });
+  s.addNotes(notes(3));
 }
 
-// ─────────────────────────────────────────── 5. Деньги
+// ─────────────────────────────────────────── 4. Деньги
 {
   const s = page();
   head(s, { title: 'Деньги сходятся' });
@@ -312,11 +271,11 @@ const backupPage = () => {
     x: gx + 3.1, y: gy + gh + 0.14, w: 8, h: 0.26, fontSize: 11, color: C.ink2, align: 'right',
   });
 
-  foot(s, { n: 5, total: TOTAL });
-  s.addNotes(notes(5));
+  foot(s, { n: 4, total: TOTAL });
+  s.addNotes(notes(4));
 }
 
-// ─────────────────────────────────────────── 6. План
+// ─────────────────────────────────────────── 5. План
 {
   const s = page();
   head(s, { title: 'Пять шагов до 2033 года' });
@@ -352,11 +311,11 @@ const backupPage = () => {
     T(s, t, { x: x + 0.34, y: 5.98, w: 3.4, h: 0.72, fontSize: 12, color: C.ink2, valign: 'middle' });
   });
 
-  foot(s, { n: 6, total: TOTAL });
-  s.addNotes(notes(6));
+  foot(s, { n: 5, total: TOTAL });
+  s.addNotes(notes(5));
 }
 
-// ─────────────────────────────────────────── 7. Демонстрация
+// ─────────────────────────────────────────── 6. Демонстрация
 {
   const s = page();
   s.addImage({ data: G.final, x: 0, y: 0, w: L.W, h: L.H });
@@ -371,155 +330,7 @@ const backupPage = () => {
   T(s, SITE.replace('https://', ''), {
     x: 0, y: 6.58, w: L.W, h: 0.44, fontSize: 20, bold: true, color: C.brand, align: 'center',
   });
-  s.addNotes(notes(7));
-}
-
-// ─────────────────────────────────────────── 8. Запасной: инструмент
-{
-  const s = backupPage();
-  head(s, { title: 'Портфель собирается за минуту' });
-
-  const bars = [
-    { w: 7.4, g: G.pale, label: nf(ALL_COMBOS), cap: 'столько портфелей вообще можно собрать', color: C.deep },
-    { w: 4.3, g: G.mint, label: String(admitted), cap: 'столько остаётся, если держать условия кейса', color: C.white },
-    { w: 2.3, g: G.deep, label: '1', cap: 'тот, который мы предлагаем региону', color: C.white },
-  ];
-  bars.forEach((b, i) => {
-    const y = 2.16 + i * 1.16;
-    s.addImage({ data: b.g, x: L.M, y, w: b.w, h: 0.88 });
-    T(s, b.label, { x: L.M + 0.32, y, w: 2.6, h: 0.88, fontSize: 28, bold: true, color: b.color, valign: 'middle' });
-    T(s, b.cap, { x: L.M + b.w + 0.3, y, w: 4.6, h: 0.88, fontSize: 12.5, color: C.ink2, valign: 'middle' });
-    if (i < 2) flow(s, { x: L.M + 0.78, y: y + 0.92, d: 0.2, color: C.mint, dir: 'down' });
-  });
-
-  card(s, { x: L.M, y: 5.72, w: 11.893, h: 0.92 });
-  ['открыть портфель', 'переключить бюджет', 'заменить лот', 'увидеть, что сломалось', 'вернуть обратно'].forEach((t, i) => {
-    const x = L.M + 0.34 + i * 2.32;
-    T(s, String(i + 1), { x, y: 5.72, w: 0.26, h: 0.92, fontSize: 13, bold: true, color: C.mint, valign: 'middle' });
-    T(s, t, { x: x + 0.28, y: 5.72, w: 1.78, h: 0.92, fontSize: 11.5, color: C.ink2, valign: 'middle' });
-    if (i < 4) flow(s, { x: x + 2.06, y: 6.09, d: 0.16, color: 'BBD3C6' });
-  });
-
-  s.addNotes(notes(8));
-}
-
-// ─────────────────────────────────────────── 9. Запасной: условия
-{
-  const s = backupPage();
-  head(s, { title: 'Девять условий кейса' });
-
-  const labels = {
-    exact_lot_count: 'Четыре лота',
-    territorial_archetypes: 'Территории',
-    capability_groups: 'Технологические группы',
-    public_core_lots: 'Общедоступные сервисы',
-    c0_limit: 'Стартовые затраты',
-    opex_limit: 'Содержание в год',
-    vpub_floor: 'Общественная польза',
-    kcash_floor: 'Поступления к содержанию',
-    t_rep_floor: 'Тиражируемость',
-  };
-  const order = ['exact_lot_count', 'territorial_archetypes', 'capability_groups', 'public_core_lots', 'c0_limit', 'opex_limit', 'vpub_floor', 'kcash_floor', 't_rep_floor'];
-  const cw = 3.816, ch = 1.24;
-  order.forEach((code, i) => {
-    const c = checkOf(code === 'c0_limit' ? stress : base, code);
-    const dec = Number.isInteger(c.actual) && Number.isInteger(c.threshold) ? 0 : 2;
-    const x = L.M + (i % 3) * (cw + 0.22);
-    const y = 2.06 + Math.floor(i / 3) * (ch + 0.2);
-    const tight = c.operator === '<=' ? c.actual / c.threshold : c.threshold / c.actual;
-    const tense = tight > 0.9 && c.margin !== 0;
-    const cc = tense ? C.brass : C.brand;
-    const fact = c.operator === '<='
-      ? `${nf(c.actual, dec)} при пределе ${nf(c.threshold, dec)}`
-      : c.operator === '>='
-        ? `${nf(c.actual, dec)} при минимуме ${nf(c.threshold, dec)}`
-        : `${nf(c.actual, dec)}, ровно столько и нужно`;
-    card(s, { x, y, w: cw, h: ch });
-    badge(s, { x: x + 0.26, y: y + 0.24, d: 0.38, img: I.check, pad: 0.095, line: tense ? 'E3CFA6' : 'C8E5D5' });
-    T(s, labels[code], { x: x + 0.76, y: y + 0.22, w: cw - 1.0, h: 0.28, fontSize: 12, bold: true, color: C.ink });
-    T(s, fact, { x: x + 0.76, y: y + 0.5, w: cw - 1.0, h: 0.26, fontSize: 11, color: C.ink2 });
-    const mw = cw - 2.3;
-    meter(s, { x: x + 0.76, y: y + 0.88, w: mw, frac: tight, color: cc });
-    T(s, c.margin === 0 ? 'ровно порог' : `запас ${nf(Math.abs(c.margin), dec)}`, {
-      x: x + 0.76 + mw + 0.14, y: y + 0.78, w: 1.22, h: 0.3, fontSize: 9.5, color: cc,
-    });
-  });
-
-  s.addImage({ data: G.mark, x: L.M, y: 6.34, w: 6.9, h: 0.54 });
-  T(s, `Тоньше всего запас по старту при урезанном бюджете: ${nf(c0Stress.margin)} млн ₽`, {
-    x: L.M + 0.28, y: 6.34, w: 6.5, h: 0.54, fontSize: 12, bold: true, color: C.deep, valign: 'middle',
-  });
-
-  s.addNotes(notes(9));
-}
-
-// ─────────────────────────────────────────── 10. Запасной: договорная схема
-{
-  const s = backupPage();
-  head(s, { title: 'Кто за что отвечает' });
-
-  const chain = [
-    { ic: I.users, t: 'Заказчик', b: 'стандарты, права на историю данных, правила доступа и приёмка' },
-    { ic: I.settings, t: 'Оператор', b: 'единый сервис, SLA, журналы, интеграции и поддержка' },
-    { ic: I.sat, t: 'Поставщики', b: 'отдельные компоненты и периоды услуги, конкурируют между собой' },
-  ];
-  const cw = 3.68;
-  chain.forEach((c, i) => {
-    const x = L.M + i * (cw + 0.52);
-    card(s, { x, y: 2.1, w: cw, h: 1.9 });
-    badge(s, { x: x + 0.3, y: 2.36, d: 0.66, img: c.ic, pad: 0.16 });
-    T(s, c.t, { x: x + 1.1, y: 2.4, w: cw - 1.36, h: 0.32, fontSize: 14, bold: true, color: C.ink });
-    T(s, c.b, { x: x + 0.3, y: 3.16, w: cw - 0.6, h: 0.72, fontSize: 11.5, color: C.ink2 });
-    if (i < 2) flow(s, { x: x + cw + 0.16, y: 2.95, d: 0.2 });
-  });
-
-  card(s, { x: L.M, y: 4.28, w: 5.84, h: 2.0 });
-  badge(s, { x: L.M + 0.32, y: 4.56, d: 0.66, img: I.swap, pad: 0.16 });
-  T(s, 'Когда меняем поставщика', { x: L.M + 1.12, y: 4.6, w: 4.4, h: 0.32, fontSize: 14, bold: true, color: C.ink });
-  T(s, 'Повторно нарушен критический SLA, утрачены права на данные или закрыт формат выгрузки. Прежний поставщик отдаёт историю и настройки, новый проходит контрольный пересчёт и период параллельной работы.', {
-    x: L.M + 0.32, y: 5.36, w: 5.2, h: 0.8, fontSize: 11.5, color: C.ink2,
-  });
-
-  card(s, { x: 6.77, y: 4.28, w: 5.84, h: 2.0 });
-  badge(s, { x: 7.09, y: 4.56, d: 0.66, img: I.alert, pad: 0.16, line: 'E3CFA6' });
-  T(s, 'Восемь рисков, у каждого владелец', { x: 7.89, y: 4.6, w: 4.5, h: 0.32, fontSize: 14, bold: true, color: C.brass });
-  ['данные', 'ложный сигнал', 'поставщик', 'внедрение', 'доступ', 'спрос', 'платежи', 'KPI'].forEach((r, i) => {
-    chip(s, {
-      x: 7.09 + (i % 4) * 1.36, y: 5.36 + Math.floor(i / 4) * 0.46, w: 1.28, h: 0.38,
-      text: r, fill: C.soft, border: 'D5EADF', color: C.deep, size: 9, bold: false,
-    });
-  });
-
-  s.addNotes(notes(10));
-}
-
-// ─────────────────────────────────────────── 11. Запасной: тиражирование
-{
-  const s = backupPage();
-  head(s, { title: 'Тираж без переделки' });
-
-  [
-    { t: 'Переносим как есть', ic: I.copy, color: C.brand, items: ['каталог сервисов и ролей', 'обработку данных и модель событий', 'интерфейсы и форматы выгрузки', 'доступ и журналирование', 'шаблоны SLA и договоров', 'методику KPI и базу знаний'] },
-    { t: 'Настраиваем на месте', ic: I.map, color: C.brass, items: ['границы и сезонные пороги для пожаров', 'зоны и типы событий для экологии', 'поля, культуры и права хозяйств', 'объекты, маршруты и регламент реакции'] },
-  ].forEach((cl, i) => {
-    const x = L.M + i * 6.05;
-    card(s, { x, y: 2.1, w: 5.84, h: 3.2 });
-    badge(s, { x: x + 0.32, y: 2.36, d: 0.66, img: cl.ic, pad: 0.16, line: i ? 'E3CFA6' : 'C8E5D5' });
-    T(s, cl.t, { x: x + 1.12, y: 2.4, w: 4.4, h: 0.34, fontSize: 15, bold: true, color: cl.color });
-    cl.items.forEach((it, j) => {
-      const y = 3.2 + j * 0.34;
-      s.addShape('ellipse', { x: x + 0.36, y: y + 0.1, w: 0.1, h: 0.1, fill: { color: cl.color }, line: { color: cl.color, width: 0 } });
-      T(s, it, { x: x + 0.62, y, w: 5.0, h: 0.3, fontSize: 11.5, color: C.ink2 });
-    });
-  });
-
-  ['пилот в регионе', 'разбор и обновление ядра', 'следующий регион по шаблону'].forEach((t, i) => {
-    const x = L.M + i * 4.12;
-    chip(s, { x, y: 5.68, w: 3.6, h: 0.6, text: t, size: 12, color: C.deep });
-    if (i < 2) flow(s, { x: x + 3.74, y: 5.88, d: 0.2 });
-  });
-
-  s.addNotes(notes(11));
+  s.addNotes(notes(6));
 }
 
 const out = path.join(HERE, 'kosmo-deck.pptx');

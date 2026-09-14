@@ -7,3 +7,4 @@ app/data/
 results/enumeration.csv
 results/variants/
 .claude/
+docs/presentation/node_modules

@@ -8,3 +8,4 @@ results/enumeration.csv
 results/variants/
 .claude/
 docs/presentation/node_modules
+config/custom_mode.json

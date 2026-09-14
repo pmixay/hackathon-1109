@@ -422,8 +422,42 @@ svg text.ax{font-size:10px;fill:var(--muted)}
 .mini span{position:absolute;right:8px;top:0;line-height:22px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
 table.brk td .sub{font-size:12px}
 .tiles.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+/* Плитка на своей странице лежит на фоне и различима тенью, а внутри карточки
+   фон совпадает с её белым: там заливку и рамку задаём явно, иначе нейтральные
+   плитки исчезают рядом с цветными. */
+.card .tile{background:var(--surface-2);border:1px solid var(--rule);box-shadow:none}
 .tile.thin{border-color:var(--warn);background:var(--warn-soft)}.tile.bad{border-color:var(--crit);background:var(--crit-soft)}
 .tile .tc{font-size:12.5px;font-weight:500;color:var(--ink-2);margin-top:2px}
+.tile.thin .tc{color:var(--warn-ink)}.tile.bad .tc{color:var(--crit-ink)}
+
+/* S2: покрытие годового OPEX якорными поступлениями. Полоса — весь OPEX,
+   тёмная часть покрыта, красная не покрыта, засечка — формальный порог K_cash.
+   Порог и край покрытия почти совпадают: экран показывает именно это. */
+.s2b{margin-top:20px}
+.s2b-h{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap;font-size:13.5px;font-weight:600;color:var(--ink)}
+.s2b-h>span+span{color:var(--ink-2);font-weight:500;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:2px}
+.s2b-bar{position:relative;display:flex;height:26px;margin-top:14px;border-radius:8px;background:var(--rule-2)}
+.s2b-bar i{display:block;height:100%}
+.s2b-bar i.cov{background:var(--seg-a)}
+.s2b-bar i.gap{background:var(--crit)}
+.s2b-bar i:first-child{border-radius:8px 0 0 8px}
+.s2b-bar i:last-of-type{border-radius:0 8px 8px 0}
+.s2b-bar i:only-of-type{border-radius:8px}
+.s2b-bar .thr{position:absolute;top:-7px;bottom:-7px;width:2px;margin-left:-1px;background:var(--ink);border-radius:2px}
+.s2b-bar .thr::after{content:"";position:absolute;left:1px;top:0;width:7px;height:7px;border-radius:50%;background:var(--ink);transform:translate(-50%,-50%)}
+.s2b .legend{flex-wrap:wrap;gap:6px 18px;margin-top:14px}
+.s2b .legend i.cov{background:var(--seg-a)}
+.s2b .legend i.gap{background:var(--crit)}
+.s2b .legend i.tick{width:2px;height:12px;border-radius:2px;background:var(--ink);margin-right:10px;vertical-align:-2px}
+
+/* S2: разложение непокрытого OPEX по лотам */
+table.s2l td.neg{color:var(--crit);font-weight:700}
+table.s2l td .sub{font-size:12.5px}
+table.s2l th:last-child,table.s2l td:last-child{width:210px}
+.s2cov{display:flex;align-items:center;gap:10px}
+.s2cov .mini{flex:1;min-width:100px}
+.s2cov b{font-family:var(--f-num);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;min-width:54px;text-align:right}
+.mini.warn i{background:var(--warn)}
 .sv-p{font-size:13px;color:var(--ink-2)}.sv-p b{color:var(--ink);font-weight:600}
 @media (max-width:1280px){.why-hero,.res2,.chk2{grid-template-columns:minmax(0,1fr)}.bld-row{grid-template-columns:32px minmax(0,1fr) auto;grid-auto-rows:auto}.bld-info{grid-column:2/-1}}
 
@@ -513,6 +547,8 @@ table.brk td .sub{font-size:12px}
   .dd-it.on:hover .ck{opacity:1}
   /* карточки лотов, плитки, карточки сервисов */
   .hl-lot:hover,.tile:not(.thin):not(.bad):hover{background:var(--surface-2);box-shadow:var(--shadow-sm)}
+  /* внутри карточки плитка и так залита --surface-2: подсветкой служит рамка */
+  .card .tile:not(.thin):not(.bad):hover{box-shadow:none;border-color:var(--rule-2)}
   .tile:hover .seglbl{color:var(--ink)}
   .sv:hover{background:var(--surface-2)}
   /* полоса вклада в разложении балла */
